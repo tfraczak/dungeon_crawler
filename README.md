@@ -12,7 +12,7 @@ In Dungeon Crawler 3000, players will be able to:
 - Move from one room node to another.
 - Interact with entities (ex. items such as coins, potions... etc.).
 - BONUS - Interactive enemies with their own pathfinding logic.
-- BONUs - Battle logic for the player to attack enemies.
+- BONUS - Battle logic for the player to attack enemies.
 - BONUS - Implement different classes for the player to choose from the start.
 - BONUS - Implement a simple, yet complex, character attribute system that will affect how the player's character performs in the game.
 
