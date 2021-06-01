@@ -26,7 +26,7 @@ In addition, this project will include:
 Technologies employed
 
 - JavaScript
-- NodeJS
+- NodeJS for installing packages such as webpack, babel, css/scss loaders
 - HTML/CSS/SCSS
 - Canvas
 
