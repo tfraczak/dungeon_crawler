@@ -1,6 +1,6 @@
 # **Dungeon Crawler 3000**
 
-*Dungeon Crawler 3000 is a JavaScript browser game where a player can explore a procedurally generated dungeon.*
+*Dungeon Crawler 3000 is a JavaScript browser game where a player can explore a randomly generated dungeon.*
 
 ---
 
