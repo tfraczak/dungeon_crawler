@@ -36,7 +36,7 @@ Wireframe
 
 Timeline
 
-- Get content to render and move player (1 day)
+- Get content to render and move sprite (1 day)
 - Animate sprite movement (1 day)
 - Move from one room node to another (1 day)
 - Interact with entities (1 day)
