@@ -36,6 +36,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.keyCode === 16 && KEYS[16]) KEYS[e.keyCode] = false;
   });
 
+  const howTo = document.getElementById("how-to");
+  howTo.addEventListener("mouseenter", e => {
+    document.getElementById("how-to").classList.add("active");
+    document.querySelector("#how-to > ul").classList.add("active");
+  });
+  howTo.addEventListener("mouseleave", e => {
+    document.getElementById("how-to").classList.remove("active");
+    document.querySelector("#how-to > ul").classList.remove("active");
+  });
+
   
 
   let playerSprite = new Image();

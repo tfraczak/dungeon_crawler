@@ -23,7 +23,7 @@ class ColBox {
   }
 
   draw(ctx) {
-    ctx.strokeStyle = "red";
+    ctx.strokeStyle = "transparent";
     ctx.strokeRect(
       this.pos[0],
       this.pos[1],

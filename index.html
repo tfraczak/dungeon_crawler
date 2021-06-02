@@ -4,12 +4,46 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.12/css/all.css" integrity="sha384-G0fIWCsCzJIMAVNQPfjH08cyYaUtMwjJwqiRKxxE/rx96Uroj1BtIQ6MLJuheaO9" crossorigin="anonymous">
     <link rel="stylesheet" href="./dist/main.css" />
     <title>Dungeon Crawler 3000</title>
     <script src="./dist/main.js"></script>
   </head>
 
   <body>
+    <header id="header">
+      <section id="title">
+        <h1>Dungeon Crawler 3000</h1>
+        <h2>by: Tim Fraczak</h2>
+      </section>
+      <section id="nav">
+        <div>
+          <button id="restart">Restart</button>
+          <button id="how-to">How to Play
+            <ul> 
+              <li>
+                <span class="list-category">Controls</span>
+                <ul id="controls">
+                  <li>W - up</li>
+                  <li>S - down</li>
+                  <li>A - left</li>
+                  <li>D - right</li>
+                  <li>LShift - sprint</li>
+                </ul>
+              </li>
+              
+            </ul>
+          </button>
+          
+        </div>
+        <nav id="links-nav">
+          <ul>
+            <li><a href="https://www.github.com/tfraczak"><i class="fab fa-github"></i></a></li>
+            <li><a href="https://www.linkedin.com/in/timothy-fraczak-e-i-t-1393a183/"><i class="fab fa-linkedin-in"></i></a></li>
+          </ul>
+        </nav>
+      </section>
+    </header>
     <div id="display-wrapper">
       <canvas id="display">Your browser does not support cavnas.</canvas>
     </div>
