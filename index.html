@@ -17,29 +17,31 @@
         <h2>by: Tim Fraczak</h2>
       </section>
       <section id="nav">
-        <div>
-          <button id="restart">Restart</button>
-          <button id="how-to">How to Play
-            <ul> 
-              <li>
-                <span class="list-category">Controls</span>
-                <ul id="controls">
-                  <li>W - up</li>
-                  <li>S - down</li>
-                  <li>A - left</li>
-                  <li>D - right</li>
-                  <li>LShift - sprint</li>
-                </ul>
-              </li>
-              
-            </ul>
-          </button>
+        <div id="buttons">
+          <div class="restart wrapper">
+            <i id="restart-pointer" class="fas fa-hand-pointer"></i>
+            <button id="restart" class="button">Restart</button>
+          </div>
+          <div class="how-to wrapper">
+            <i id="how-to-pointer" class="fas fa-hand-pointer"></i>
+            <button id="how-to" class="button">How to play?
+              <ul id="dropdown-menu"> 
+                <li class="menu-category">Controls</li>
+                  <li class="control">W - up</li>
+                  <li class="control">S - down</li>
+                  <li class="control">A - left</li>
+                  <li class="control">D - right</li>
+                  <li class="control">LShift - sprint</li>
+              </ul>
+            </button>
+          </div>
+          
           
         </div>
         <nav id="links-nav">
           <ul>
-            <li><a href="https://www.github.com/tfraczak"><i class="fab fa-github"></i></a></li>
-            <li><a href="https://www.linkedin.com/in/timothy-fraczak-e-i-t-1393a183/"><i class="fab fa-linkedin-in"></i></a></li>
+            <li><a href="https://www.github.com/tfraczak" target="_blank"><i class="fab fa-github"></i></a></li>
+            <li><a href="https://www.linkedin.com/in/timothy-fraczak-e-i-t-1393a183/" target="_blank"><i class="fab fa-linkedin-in"></i></a></li>
           </ul>
         </nav>
       </section>
@@ -47,5 +49,7 @@
     <div id="display-wrapper">
       <canvas id="display">Your browser does not support cavnas.</canvas>
     </div>
+    <audio id="restart-sound" src="./src/assets/audio/click.mp3"></audio>
+    <audio id="how-to-sound" src="./src/assets/audio/click.mp3"></audio>
   </body>
 </html>

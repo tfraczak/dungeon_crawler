@@ -1,8 +1,9 @@
 import Entity from "./entity";
-import walkPalette from "../images/rogue/rogue_walk.png";
+import * as Global from "./utils/global_vars";
+import { roomChange } from "./utils/func_utils";
 
 class Player extends Entity {
-  constructor(pos,width,height,spritePalette=walkPalette) {
+  constructor(pos,width,height,spritePalette) {
     
     super(pos,width,height,spritePalette);
     this.speed = 2;
@@ -29,6 +30,23 @@ class Player extends Entity {
     };
   }
 
+  newRoomPos(dir) {
+    switch(dir) {
+      case "up":
+        this.pos[1] = 720-24;
+        break;
+      case "down":
+        this.pos[1] = -24;
+        break;
+      case "left":
+        this.pos[0] = 720-24;
+        break;
+      case "right":
+        this.pos[0] = -24;
+        break;
+    }
+  }
+
   stridePalettePos(direction) {
     this.pace = 24 / (this.speed * this.speedModifier);
     if (this.stride[direction].stepCount <= this.pace) {
@@ -49,7 +67,7 @@ class Player extends Entity {
     }
   }
 
-  move(KEYS, OBJECTS) {
+  move(OBJECTS) {
     const [
       up,
       down,
@@ -57,14 +75,14 @@ class Player extends Entity {
       right,
       shift
     ] = [
-      KEYS[87],
-      KEYS[83],
-      KEYS[65],
-      KEYS[68],
-      KEYS[16],
+      Global.KEYS[87],
+      Global.KEYS[83],
+      Global.KEYS[65],
+      Global.KEYS[68],
+      Global.KEYS[16],
     ];
     if (shift) {
-      this.speedModifier = 1.4;
+      this.speedModifier = 2;
     } else {
       this.speedModifier = 1;
     }
@@ -149,10 +167,11 @@ class Player extends Entity {
       } else {
         this.colBox.pos[0] += this.speed * this.speedModifier;
       }
-      this.colBox.updateSides();
+      this.updateSides();
       for(let OBJECT of OBJECTS) { if (this.collidedOnSide("right", OBJECT)) break }
       if (this.collisions.right) {
         this.colBox.pos[0] = this.collisions.right;
+        this.pos[0] = this.collisions.right-(this.colBox.width + this.colBox.width/2);
       } else {
         if (up || down) {
           this.pos[0] += this.normalizedSpeed * this.speedModifier;
@@ -171,7 +190,27 @@ class Player extends Entity {
       this.drawOptions.palX = 48 * 1;
     }
 
-    // this.updateSides();
+    const [x,y] = this.pos;
+    let exitDir;
+    if (x < -24) {
+      exitDir = "left";
+      this.newRoomPos(exitDir);
+      roomChange(exitDir, Global.SESSION.game.room);
+    } else if (x > 720-24) {
+      exitDir = "right";
+      this.newRoomPos(exitDir);
+      roomChange(exitDir, Global.SESSION.game.room);
+    } else if (y < -24) {
+      exitDir = "up";
+      this.newRoomPos(exitDir);
+      roomChange(exitDir, Global.SESSION.game.room);
+    } else if (y > 720-24) {
+      exitDir = "down";
+      this.newRoomPos(exitDir);
+      roomChange(exitDir, Global.SESSION.game.room);
+    }
+
+    this.updateSides();
     this.drawOptions.x = this.pos[0];
     this.drawOptions.y = this.pos[1];
   }

@@ -1,7 +1,9 @@
 body {
-  background-image: url("../images/8bit-bg.jpg");
+  background-image: url("../assets/images/8bit-bg.jpg");
 }
-
+* {
+  transition: 0.1s ease-in-out;
+}
 canvas {
   background-color: $off-white;
 }

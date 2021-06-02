@@ -1,0 +1,140 @@
+#header {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100px;
+  width: 900px;
+  font-family: $start-2p;
+
+  #title {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-evenly;
+    height: 32px;
+    width: 100%;
+    margin: 20px 0;
+
+    h1 {
+      font-size: 28px;
+    }
+  }
+
+
+  #nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 80%;
+
+    #buttons {
+      display: flex;
+      width: 100%;
+
+      .fa-hand-pointer {
+        position: absolute;
+        top: 0;
+        left: -35px;
+        transform: rotate(90deg);
+        font-size: 24px;
+        visibility: hidden;
+        opacity: 0;
+        margin-left: 5px;
+
+        &.active {
+          visibility: visible;
+          opacity: 1;
+          margin-left: 0;
+        }
+
+      }
+    }
+
+    button {
+      margin-right: 60px;
+      font-size: 24px;
+    }
+
+    
+
+    #restart {
+      padding-bottom: 10px;
+      font-size: 20px;
+      &.active {
+        color: $restart-color;
+        // cursor: pointer;
+      }
+
+      
+    }
+
+    #how-to {
+      &.active {
+        color: $banana;
+      }
+      #how-to-pointer {
+        &.active {
+          visibility: visible;
+          opacity: 1;
+          margin-left: 0;
+        }
+      }
+    }
+
+    #how-to {
+      font-size: 20px;
+      padding-bottom: 10px;
+      #dropdown-menu {
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        right: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        visibility: hidden;
+        background-image: linear-gradient(-30deg,darken($menu-color, 35%), $menu-color);
+        border-radius: 3px;
+        border: 5px solid darken(white,15%);
+        margin: 10px 0;
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 0 10px;
+        padding-top: 3px;
+        padding-bottom: 7px;
+        font-family: $rubik;
+        z-index: 1;
+        width: 250px;
+        opacity: 0;
+        li {
+          transform: scale(1.03, 0.97);
+        }
+        .menu-category {
+          font-size: 20px;
+          font-weight: 500;
+          margin-bottom: 5px;
+        }
+        li:not(.menu-category) {
+          font-size: 16px;
+          margin: 0 15px;
+          margin-bottom: 2px;
+        }
+        &.active {
+          visibility: visible;
+          opacity: 1;
+          
+        }
+      }
+    }
+    
+    #links-nav {
+      & > ul {
+        display: flex;
+        li {
+          margin-left: 20px;
+          font-size: 36px;
+        }
+      }
+    }
+  }
+}
+
