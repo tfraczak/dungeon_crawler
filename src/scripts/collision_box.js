@@ -14,14 +14,13 @@ class ColBox {
     const bottomLeft = [x,y+height];
     
     this.center = [x+(width/2),y+(height/2)];
-    this.top = [[topLeft[0], topRight[0]],topLeft[1]];
-    this.bottom = [bottomLeft,bottomRight];
-    this.right = [topRight,bottomRight];
-    this.left = [topLeft,bottomLeft];
+    this.top = [[topLeft[0],topRight[0]], topLeft[1]];
+    this.bottom = [[bottomLeft[0],bottomRight[0]], bottomLeft[1]];
+    this.right = [topRight[0], [topRight[1],bottomRight[1]]];
+    this.left = [topLeft[0], [topLeft[1],bottomLeft[1]]];
     this.sides = [this.top, this.bottom, this.right, this.left];
     
   }
-
   draw(ctx) {
     ctx.strokeStyle = "transparent";
     ctx.strokeRect(

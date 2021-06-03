@@ -12,6 +12,14 @@ export const KEYS = {
 export const ROOMS = {};
 
 export const SESSION = {};
+export const SPRITES = {};
+
+export const COIN_WEIGHTS = {
+  3: 10,
+  2: 20,
+  1: 30,
+  0: 20, 
+};
 
 export const WEIGHTS = {
   4: {

@@ -3,7 +3,7 @@ import * as Global from "./utils/global_vars";
 
 class BGMap {
   constructor() {
-
+    
   }
 }
 

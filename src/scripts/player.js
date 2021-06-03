@@ -4,9 +4,7 @@ import { roomChange } from "./utils/func_utils";
 
 class Player extends Entity {
   constructor(pos,width,height,spritePalette) {
-    
     super(pos,width,height,spritePalette);
-    this.pos = pos;
     this.speed = 1;
     this.normalizedSpeed = parseFloat(this.speed) / Math.sqrt(2);
     this.pace = 24/this.speed;
@@ -68,7 +66,7 @@ class Player extends Entity {
     }
   }
 
-  move(OBJECTS) {
+  move(walls) {
     const [
       up,
       down,
@@ -98,7 +96,7 @@ class Player extends Entity {
         this.colBox.pos[1] += -this.speed * this.speedModifier;
       }
       this.updateSides();
-      for(let OBJECT of OBJECTS) { if (this.collidedOnSide("top", OBJECT)) break }
+      for(let wall of walls) { if (this.collidedOnSide("top", wall)) break }
       if (this.collisions.top) {
         this.pos[1] = this.collisions.top - (this.height-this.colBox.height);
       } else {
@@ -125,7 +123,7 @@ class Player extends Entity {
         this.colBox.pos[1] += this.speed * this.speedModifier;
       }
       this.updateSides();
-      for(let OBJECT of OBJECTS) { if (this.collidedOnSide("bottom", OBJECT)) break }
+      for(let wall of walls) { if (this.collidedOnSide("bottom", wall)) break }
       if (this.collisions.bottom) {
         this.colBox.pos[1] = this.collisions.bottom;
         this.pos[1] = this.collisions.bottom-48;
@@ -152,7 +150,7 @@ class Player extends Entity {
         this.colBox.pos[0] += -this.speed * this.speedModifier;
       }
       this.updateSides();
-      for(let OBJECT of OBJECTS) { if (this.collidedOnSide("left", OBJECT)) break }
+      for(let wall of walls) { if (this.collidedOnSide("left", wall)) break }
       if (this.collisions.left) {
         this.colBox.pos[0] = this.collisions.left;
       } else {
@@ -176,7 +174,7 @@ class Player extends Entity {
         this.colBox.pos[0] += this.speed * this.speedModifier;
       }
       this.updateSides();
-      for(let OBJECT of OBJECTS) { if (this.collidedOnSide("right", OBJECT)) break }
+      for(let wall of walls) { if (this.collidedOnSide("right", wall)) break }
       if (this.collisions.right) {
         this.colBox.pos[0] = this.collisions.right;
         this.pos[0] = this.collisions.right-(this.colBox.width + this.colBox.width/2);

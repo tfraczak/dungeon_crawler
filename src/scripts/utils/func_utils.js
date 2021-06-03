@@ -2,14 +2,18 @@ import * as Global from "./global_vars";
 import Wall from "../wall";
 import Room from "../room";
 import Game from "../game";
+import Entity from "../entity";
+import Coin from "../coin";
+
 
 export const newGame = () => {
   if (Global.SESSION.game) {
     Global.SESSION.game.stop();
-    delete Global.SESSION.game;
-    delete Global.SESSION.player;
+    delete Global.SESSION["game"];
+    delete Global.SESSION["player"];
+    delete Global.SESSION["coinCount"];
     for (let room in Global.ROOMS) {
-      delete Global.ROOMS[room];
+      delete Global.ROOMS[`${room.nodePos}`];
     };
   }
   new Game(...Object.values(Global.GAME_OPTIONS));
@@ -325,6 +329,37 @@ export const buildRoomWalls = paths => {
       walls.push(new Wall([0,0], 720, 48)); // up blocked
       return walls;
   }
+};
+
+const randNumCoins = () => {
+  let weightedNumCoins = [];
+  for (let i = 0; i < Global.COIN_WEIGHTS[3]; i++) { weightedNumCoins.push(3) }
+  for (let i = 0; i < Global.COIN_WEIGHTS[2]; i++) { weightedNumCoins.push(2) }
+  for (let i = 0; i < Global.COIN_WEIGHTS[1]; i++) { weightedNumCoins.push(1) }
+  for (let i = 0; i < Global.COIN_WEIGHTS[0]; i++) { weightedNumCoins.push(0) }
+  const randIdx = Math.floor(Math.random() * weightedNumCoins.length);
+  shuffle(weightedNumCoins);
+  return weightedNumCoins[randIdx];
+};
+
+export const randCoinSound = () => {
+  const i = Math.floor(Math.random() * 10);
+  return document.getElementById(`coin${i}`);
+}
+
+export const generateCoins = () => {
+  const numCoins = randNumCoins();
+  let coins = {};
+  for (let i = 0; i < numCoins; i++) {
+    let x = Math.floor(Math.random()*592) + 64;
+    while (x > 336 && x < 384) x = Math.floor(Math.random()*592) + 64;
+    let y = Math.floor(Math.random()*592) + 64;
+    while (y > 336 && y < 384) y = Math.floor(Math.random()*592) + 64;
+    let pos = [x,y];
+    const coin = new Coin(pos, 16,16,Global.SPRITES.coin);
+    coins[`${coin.pos}`] = coin;
+  }
+  return coins;
 };
 
 export const shuffle = arr => {

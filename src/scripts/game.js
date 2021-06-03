@@ -14,6 +14,7 @@ class Game {
     this.player.draw(ctx);
     Global.SESSION.game = this;
     Global.SESSION.stop = false;
+    Global.SESSION.coinCount = 0;
     this.gameStep = this.gameStep.bind(this);
     this.stop = this.stop.bind(this);
     Global.SESSION.game.play();
@@ -30,7 +31,8 @@ class Game {
     if (!this.requestId) {
       const player = Global.SESSION.player;
       this.ctx.clearRect(0,0, Global.WIDTH, Global.HEIGHT);
-      player.move(this.room.objects);
+      player.move(this.room.walls);
+      this.room.animate();
       this.room.draw(this.ctx);
       player.draw(this.ctx);
       this.requestId = requestAnimationFrame(this.gameStep);

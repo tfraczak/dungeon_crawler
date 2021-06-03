@@ -1,8 +1,8 @@
 import "./styles/index.scss";
-import Game from "./scripts/game";
 import installListeners from "./scripts/utils/install_listeners";
 import * as Global from "./scripts/utils/global_vars";
 import { newGame } from "./scripts/utils/func_utils";
+import Entity from "./scripts/entity";
 
 
 
@@ -15,8 +15,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   installListeners(Global.KEYS);
   
+  let coinSprite = new Image();
+  coinSprite.src = "../src/assets/images/coin/coin.png";
+  coinSprite.onload = () => {
+    Global.SPRITES.coin = coinSprite;
+  };
   let playerSprite = new Image();
   playerSprite.src = "../src/assets/images/rogue/rogue_walk.png";
+  
   
   playerSprite.onload = () => {
     Global.GAME_OPTIONS["ctx"] = ctx;
