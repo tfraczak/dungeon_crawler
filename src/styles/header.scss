@@ -108,6 +108,7 @@
         z-index: 1;
         width: 250px;
         opacity: 0;
+        
         li {
           transform: scale(1.03, 0.97);
         }
@@ -124,7 +125,7 @@
         &.active {
           visibility: visible;
           opacity: 1;
-          
+          box-shadow: 0 0 2px #000000;
         }
       }
     }
