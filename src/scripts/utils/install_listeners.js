@@ -1,3 +1,5 @@
+import * as Global from "./global_vars";
+
 export default (KEYS) => {
   document.addEventListener("keydown", e => {
     if (e.keyCode === 87 && !KEYS[87]) KEYS[e.keyCode] = true;
@@ -38,6 +40,9 @@ export default (KEYS) => {
   restart.addEventListener("mouseleave", e => {
     document.getElementById("restart").classList.remove("active");
     document.getElementById("restart-pointer").classList.remove("active");
+  });
+  restart.addEventListener("click", () => {
+    location.reload();
   });
 
 }
