@@ -2,6 +2,7 @@ import "./styles/index.scss";
 import Game from "./scripts/game";
 import installListeners from "./scripts/utils/install_listeners";
 import * as Global from "./scripts/utils/global_vars";
+import { newGame } from "./scripts/utils/func_utils";
 
 
 
@@ -18,8 +19,9 @@ document.addEventListener("DOMContentLoaded", () => {
   playerSprite.src = "../src/assets/images/rogue/rogue_walk.png";
   
   playerSprite.onload = () => {
-    new Game(ctx, playerSprite);
-    Global.SESSION.game.play();
+    Global.GAME_OPTIONS["ctx"] = ctx;
+    Global.GAME_OPTIONS["playerSprite"] = playerSprite;
+    newGame();
   }
 
 });

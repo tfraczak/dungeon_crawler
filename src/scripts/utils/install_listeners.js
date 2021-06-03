@@ -1,4 +1,6 @@
 import * as Global from "./global_vars";
+import Game from "../game";
+import { newGame } from "../utils/func_utils";
 
 export default (KEYS) => {
   document.addEventListener("keydown", e => {
@@ -41,8 +43,9 @@ export default (KEYS) => {
     document.getElementById("restart").classList.remove("active");
     document.getElementById("restart-pointer").classList.remove("active");
   });
-  restart.addEventListener("click", () => {
-    location.reload();
+  restart.addEventListener("click", e => {
+    e.preventDefault();
+    newGame();
   });
 
 }

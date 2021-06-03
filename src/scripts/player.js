@@ -6,14 +6,15 @@ class Player extends Entity {
   constructor(pos,width,height,spritePalette) {
     
     super(pos,width,height,spritePalette);
-    this.speed = 2;
+    this.pos = pos;
+    this.speed = 1;
     this.normalizedSpeed = parseFloat(this.speed) / Math.sqrt(2);
     this.pace = 24/this.speed;
     this.speedModifier = 1;
     this.stride = {
       up: {
         stepCount: 0,
-        palY: 48 * 3,
+        palY: 48 * 6,
       },
       down: {
         stepCount: 0,
@@ -21,11 +22,11 @@ class Player extends Entity {
       },
       left: {
         stepCount: 0,
-        palY: 48 * 1,
+        palY: 48 * 2,
       },
       right: {
         stepCount: 0,
-        palY: 48 * 2,
+        palY: 48 * 4,
       },
     };
   }
@@ -87,6 +88,8 @@ class Player extends Entity {
       this.speedModifier = 1;
     }
 
+    
+
     // W key movements and sprite direction
     if (up) {
       if (left || right) {
@@ -108,7 +111,10 @@ class Player extends Entity {
         }
       }
       this.drawOptions.palY = this.stride.up.palY;
-      this.drawOptions.palX = this.stridePalettePos("up");
+      if (!left && !right) {
+        this.drawOptions.palX = this.stridePalettePos("up");
+        
+      }
     }
 
     // S key movements and sprite direction
@@ -133,7 +139,9 @@ class Player extends Entity {
         }
       }
       this.drawOptions.palY = this.stride.down.palY;
-      this.drawOptions.palX = this.stridePalettePos("down");
+      if (!left && !right) {
+        this.drawOptions.palX = this.stridePalettePos("down");
+      }
     }
 
     // A key movement

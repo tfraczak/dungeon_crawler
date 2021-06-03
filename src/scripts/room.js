@@ -12,15 +12,6 @@ import {
 class Room {
   constructor(neighbor) {
     this.objects = [];
-    // this.objects.push(new Wall([0,0], 48*6, 48));
-    // this.objects.push(new Wall([48*9,0], 48*6, 48));
-    // this.objects.push(new Wall([48*9,720-48], 48*6, 48));
-    // this.objects.push(new Wall([0,720-48], 48*6, 48));
-    // this.objects.push(new Wall([0,0], 48, 48*6));
-    // this.objects.push(new Wall([0,48*9], 48, 48*6));
-    // this.objects.push(new Wall([720-48,0], 48, 48*6));
-    // this.objects.push(new Wall([720-48,48*9], 48, 48*6));
-    
     this.neighbors = {
       up: undefined,
       down: undefined,
@@ -86,13 +77,16 @@ class Room {
       if (numPaths === paths.length) {
         walls = buildRoomWalls(paths);
         this.objects.push(...walls);
+        Global.ROOMS[`${this.nodePos}`];
       } else {
         shuffle(pathsArr);
         for (let i = 0; i < numPaths; i++) { newPaths.push(pathsArr.pop()) }
         newPaths = newPaths.sort().join("");
         assignBlockedPaths(this, newPaths);
         walls = buildRoomWalls(newPaths);
+        
         this.objects.push(...walls);
+        Global.ROOMS[`${this.nodePos}`];
       }
     }
     

@@ -1,6 +1,19 @@
 import * as Global from "./global_vars";
 import Wall from "../wall";
 import Room from "../room";
+import Game from "../game";
+
+export const newGame = () => {
+  if (Global.SESSION.game) {
+    Global.SESSION.game.stop();
+    delete Global.SESSION.game;
+    delete Global.SESSION.player;
+    for (let room in Global.ROOMS) {
+      delete Global.ROOMS[room];
+    };
+  }
+  new Game(...Object.values(Global.GAME_OPTIONS));
+}
 
 export const collidedWithSide = (side, thisSide, otherSide) => {
   let collided = false;
@@ -104,17 +117,17 @@ export const roomChange = (exitDir, currRoom) => {
 export const randNumPaths = max => {
   let paths = [];
   if (max > 3) {
-    for (let i = 0; i < 60; i++) { paths.push(4) }
-    for (let i = 0; i < 30; i++) { paths.push(3) }
-    for (let i = 0; i < 9; i++) { paths.push(2) }
-    for (let i = 0; i < 1; i++) { paths.push(1) }
+    for (let i = 0; i < Global.WEIGHTS[max][4]; i++) { paths.push(4) }
+    for (let i = 0; i < Global.WEIGHTS[max][3]; i++) { paths.push(3) }
+    for (let i = 0; i < Global.WEIGHTS[max][2]; i++) { paths.push(2) }
+    for (let i = 0; i < Global.WEIGHTS[max][1]; i++) { paths.push(1) }
   } else if (max > 2) {
-    for (let i = 0; i < 70; i++) { paths.push(3) }
-    for (let i = 0; i < 25; i++) { paths.push(2) }
-    for (let i = 0; i < 5; i++) { paths.push(1) }
+    for (let i = 0; i < Global.WEIGHTS[max][3]; i++) { paths.push(3) }
+    for (let i = 0; i < Global.WEIGHTS[max][2]; i++) { paths.push(2) }
+    for (let i = 0; i < Global.WEIGHTS[max][1]; i++) { paths.push(1) }
   } else if (max > 1) {
-    for (let i = 0; i < 60; i++) { paths.push(2) }
-    for (let i = 0; i < 40; i++) { paths.push(1) }
+    for (let i = 0; i < Global.WEIGHTS[max][2]; i++) { paths.push(2) }
+    for (let i = 0; i < Global.WEIGHTS[max][1]; i++) { paths.push(1) }
   } else {
     paths.push(1);
   }

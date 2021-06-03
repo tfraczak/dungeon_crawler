@@ -13,61 +13,23 @@ export const ROOMS = {};
 
 export const SESSION = {};
 
-export const POSSIBLE_PATHS = {
-  "up":{
-    "1": "U",
-    "2": [
-      "UL",
-      "UD",
-      "UR",
-    ],
-    "3": [
-      "ULD",
-      "ULR",
-      "UDR",
-    ],
-    "4": "ULDR",
+export const WEIGHTS = {
+  4: {
+    4: 45,
+    3: 45,
+    2: 9,
+    1: 1,
   },
-  "down": {
-    "1": "D",
-    "2": [
-      "LD",
-      "UD",
-      "DR",
-    ],
-    "3": [
-      "ULD",
-      "LDR",
-      "UDR",
-    ],
-    "4": "ULDR",
+  3: {
+    3: 70,
+    2: 25,
+    1: 5,
   },
-  "left": {
-    "1": "L",
-    "2": [
-      "UL",
-      "LD",
-      "LR",
-    ],
-    "3": [
-      "ULD",
-      "ULR",
-      "LDR",
-    ],
-    "4": "ULDR",
-  },
-  "right": {
-    "1": "R",
-    "2": [
-      "LR",
-      "DR",
-      "UR",
-    ],
-    "3": [
-      "LDR",
-      "ULR",
-      "UDR",
-    ],
-    "4": "ULDR",
+  2: {
+    2: 60,
+    1: 40,
   },
 };
+
+export const GAME_OPTIONS = {};
+export const REQUEST = {};

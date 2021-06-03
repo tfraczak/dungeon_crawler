@@ -60,6 +60,9 @@
     #restart {
       margin-bottom: 10px;
       font-size: 20px;
+      outline: none;
+
+      
       &.active {
         color: $restart-color;
         cursor: pointer;
