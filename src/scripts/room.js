@@ -1,10 +1,10 @@
 import * as Global from "./utils/global_vars";
+import Wall from "./wall";
 
 import {
   randNumPaths,
   addValidNeighbors,
   buildPaths,
-  buildRoomWalls,
   shuffle,
   assignBlockedPaths,
   generateCoins,
@@ -66,14 +66,8 @@ class Room {
       if (numPaths === paths.length) { // if all 4 paths are available
         randIdx = Math.floor(Math.random()*3);
         this.background = Global.BG_IMGS[`${numPaths}${paths}${randIdx}`];
-        if (!this.background) {
-          
-        }
         assignBlockedPaths(this, paths);
-        walls = buildRoomWalls(paths);
-        if (!walls) {
-          debugger
-        }
+        walls = this.buildRoomWalls(paths);
         this.walls.push(...walls);
         Global.ROOMS[`${this.nodePos}`] = this;
       } else { // less than 4 paths available
@@ -88,10 +82,7 @@ class Room {
           
         }
         assignBlockedPaths(this, newPaths);
-        walls = buildRoomWalls(newPaths);
-        if (!walls) {
-          debugger
-        }
+        walls = this.buildRoomWalls(newPaths);
         this.walls.push(...walls);
         Global.ROOMS[`${this.nodePos}`] = this;
       }
@@ -100,10 +91,7 @@ class Room {
       if (numPaths === paths.length) {
         randIdx = Math.floor(Math.random()*3);
         this.background = Global.BG_IMGS[`${numPaths}${paths}${randIdx}`];
-        walls = buildRoomWalls(paths);
-        if (!walls) {
-          debugger
-        }
+        walls = this.buildRoomWalls(paths);
         this.walls.push(...walls);
         Global.ROOMS[`${this.nodePos}`] = this;
       } else {
@@ -113,10 +101,7 @@ class Room {
         randIdx = Math.floor(Math.random()*3);
         this.background = Global.BG_IMGS[`${numPaths}${newPaths}${randIdx}`];
         assignBlockedPaths(this, newPaths);
-        walls = buildRoomWalls(newPaths);
-        if (!walls) {
-          debugger
-        }
+        walls = this.buildRoomWalls(newPaths);
         this.walls.push(...walls);
         Global.ROOMS[`${this.nodePos}`] = this;
       }
@@ -156,6 +141,137 @@ class Room {
     ctx.fillText(`Room [ ${this.nodePos} ]`, 15, 30);
     ctx.fillText(`Coins x ${Global.SESSION.coinCount}`, 590, 30);
   }
+
+  buildRoomWalls(paths) {
+    let walls = [];
+    switch(paths) {
+      case "DLRU":
+        walls.push(new Wall([0,0], 48*6, 48)); // up left
+        walls.push(new Wall([48*9,0], 48*6, 48)); // up right
+        walls.push(new Wall([0,720-48], 48*6, 48)); // down left
+        walls.push(new Wall([48*9,720-48], 48*6, 48)); // down right
+        walls.push(new Wall([0,0], 48, 48*6)); // left up
+        walls.push(new Wall([0,48*9], 48, 48*6)); // left down
+        walls.push(new Wall([720-48,0], 48, 48*6)); // right up
+        walls.push(new Wall([720-48,48*9], 48, 48*6)); // right down
+        return walls;
+      case "DLU":
+        walls.push(new Wall([0,0], 48*6, 48)); // up left
+        walls.push(new Wall([48*9,0], 48*6, 48)); // up right
+        walls.push(new Wall([0,720-48], 48*6, 48)); // down left
+        walls.push(new Wall([48*9,720-48], 48*6, 48)); // down right
+        walls.push(new Wall([0,0], 48, 48*6)); // left up
+        walls.push(new Wall([0,48*9], 48, 48*6)); // left down
+        walls.push(new Wall([720-48,0], 48, 720)); // right blocked
+        return walls;
+      case "LRU":
+        walls.push(new Wall([0,0], 48*6, 48)); // up left
+        walls.push(new Wall([48*9,0], 48*6, 48)); // up right
+        walls.push(new Wall([0,0], 48, 48*6)); // left up
+        walls.push(new Wall([0,48*9], 48, 48*6)); // left down
+        walls.push(new Wall([720-48,0], 48, 48*6)); // right up
+        walls.push(new Wall([720-48,48*9], 48, 48*6)); // right down
+        walls.push(new Wall([0,720-48], 720, 48)); // down blocked
+        return walls;
+      case "DRU":
+        walls.push(new Wall([0,0], 48*6, 48)); // up left
+        walls.push(new Wall([48*9,0], 48*6, 48)); // up right
+        walls.push(new Wall([0,720-48], 48*6, 48)); // down left
+        walls.push(new Wall([48*9,720-48], 48*6, 48)); // down right
+        walls.push(new Wall([720-48,0], 48, 48*6)); // right up
+        walls.push(new Wall([720-48,48*9], 48, 48*6)); // right down
+        walls.push(new Wall([0,0], 48, 720)); // left blocked
+        return walls;
+      case "DLR":
+        walls.push(new Wall([0,720-48], 48*6, 48)); // down left
+        walls.push(new Wall([48*9,720-48], 48*6, 48)); // down right
+        walls.push(new Wall([0,0], 48, 48*6)); // left up
+        walls.push(new Wall([0,48*9], 48, 48*6)); // left down
+        walls.push(new Wall([720-48,0], 48, 48*6)); // right up
+        walls.push(new Wall([720-48,48*9], 48, 48*6)); // right down
+        walls.push(new Wall([0,0], 720, 48)); // up blocked
+        return walls;
+      case "LU":
+        walls.push(new Wall([0,0], 48, 48*6)); // left up
+        walls.push(new Wall([0,48*9], 48, 48*6)); // left down
+        walls.push(new Wall([0,0], 48*6, 48)); // up left
+        walls.push(new Wall([48*9,0], 48*6, 48)); // up right
+        walls.push(new Wall([720-48,0], 48, 720)); // right blocked
+        walls.push(new Wall([0,720-48], 720, 48)); // down blocked
+        return walls;
+      case "DU":
+        walls.push(new Wall([0,0], 48*6, 48)); // up left
+        walls.push(new Wall([48*9,0], 48*6, 48)); // up right
+        walls.push(new Wall([0,720-48], 48*6, 48)); // down left
+        walls.push(new Wall([48*9,720-48], 48*6, 48)); // down right
+        walls.push(new Wall([0,0], 48, 720)); // left blocked
+        walls.push(new Wall([720-48,0], 48, 720)); // right blocked
+        return walls;
+      case "RU":
+        walls.push(new Wall([720-48,0], 48, 48*6)); // right up
+        walls.push(new Wall([720-48,48*9], 48, 48*6)); // right down
+        walls.push(new Wall([0,0], 48*6, 48)); // up left
+        walls.push(new Wall([48*9,0], 48*6, 48)); // up right
+        walls.push(new Wall([0,720-48], 720, 48)); // down blocked
+        walls.push(new Wall([0,0], 48, 720)); // left blocked
+        return walls;
+      case "DL":
+        walls.push(new Wall([0,0], 48, 48*6)); // left up
+        walls.push(new Wall([0,48*9], 48, 48*6)); // left down
+        walls.push(new Wall([0,720-48], 48*6, 48)); // down left
+        walls.push(new Wall([48*9,720-48], 48*6, 48)); // down right
+        walls.push(new Wall([0,0], 720, 48)); // up blocked
+        walls.push(new Wall([720-48,0], 48, 720)); // right blocked
+        return walls;
+      case "DR":
+        walls.push(new Wall([720-48,0], 48, 48*6)); // right up
+        walls.push(new Wall([720-48,48*9], 48, 48*6)); // right down
+        walls.push(new Wall([0,720-48], 48*6, 48)); // down left
+        walls.push(new Wall([48*9,720-48], 48*6, 48)); // down right
+        walls.push(new Wall([0,0], 48, 720)); // left blocked
+        walls.push(new Wall([0,0], 720, 48)); // up blocked
+        return walls;
+      case "LR":
+        walls.push(new Wall([0,0], 48, 48*6)); // left up
+        walls.push(new Wall([0,48*9], 48, 48*6)); // left down
+        walls.push(new Wall([720-48,0], 48, 48*6)); // right up
+        walls.push(new Wall([720-48,48*9], 48, 48*6)); // right down
+        walls.push(new Wall([0,720-48], 720, 48)); // down blocked
+        walls.push(new Wall([0,0], 720, 48)); // up blocked
+        return walls;
+      case "L":
+        walls.push(new Wall([0,0], 48, 48*6)); // left up
+        walls.push(new Wall([0,48*9], 48, 48*6)); // left down
+        walls.push(new Wall([720-48,0], 48, 720)); // right blocked
+        walls.push(new Wall([0,720-48], 720, 48)); // down blocked
+        walls.push(new Wall([0,0], 720, 48)); // up blocked
+        return walls;
+      case "R":
+        walls.push(new Wall([720-48,0], 48, 48*6)); // right up
+        walls.push(new Wall([720-48,48*9], 48, 48*6)); // right down
+        walls.push(new Wall([0,720-48], 720, 48)); // down blocked
+        walls.push(new Wall([0,0], 48, 720)); // left blocked
+        walls.push(new Wall([0,0], 720, 48)); // up blocked
+        return walls;
+      case "U":
+        walls.push(new Wall([0,0], 48*6, 48)); // up left
+        walls.push(new Wall([48*9,0], 48*6, 48)); // up right
+        walls.push(new Wall([720-48,0], 48, 720)); // right blocked
+        walls.push(new Wall([0,720-48], 720, 48)); // down blocked
+        walls.push(new Wall([0,0], 48, 720)); // left blocked
+        return walls;
+      case "D":
+        walls.push(new Wall([0,720-48], 48*6, 48)); // down left
+        walls.push(new Wall([48*9,720-48], 48*6, 48)); // down right
+        walls.push(new Wall([720-48,0], 48, 720)); // right blocked
+        walls.push(new Wall([0,0], 48, 720)); // left blocked
+        walls.push(new Wall([0,0], 720, 48)); // up blocked
+        return walls;
+    }
+  }
+
 }
+
+
 
 export default Room;
