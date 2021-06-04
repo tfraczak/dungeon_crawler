@@ -71,6 +71,9 @@ class Room {
         }
         assignBlockedPaths(this, paths);
         walls = buildRoomWalls(paths);
+        if (!walls) {
+          debugger
+        }
         this.walls.push(...walls);
         Global.ROOMS[`${this.nodePos}`] = this;
       } else { // less than 4 paths available
@@ -86,6 +89,9 @@ class Room {
         }
         assignBlockedPaths(this, newPaths);
         walls = buildRoomWalls(newPaths);
+        if (!walls) {
+          debugger
+        }
         this.walls.push(...walls);
         Global.ROOMS[`${this.nodePos}`] = this;
       }
@@ -95,6 +101,9 @@ class Room {
         randIdx = Math.floor(Math.random()*3);
         this.background = Global.BG_IMGS[`${numPaths}${paths}${randIdx}`];
         walls = buildRoomWalls(paths);
+        if (!walls) {
+          debugger
+        }
         this.walls.push(...walls);
         Global.ROOMS[`${this.nodePos}`] = this;
       } else {
@@ -105,6 +114,9 @@ class Room {
         this.background = Global.BG_IMGS[`${numPaths}${newPaths}${randIdx}`];
         assignBlockedPaths(this, newPaths);
         walls = buildRoomWalls(newPaths);
+        if (!walls) {
+          debugger
+        }
         this.walls.push(...walls);
         Global.ROOMS[`${this.nodePos}`] = this;
       }

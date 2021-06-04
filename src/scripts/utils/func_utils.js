@@ -330,6 +330,34 @@ export const buildRoomWalls = paths => {
       walls.push(new Wall([0,720-48], 720, 48)); // down blocked
       walls.push(new Wall([0,0], 720, 48)); // up blocked
       return walls;
+    case "L":
+      walls.push(new Wall([0,0], 48, 48*6)); // left up
+      walls.push(new Wall([0,48*9], 48, 48*6)); // left down
+      walls.push(new Wall([720-48,0], 48, 720)); // right blocked
+      walls.push(new Wall([0,720-48], 720, 48)); // down blocked
+      walls.push(new Wall([0,0], 720, 48)); // up blocked
+      return walls;
+    case "R":
+      walls.push(new Wall([720-48,0], 48, 48*6)); // right up
+      walls.push(new Wall([720-48,48*9], 48, 48*6)); // right down
+      walls.push(new Wall([0,720-48], 720, 48)); // down blocked
+      walls.push(new Wall([0,0], 48, 720)); // left blocked
+      walls.push(new Wall([0,0], 720, 48)); // up blocked
+      return walls;
+    case "U":
+      walls.push(new Wall([0,0], 48*6, 48)); // up left
+      walls.push(new Wall([48*9,0], 48*6, 48)); // up right
+      walls.push(new Wall([720-48,0], 48, 720)); // right blocked
+      walls.push(new Wall([0,720-48], 720, 48)); // down blocked
+      walls.push(new Wall([0,0], 48, 720)); // left blocked
+      return walls;
+    case "D":
+      walls.push(new Wall([0,720-48], 48*6, 48)); // down left
+      walls.push(new Wall([48*9,720-48], 48*6, 48)); // down right
+      walls.push(new Wall([720-48,0], 48, 720)); // right blocked
+      walls.push(new Wall([0,0], 48, 720)); // left blocked
+      walls.push(new Wall([0,0], 720, 48)); // up blocked
+      return walls;
   }
 };
 
