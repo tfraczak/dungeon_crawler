@@ -23,7 +23,7 @@ export const COIN_WEIGHTS = {
 
 export const WEIGHTS = {
   4: {
-    4: 45,
+    4: 20,
     3: 45,
     2: 9,
     1: 1,

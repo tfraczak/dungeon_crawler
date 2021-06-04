@@ -68,6 +68,7 @@ class Room {
       } else { // less than 4 paths available
         shuffle(pathsArr); // randomize the path choices
         newPaths.push(entryDir); // MUST ALWAYS have the path you enter from
+        numPaths--;
         for (let i = 0; i < numPaths; i++) { newPaths.push(pathsArr.pop()) }
         newPaths = newPaths.sort().join("");
         assignBlockedPaths(this, newPaths);

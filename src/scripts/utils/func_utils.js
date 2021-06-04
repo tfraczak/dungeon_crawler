@@ -136,6 +136,8 @@ export const randNumPaths = max => {
     paths.push(1);
   }
 
+  shuffle(paths);
+
   return paths[Math.floor(Math.random()*paths.length)];
   
 };
@@ -343,7 +345,7 @@ const randNumCoins = () => {
 };
 
 export const randCoinSound = () => {
-  const i = Math.floor(Math.random() * 10);
+  const i = Math.floor(Math.random() * 9);
   return document.getElementById(`coin${i}`);
 }
 
