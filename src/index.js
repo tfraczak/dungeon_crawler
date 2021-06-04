@@ -2,7 +2,8 @@ import "./styles/index.scss";
 import installListeners from "./scripts/utils/install_listeners";
 import * as Global from "./scripts/utils/global_vars";
 import { newGame } from "./scripts/utils/func_utils";
-import Entity from "./scripts/entity";
+import coinImg from "./assets/images/coin/coin.png";
+import playerImg from "./assets/images/rogue/rogue_walk.png";
 
 
 
@@ -14,15 +15,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const ctx = canvas.getContext("2d");
 
   installListeners(Global.KEYS);
-  
+  // let coinImg, playerImg;
+  // if (!coinImg) coinImg = "../src/assets/images/coin/coin.png";
+  // if (!playerImg) playerImg = "../src/assets/images/rogue/rogue_walk.png";
   let coinSprite = new Image();
-  coinSprite.src = "../src/assets/images/coin/coin.png";
+  coinSprite.src = coinImg;
   coinSprite.onload = () => {
     Global.SPRITES.coin = coinSprite;
   };
-  let playerSprite = new Image();
-  playerSprite.src = "../src/assets/images/rogue/rogue_walk.png";
   
+  for (let path of Global.ALL_PATHS) {
+    for (let i = 0; i < 3; i++) {
+      const background = new Image();
+      background.src = `../src/assets/images/map_imgs/${path.length}/${path}/map${i}.png`;
+      background.onload = () => {
+        Global.BG_IMGS[`${path.length}${path}${i}`] = background;
+        // Global.GB_IMGS[4]["DLRU"][0] = background
+      };
+    }
+  }
+
+  let playerSprite = new Image();
+  playerSprite.src = playerImg;
   
   playerSprite.onload = () => {
     Global.GAME_OPTIONS["ctx"] = ctx;

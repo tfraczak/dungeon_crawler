@@ -14,6 +14,7 @@ class Room {
   constructor(neighbor) {
     this.coins = generateCoins();
     this.walls = [];
+    let randIdx;
     this.neighbors = {
       up: undefined,
       down: undefined,
@@ -63,21 +64,30 @@ class Room {
       pathsArr = pathsArr.filter(path => path !== entryDir); // remove entryDir from paths
       numPaths = randNumPaths(paths.length); // weighted random number generator, prefers more paths
       if (numPaths === paths.length) { // if all 4 paths are available
+        randIdx = Math.floor(Math.random()*numPaths);
+        // this.background = Global.BG_IMGS[`${numPaths}${paths}${randIdx}`];
+        assignBlockedPaths(this, paths);
         walls = buildRoomWalls(paths);
         this.walls.push(...walls);
+        Global.ROOMS[`${this.nodePos}`] = this;
       } else { // less than 4 paths available
         shuffle(pathsArr); // randomize the path choices
         newPaths.push(entryDir); // MUST ALWAYS have the path you enter from
         numPaths--;
         for (let i = 0; i < numPaths; i++) { newPaths.push(pathsArr.pop()) }
         newPaths = newPaths.sort().join("");
+        randIdx = Math.floor(Math.random()*numPaths);
+        // this.background = Global.BG_IMGS[`${numPaths}${newPaths}${randIdx}`];
         assignBlockedPaths(this, newPaths);
         walls = buildRoomWalls(newPaths);
         this.walls.push(...walls);
+        Global.ROOMS[`${this.nodePos}`] = this;
       }
     } else {
       numPaths = randNumPaths(paths.length);
       if (numPaths === paths.length) {
+        randIdx = Math.floor(Math.random()*numPaths);
+        // this.background = Global.BG_IMGS[`${numPaths}${paths}${randIdx}`];
         walls = buildRoomWalls(paths);
         this.walls.push(...walls);
         Global.ROOMS[`${this.nodePos}`] = this;
@@ -85,6 +95,8 @@ class Room {
         shuffle(pathsArr);
         for (let i = 0; i < numPaths; i++) { newPaths.push(pathsArr.pop()) }
         newPaths = newPaths.sort().join("");
+        randIdx = Math.floor(Math.random()*numPaths);
+        // this.background = Global.BG_IMGS[`${numPaths}${newPaths}${randIdx}`];
         assignBlockedPaths(this, newPaths);
         walls = buildRoomWalls(newPaths);
         this.walls.push(...walls);
@@ -95,6 +107,9 @@ class Room {
     Object.values(this.coins).forEach(coin => {
       this.animatedObjects[`coin-${coin.pos}`] = coin;
     });
+
+    
+
   }
 
   animate() {
@@ -115,6 +130,7 @@ class Room {
 
 
   draw(ctx) {
+    // ctx.drawImage(this.background, 0, 0);
     this.walls.forEach(wall => wall.draw(ctx));
     Object.values(this.animatedObjects).forEach(object => object.draw(ctx));
     ctx.fillStyle = "#333333";

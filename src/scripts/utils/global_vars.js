@@ -13,6 +13,7 @@ export const ROOMS = {};
 
 export const SESSION = {};
 export const SPRITES = {};
+export const BG_IMGS = {};
 
 export const COIN_WEIGHTS = {
   3: 10,
@@ -21,9 +22,27 @@ export const COIN_WEIGHTS = {
   0: 20, 
 };
 
+export const ALL_PATHS = [
+  "DLRU",
+  "DLR",
+  "DLU",
+  "LRU",
+  "DRU",
+  "DL",
+  "DR",
+  "DU",
+  "LR",
+  "LU",
+  "RU",
+  "D",
+  "L",
+  "R",
+  "U",
+];
+
 export const WEIGHTS = {
   4: {
-    4: 20,
+    4: 45,
     3: 45,
     2: 9,
     1: 1,
