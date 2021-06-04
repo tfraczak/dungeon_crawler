@@ -15,9 +15,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const ctx = canvas.getContext("2d");
 
   installListeners(Global.KEYS);
-  // let coinImg, playerImg;
-  // if (!coinImg) coinImg = "../src/assets/images/coin/coin.png";
-  // if (!playerImg) playerImg = "../src/assets/images/rogue/rogue_walk.png";
+
+  
+
   let coinSprite = new Image();
   coinSprite.src = coinImg;
   coinSprite.onload = () => {
@@ -25,12 +25,14 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   
   for (let path of Global.ALL_PATHS) {
+    path = path.split("").sort().join("");
     for (let i = 0; i < 3; i++) {
       const background = new Image();
-      background.src = `../src/assets/images/map_imgs/${path.length}/${path}/map${i}.png`;
+      background.src = `./src/assets/images/map_imgs/${path.length}/${path}/map${i}.png`;
+      
       background.onload = () => {
         Global.BG_IMGS[`${path.length}${path}${i}`] = background;
-        // Global.GB_IMGS[4]["DLRU"][0] = background
+        // Global.GB_IMGS["4DLRU0"] = background
       };
     }
   }
@@ -39,9 +41,12 @@ document.addEventListener("DOMContentLoaded", () => {
   playerSprite.src = playerImg;
   
   playerSprite.onload = () => {
-    Global.GAME_OPTIONS["ctx"] = ctx;
+    setTimeout(() => {
+      Global.GAME_OPTIONS["ctx"] = ctx;
     Global.GAME_OPTIONS["playerSprite"] = playerSprite;
     newGame();
+    },1000);
+    
   }
 
 });
