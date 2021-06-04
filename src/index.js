@@ -2,8 +2,6 @@ import "./styles/index.scss";
 import installListeners from "./scripts/utils/install_listeners";
 import * as Global from "./scripts/utils/global_vars";
 import { newGame } from "./scripts/utils/func_utils";
-import coinImg from "./assets/images/coin/coin.png";
-import playerImg from "./assets/images/rogue/rogue_walk.png";
 
 
 
@@ -19,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
 
   let coinSprite = new Image();
-  coinSprite.src = coinImg;
+  coinSprite.src = "./dist/assets/images/coin/coin.png";
   coinSprite.onload = () => {
     Global.SPRITES.coin = coinSprite;
   };
@@ -28,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     path = path.split("").sort().join("");
     for (let i = 0; i < 3; i++) {
       const background = new Image();
-      background.src = `./src/assets/images/map_imgs/${path.length}/${path}/map${i}.png`;
+      background.src = `./dist/assets/images/map_imgs/${path.length}/${path}/map${i}.png`;
       
       background.onload = () => {
         Global.BG_IMGS[`${path.length}${path}${i}`] = background;
@@ -38,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let playerSprite = new Image();
-  playerSprite.src = playerImg;
+  playerSprite.src = "./dist/assets/images/rogue/rogue_walk.png";
   
   playerSprite.onload = () => {
     setTimeout(() => {
