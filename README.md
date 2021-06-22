@@ -38,6 +38,8 @@ Technologies employed
   - Finally, the last, and most important technology of this project, canvas. This API allows for pure JS-based games in the browser. Nothing more, or less, is needed to easily execute all of our game-designing dreams. It incorporates JavaScript's vanilla DOM manipulation, as well as its own library, to render to a single DOM element, smoothly animated images that could rival some modern day games.
 
 Feature Highlights
+[Dungeon Crawler 3000](https://tfraczak.github.io/dungeon_crawler/) implements a randomly generated graph node system, to generate and keep track of rooms within the game. Each play through is different from the last. Can you find all of the extremely rare single path rooms? 
+<img src="https://github.com/tfraczak/dungeon_crawler/blob/main/design_docs/starting_new_game.gif?raw=true" />d
 
 
 Timeline
