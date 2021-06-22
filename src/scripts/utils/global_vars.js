@@ -19,7 +19,7 @@ export const COIN_WEIGHTS = {
   3: 2,
   2: 8,
   1: 30,
-  0: 75, 
+  0: 50, 
 };
 
 export const ALL_PATHS = [

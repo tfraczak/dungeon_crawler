@@ -1,6 +1,6 @@
-# **Dungeon Crawler 3000**
+# **[Dungeon Crawler 3000](https://tfraczak.github.io/dungeon_crawler/)**
 
-*Dungeon Crawler 3000 is a JavaScript browser game where a player can explore a randomly generated dungeon.*
+*[Dungeon Crawler 3000](https://tfraczak.github.io/dungeon_crawler/) is a JavaScript browser game where a player can explore a randomly generated dungeon.*
 
 ---
 
@@ -8,14 +8,17 @@
 
 In Dungeon Crawler 3000, players will be able to:
 
-- Move their character around on the screen.
-- Animate sprite's movement.
-- Move from one room node to another.
-- Interact with entities (ex. items such as coins, potions... etc.).
-- BONUS - Interactive enemies with their own pathfinding logic.
-- BONUS - Battle logic for the player to attack enemies.
-- BONUS - Implement different classes for the player to choose from the start.
-- BONUS - Implement a simple, yet complex, character attribute system that will affect how the player's character performs in the game.
+🟢 Move their character around on the screen.  
+🟢 Animate sprite's movement.  
+🟢 Move from one randomized room node to another.  
+🟢 Interact with entities (ex. items such as coins, potions... etc.).  
+  - 🟢 First implementation will be coins.  
+
+🟢 Interactive enemies with their own pathfinding logic.  
+🔴 BONUS - Additional items, such as health potions or stamina regeneratives.  
+🔴 BONUS - Battle logic for the player to attack enemies.  
+🔴 BONUS - Implement different classes for the player to choose from the start.  
+🔴 BONUS - Implement a simple, yet complex, character attribute system that will affect how the player's character performs in the game.  
 
 In addition, this project will include:
 
@@ -26,13 +29,16 @@ In addition, this project will include:
 Technologies employed
 
 - JavaScript
+  - JavaScript is the modern web's workhorse when it comes to driving almost anything on the internet nowadays. One of the appealing aspects of the language is the versatility of it, especially with built-in DOM manipulation, and context setting functions (bind, call, apply).
 - NodeJS for installing packages such as webpack, babel, css/scss loaders
-- HTML/CSS/SCSS
+  - In this project, Node was only used for installing libraries (like webpack, css/scss loader, ES translators... etc) used for packaging the final product.
+- HTML/CSS/Sass
+  - Another important family of coding languages critical to how we visualize and interact with modern webpages. HTML has the building blocks for creating skeletons for webpages. CSS executes all of our aesthetic dreams and designs. And finally, Sass just makes CSS a whole lot easier with it being a pre-processing language for CSS with added features that facilitate ease of styling.
 - Canvas
+  - Finally, the last, and most important technology of this project, canvas. This API allows for pure JS-based games in the browser. Nothing more, or less, is needed to easily execute all of our game-designing dreams. It incorporates JavaScript's vanilla DOM manipulation, as well as its own library, to render to a single DOM element, smoothly animated images that could rival some modern day games.
 
-Wireframe
+Feature Highlights
 
-<img src="https://user-images.githubusercontent.com/71852664/120353142-76146900-c2cf-11eb-9197-06c645838c33.png" />
 
 Timeline
 
