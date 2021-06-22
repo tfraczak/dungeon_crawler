@@ -5,10 +5,13 @@ import { roomChange } from "./utils/func_utils";
 class Player extends Entity {
   constructor(pos,width,height,spritePalette) {
     super(pos,width,height,spritePalette);
-    this.speed = 1;
+    this.speed = 1.25;
     this.normalizedSpeed = parseFloat(this.speed) / Math.sqrt(2);
     this.pace = 24/this.speed;
     this.speedModifier = 1;
+    this.stamina = 1000;
+    this.invulnerable = 0;
+    this.hp = 20;
     this.stride = {
       up: {
         stepCount: 0,
@@ -66,6 +69,33 @@ class Player extends Entity {
     }
   }
 
+  wallCheck(walls) {
+      for(let wall of walls) { if (this.collidedOnSide("top", wall)) break }
+      if (this.collisions.top) {
+        this.pos[1] = this.collisions.top - 32;
+      }
+
+      for(let wall of walls) { if (this.collidedOnSide("bottom", wall)) break }
+      if (this.collisions.bottom) {
+        this.pos[1] = this.collisions.bottom - 48;
+      }
+
+      for(let wall of walls) { if (this.collidedOnSide("left", wall)) break }
+      if (this.collisions.left) {
+        this.pos[0] = this.collisions.left - 12;
+      }
+
+      for(let wall of walls) { if (this.collidedOnSide("right", wall)) break }
+      if (this.collisions.right) {
+        this.pos[0] = this.collisions.right - 36;
+      }
+
+  }
+
+  hit() {
+    this.invulnerable = 75;
+  }
+
   move(walls) {
     const [
       up,
@@ -74,67 +104,45 @@ class Player extends Entity {
       right,
       shift
     ] = [
-      Global.KEYS[87],
-      Global.KEYS[83],
-      Global.KEYS[65],
-      Global.KEYS[68],
-      Global.KEYS[16],
+      Global.KEYS["w"],
+      Global.KEYS["s"],
+      Global.KEYS["a"],
+      Global.KEYS["d"],
+      Global.KEYS["Shift"],
     ];
-    if (shift) {
-      this.speedModifier = 2;
+    if (shift && this.stamina > 0) {
+      this.speedModifier = 1.5;
+      this.stamina -= 4;
     } else {
       this.speedModifier = 1;
     }
 
-    
+    if (this.stamina < 0) this.stamina = 0;
+    if (!shift && this.stamina < 1000) this.stamina += 1;
+    if (this.invulnerable) this.invulnerable--;
+    if (this.invulverable < 0) this.invulnerable = 0;
+
+    this.wallCheck(walls);
 
     // W key movements and sprite direction
     if (up) {
-      if (left || right) {
-        this.colBox.pos[1] += -this.normalizedSpeed * this.speedModifier;
+      if (left || right && !this.collisions.top) {
+        this.pos[1] += -this.normalizedSpeed * this.speedModifier;
       } else {
-        this.colBox.pos[1] += -this.speed * this.speedModifier;
-      }
-      this.updateSides();
-      for(let wall of walls) { if (this.collidedOnSide("top", wall)) break }
-      if (this.collisions.top) {
-        this.pos[1] = this.collisions.top - (this.height-this.colBox.height);
-      } else {
-        if (left || right && !this.collisions.top) {
-          this.pos[1] += -this.normalizedSpeed * this.speedModifier;
-          this.updateSides();
-        } else {
-          this.pos[1] += -this.speed * this.speedModifier;
-          this.updateSides();
-        }
+        this.pos[1] += -this.speed * this.speedModifier;
       }
       this.drawOptions.palY = this.stride.up.palY;
       if (!left && !right) {
         this.drawOptions.palX = this.stridePalettePos("up");
-        
       }
     }
 
     // S key movements and sprite direction
     if (down) {
       if (left || right) {
-        this.colBox.pos[1] += this.normalizedSpeed * this.speedModifier;
+        this.pos[1] += this.normalizedSpeed * this.speedModifier;
       } else {
-        this.colBox.pos[1] += this.speed * this.speedModifier;
-      }
-      this.updateSides();
-      for(let wall of walls) { if (this.collidedOnSide("bottom", wall)) break }
-      if (this.collisions.bottom) {
-        this.colBox.pos[1] = this.collisions.bottom;
-        this.pos[1] = this.collisions.bottom-48;
-      } else {
-        if (left || right) {
-          this.pos[1] += this.normalizedSpeed * this.speedModifier;
-          this.updateSides();
-        } else {
-          this.pos[1] += this.speed * this.speedModifier;
-          this.updateSides();
-        }
+        this.pos[1] += this.speed * this.speedModifier;
       }
       this.drawOptions.palY = this.stride.down.palY;
       if (!left && !right) {
@@ -144,23 +152,10 @@ class Player extends Entity {
 
     // A key movement
     if (left) {
-      if (up || down) {
-        this.colBox.pos[0] += -this.normalizedSpeed * this.speedModifier;
+      if (up || down && !this.collisions.left) {
+        this.pos[0] += -this.normalizedSpeed * this.speedModifier;
       } else {
-        this.colBox.pos[0] += -this.speed * this.speedModifier;
-      }
-      this.updateSides();
-      for(let wall of walls) { if (this.collidedOnSide("left", wall)) break }
-      if (this.collisions.left) {
-        this.colBox.pos[0] = this.collisions.left;
-      } else {
-        if (up || down && !this.collisions.left) {
-          this.pos[0] += -this.normalizedSpeed * this.speedModifier;
-
-        } else {
-          this.pos[0] += -this.speed * this.speedModifier;
-
-        }
+        this.pos[0] += -this.speed * this.speedModifier;
       }
       this.drawOptions.palY = this.stride.left.palY;
       this.drawOptions.palX = this.stridePalettePos("left");
@@ -169,23 +164,9 @@ class Player extends Entity {
     // D key movement
     if (right) {
       if (up || down) {
-        this.colBox.pos[0] += this.normalizedSpeed * this.speedModifier;
+        this.pos[0] += this.normalizedSpeed * this.speedModifier;
       } else {
-        this.colBox.pos[0] += this.speed * this.speedModifier;
-      }
-      this.updateSides();
-      for(let wall of walls) { if (this.collidedOnSide("right", wall)) break }
-      if (this.collisions.right) {
-        this.colBox.pos[0] = this.collisions.right;
-        this.pos[0] = this.collisions.right-(this.colBox.width + this.colBox.width/2);
-      } else {
-        if (up || down) {
-          this.pos[0] += this.normalizedSpeed * this.speedModifier;
-          this.updateSides();
-        } else {
-          this.pos[0] += this.speed * this.speedModifier;
-          this.updateSides();
-        }
+        this.pos[0] += this.speed * this.speedModifier;
       }
       this.drawOptions.palY = this.stride.right.palY;
       this.drawOptions.palX = this.stridePalettePos("right");
@@ -215,6 +196,8 @@ class Player extends Entity {
       this.newRoomPos(exitDir);
       roomChange(exitDir, Global.SESSION.game.room);
     }
+
+    
 
     this.updateSides();
     this.drawOptions.x = this.pos[0];

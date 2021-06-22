@@ -9,17 +9,17 @@ export const KEYS = {
   68: false, // D
   16: false, // L-Shift
 };
-export const ROOMS = {};
+export const FONT = {};
 
 export const SESSION = {};
 export const SPRITES = {};
 export const BG_IMGS = {};
 
 export const COIN_WEIGHTS = {
-  3: 10,
-  2: 20,
+  3: 2,
+  2: 8,
   1: 30,
-  0: 20, 
+  0: 75, 
 };
 
 export const ALL_PATHS = [
@@ -42,19 +42,19 @@ export const ALL_PATHS = [
 
 export const WEIGHTS = {
   4: {
-    4: 45,
+    4: 55,
     3: 45,
     2: 9,
     1: 1,
   },
   3: {
-    3: 70,
-    2: 25,
-    1: 5,
+    3: 80,
+    2: 20,
+    1: 3,
   },
   2: {
-    2: 60,
-    1: 40,
+    2: 90,
+    1: 10,
   },
 };
 

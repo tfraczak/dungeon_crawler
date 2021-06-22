@@ -26,6 +26,7 @@ class Entity {
     this.bottom = this.colBox.bottom;
     this.left = this.colBox.left;
     this.right = this.colBox.right;
+    this.center = this.colBox.center;
     this.collisions = {
       top: false,
       bottom: false,
@@ -46,6 +47,7 @@ class Entity {
 
   updateSides() {
     this.colBox.updateSides();
+    this.center = this.colBox.center;
     this.top = this.colBox.top;
     this.bottom = this.colBox.bottom;
     this.left = this.colBox.left;

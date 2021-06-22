@@ -1,6 +1,7 @@
 import ColBox from "./collision_box";
 import { collidedWithSide, randCoinSound } from "./utils/func_utils";
 import * as Global from "./utils/global_vars";
+// import Entity from "./entity";
 
 class Entity {
   constructor(pos,width,height,spritePalette) {

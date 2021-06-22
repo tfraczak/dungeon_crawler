@@ -21,18 +21,64 @@
         <div id="buttons">
           <div class="restart wrapper">
             <i id="restart-pointer" class="fas fa-hand-pointer"></i>
-            <button id="restart" class="button">Restart</button>
+            <button disabled id="restart" class="button">Restart</button>
           </div>
           <div class="how-to wrapper">
             <i id="how-to-pointer" class="fas fa-hand-pointer"></i>
             <button id="how-to" class="button">How to play?
-              <ul id="dropdown-menu"> 
+              <ul id="dropdown-menu">
+                <li class="menu-category">Objective</li>
+                  <li class="explanation">
+                    <p>You find yourself in a dank, smelly dungeon.</p>
+                    <p>However, you chose to be here!</p>
+                    <p>You heard of great riches that lie further in the dungeon.</p>
+                    <p>20 gold coins should be enough to last a life time.</p>
+                    <p>Venture forth! But be careful...</p>
+                    <p>Danger lurks ahead...</p>
+                  </li>
                 <li class="menu-category">Controls</li>
                   <li class="control">W - up</li>
                   <li class="control">S - down</li>
                   <li class="control">A - left</li>
                   <li class="control">D - right</li>
                   <li class="control">LShift - sprint</li>
+                <li class="menu-category">HUD</li>
+                  <li class="ui hp">
+                    <h3>HP</h3>
+                    <div class="color-wrapper">
+                      <div class="color green"></div>
+                      <div class="color red"></div>
+                    </div>
+                    <h6>"Your GP or your HP!" ~Black Mage</h6>
+                    <p>You have some HP, don't go losing it all in one place.</p>
+                    <p>Once this reaches 0, it's <span class="game-over">GAME OVER</span>.</p>
+                    <p>You lose HP by being attacked by enemies.</p>
+                  </li>
+                  <li class="ui stamina">
+                    <h3>Invulnerability</h3>
+                    <div class="color blue"></div>
+                    <p>It's not what you're thinking...</p>
+                    <p>After being hit by enemy, you have a <em>VERY</em> short</p>
+                    <p>period of time where you are invulnerable.</p>
+                    <p>Otherwise, it wouldn't be fair... to you...</p>
+                  </li>
+                  <li class="ui stamina">
+                    <h3>Stamina</h3>
+                    <div class="color yellow"></div>
+                    <p>You also have some stamina for sprinting!</p>
+                    <p>Use it wisely, it doesn't regenerate that quickly...</p>
+                  </li>
+                  <li class="ui "></li>
+                <li class="menu-category">About</li>
+                  <li class="explanation">
+                    <p>Each room is randomly generated for your enjoyment.</p>
+                    <p>This means that each playthrough is different than the last.</p>
+                    <p>How many coins can you collect??</p>
+                    <p>Check out my other projects: 
+                      <a href="https://accord-app.herokuap.com/#/">Accord</a> | 
+                      <a href="https://postcard-triplog.herokuap.com/#/">Postcard</a>
+                    </p>
+                  </li>
               </ul>
             </button>
           </div>
@@ -43,6 +89,7 @@
           <ul>
             <li><a href="https://www.github.com/tfraczak" target="_blank"><i class="fab fa-github"></i></a></li>
             <li><a href="https://www.linkedin.com/in/tfraczak/" target="_blank"><i class="fab fa-linkedin-in"></i></a></li>
+            <li><a href="https://angel.co/u/tfraczak/" target="_blank"><i class="fab fa-angellist"></i></a></li>
           </ul>
         </nav>
       </section>

@@ -1,23 +1,18 @@
 import * as Global from "./global_vars";
-import Wall from "../wall";
 import Room from "../room";
 import Game from "../game";
-import Entity from "../entity";
-import Coin from "../coin";
 
 
 export const newGame = () => {
   if (Global.SESSION.game) {
-    Global.SESSION.game.stop();
+    Global.SESSION.game.requestStop = true;
     delete Global.SESSION["game"];
     delete Global.SESSION["player"];
     delete Global.SESSION["coinCount"];
-    for (let room in Global.ROOMS) {
-      delete Global.ROOMS[`${room.nodePos}`];
-    };
+    delete Global.SESSION["rooms"];
   }
   new Game(...Object.values(Global.GAME_OPTIONS));
-}
+};
 
 export const collidedWithSide = (side, thisSide, otherSide) => {
   let collided = false;
@@ -108,8 +103,8 @@ export const roomChange = (exitDir, currRoom) => {
       nextNodePos[0] += 1;
       break;
   }
-  if (Global.ROOMS[`${nextNodePos}`]) {
-    Global.SESSION.game.room = Global.ROOMS[`${nextNodePos}`];
+  if (Global.SESSION.rooms[`${nextNodePos}`]) {
+    Global.SESSION.game.room = Global.SESSION.rooms[`${nextNodePos}`];
   } else {
     const neighbor = { [exitDir]: currRoom };
     Global.SESSION.game.room = new Room(neighbor);
@@ -156,36 +151,36 @@ export const addValidNeighbors = room => {
   right[0] += 1;
   right = right.toString();
   if (
-    Global.ROOMS[up] && 
-    (Global.ROOMS[up].neighbors.down !== "X") && 
+    Global.SESSION.rooms[up] && 
+    (Global.SESSION.rooms[up].neighbors.down !== "X") && 
     !room.neighbors.up
   ) {
-    room.neighbors.up = Global.ROOMS[up];
-    Global.ROOMS[up].neighbors.down = room;
+    room.neighbors.up = Global.SESSION.rooms[up];
+    Global.SESSION.rooms[up].neighbors.down = room;
   }
   if (
-    Global.ROOMS[down] && 
-    (Global.ROOMS[down].neighbors.up !== "X") && 
+    Global.SESSION.rooms[down] && 
+    (Global.SESSION.rooms[down].neighbors.up !== "X") && 
     !room.neighbors.down
   ) {
-    room.neighbors.down = Global.ROOMS[down];
-    Global.ROOMS[down].neighbors.up = room;
+    room.neighbors.down = Global.SESSION.rooms[down];
+    Global.SESSION.rooms[down].neighbors.up = room;
   }
   if (
-    Global.ROOMS[left] && 
-    (Global.ROOMS[left].neighbors.right !== "X") && 
+    Global.SESSION.rooms[left] && 
+    (Global.SESSION.rooms[left].neighbors.right !== "X") && 
     !room.neighbors.left
   ) {
-    room.neighbors.left = Global.ROOMS[left];
-    Global.ROOMS[left].neighbors.right = room;
+    room.neighbors.left = Global.SESSION.rooms[left];
+    Global.SESSION.rooms[left].neighbors.right = room;
   }
   if (
-    Global.ROOMS[right] && 
-    (Global.ROOMS[right].neighbors.left !== "X") && 
+    Global.SESSION.rooms[right] && 
+    (Global.SESSION.rooms[right].neighbors.left !== "X") && 
     !room.neighbors.right
   ) {
-    room.neighbors.right = Global.ROOMS[right];
-    Global.ROOMS[right].neighbors.left = room;
+    room.neighbors.right = Global.SESSION.rooms[right];
+    Global.SESSION.rooms[right].neighbors.left = room;
   }
 };
 
@@ -203,16 +198,16 @@ export const buildPaths = room => {
   let right = [...room.nodePos];
   right[0] += 1;
   right = right.toString();
-  if (!Global.ROOMS[up] || (Global.ROOMS[up].neighbors.down !== "X")) {
+  if (!Global.SESSION.rooms[up] || (Global.SESSION.rooms[up].neighbors.down !== "X")) {
     paths.push("U");
   }
-  if (!Global.ROOMS[down] || (Global.ROOMS[down].neighbors.up !== "X")) {
+  if (!Global.SESSION.rooms[down] || (Global.SESSION.rooms[down].neighbors.up !== "X")) {
     paths.push("D");
   }
-  if (!Global.ROOMS[left] || (Global.ROOMS[left].neighbors.right !== "X")) {
+  if (!Global.SESSION.rooms[left] || (Global.SESSION.rooms[left].neighbors.right !== "X")) {
     paths.push("L");
   }
-  if (!Global.ROOMS[right] || (Global.ROOMS[right].neighbors.left !== "X")) {
+  if (!Global.SESSION.rooms[right] || (Global.SESSION.rooms[right].neighbors.left !== "X")) {
     paths.push("R");
   }
   return paths.sort().join("");
@@ -233,7 +228,7 @@ export const assignBlockedPaths = (room, paths) => {
   }
 };
 
-const randNumCoins = () => {
+export const randNumCoins = () => {
   let weightedNumCoins = [];
   for (let i = 0; i < Global.COIN_WEIGHTS[3]; i++) { weightedNumCoins.push(3) }
   for (let i = 0; i < Global.COIN_WEIGHTS[2]; i++) { weightedNumCoins.push(2) }
@@ -247,21 +242,6 @@ const randNumCoins = () => {
 export const randCoinSound = () => {
   const i = Math.floor(Math.random() * 9);
   return document.getElementById(`coin${i}`);
-}
-
-export const generateCoins = () => {
-  const numCoins = randNumCoins();
-  let coins = {};
-  for (let i = 0; i < numCoins; i++) {
-    let x = Math.floor(Math.random()*592) + 64;
-    while (x > 336 && x < 384) x = Math.floor(Math.random()*592) + 64;
-    let y = Math.floor(Math.random()*592) + 64;
-    while (y > 336 && y < 384) y = Math.floor(Math.random()*592) + 64;
-    let pos = [x,y];
-    const coin = new Coin(pos, 16,16,Global.SPRITES.coin);
-    coins[`${coin.pos}`] = coin;
-  }
-  return coins;
 };
 
 export const shuffle = arr => {
@@ -269,4 +249,44 @@ export const shuffle = arr => {
     let j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
+};
+
+export const normalizedMovement = (myself, entity, chasingPlayer) => { 
+  const mx = myself.center[0];
+  const my = myself.center[1];
+  const ex = entity.center[0];
+  const ey = entity.center[1];
+  let dx = mx - ex;
+  let dy = my - ey;
+  
+  if (!chasingPlayer) {
+    const randAngle = Math.random() * 2 * Math.PI;
+    dx = Math.cos(randAngle) * myself.speed;
+    dy = Math.sin(randAngle) * myself.speed;
+  }
+  
+  const angle = Math.atan(dy/dx);
+  const ny = Math.sin(angle) * myself.speed;
+  const nx = Math.cos(angle) * myself.speed;
+
+  return {
+    dx,
+    dy,
+    nx,
+    ny,
+    up: (dy > 0) && (Math.abs(dy) > Math.abs(dx)),
+    down: (dy < 0) && (Math.abs(dy) > Math.abs(dx)),
+    left: (dx > 0) && (Math.abs(dx) > Math.abs(dy)),
+    right: (dx < 0) && (Math.abs(dx) > Math.abs(dy)),
+  };
+};
+
+export const distanceToPlayer = (myself, player) => {
+  const mx = myself.center[0];
+  const my = myself.center[1];
+  const px = player.center[0];
+  const py = player.center[1];
+  let dx = px - mx;
+  let dy = py - my;
+  return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 };

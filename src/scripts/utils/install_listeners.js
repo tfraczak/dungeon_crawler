@@ -4,19 +4,22 @@ import { newGame } from "../utils/func_utils";
 
 export default (KEYS) => {
   document.addEventListener("keydown", e => {
-    if (e.keyCode === 87 && !KEYS[87]) KEYS[e.keyCode] = true;
-    if (e.keyCode === 65 && !KEYS[65]) KEYS[e.keyCode] = true;
-    if (e.keyCode === 83 && !KEYS[83]) KEYS[e.keyCode] = true;
-    if (e.keyCode === 68 && !KEYS[68]) KEYS[e.keyCode] = true;
-    if (e.keyCode === 16 && !KEYS[16]) KEYS[e.keyCode] = true;
+    debugger
+    if (e.key.toLowerCase() === "w" && !KEYS["w"]) KEYS[e.key.toLowerCase()] = true;
+    if (e.key.toLowerCase() === "a" && !KEYS["a"]) KEYS[e.key.toLowerCase()] = true;
+    if (e.key.toLowerCase() === "s" && !KEYS["s"]) KEYS[e.key.toLowerCase()] = true;
+    if (e.key.toLowerCase() === "d" && !KEYS["d"]) KEYS[e.key.toLowerCase()] = true;
+    if (e.key === "Shift" && !KEYS["Shift"]) KEYS[e.key] = true;
+    if (e.key === "Enter" && !KEYS["Enter"]) KEYS[e.key] = true;
 
   });
   document.addEventListener("keyup", e => {
-    if (e.keyCode === 87 && KEYS[87]) KEYS[e.keyCode] = false;
-    if (e.keyCode === 65 && KEYS[65]) KEYS[e.keyCode] = false;
-    if (e.keyCode === 83 && KEYS[83]) KEYS[e.keyCode] = false;
-    if (e.keyCode === 68 && KEYS[68]) KEYS[e.keyCode] = false;
-    if (e.keyCode === 16 && KEYS[16]) KEYS[e.keyCode] = false;
+    if (e.key.toLowerCase() === "w" && KEYS["w"]) KEYS[e.key.toLowerCase()] = false;
+    if (e.key.toLowerCase() === "a" && KEYS["a"]) KEYS[e.key.toLowerCase()] = false;
+    if (e.key.toLowerCase() === "s" && KEYS["s"]) KEYS[e.key.toLowerCase()] = false;
+    if (e.key.toLowerCase() === "d" && KEYS["d"]) KEYS[e.key.toLowerCase()] = false;
+    if (e.key === "Shift" && KEYS["Shift"]) KEYS[e.key] = false;
+    if (e.key === "Enter" && KEYS["Enter"]) KEYS[e.key] = false;
   });
 
   const howTo = document.getElementById("how-to");

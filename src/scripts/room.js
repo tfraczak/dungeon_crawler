@@ -1,5 +1,7 @@
 import * as Global from "./utils/global_vars";
 import Wall from "./wall";
+import Coin from "./coin";
+import Enemy from "./enemy";
 
 import {
   randNumPaths,
@@ -7,12 +9,13 @@ import {
   buildPaths,
   shuffle,
   assignBlockedPaths,
-  generateCoins,
+  randNumCoins
 } from "./utils/func_utils";
+
 
 class Room {
   constructor(neighbor) {
-    this.coins = generateCoins();
+    this.generateCoins();
     this.walls = [];
     let randIdx;
     this.neighbors = {
@@ -52,7 +55,7 @@ class Room {
       this.nodePos = [0,0];
     }
     
-    Global.ROOMS[`${this.nodePos}`] = this;
+    Global.SESSION.rooms[`${this.nodePos}`] = this;
 
     addValidNeighbors(this);
     let walls, numPaths, randPaths;
@@ -69,7 +72,7 @@ class Room {
         assignBlockedPaths(this, paths);
         walls = this.buildRoomWalls(paths);
         this.walls.push(...walls);
-        Global.ROOMS[`${this.nodePos}`] = this;
+        Global.SESSION.rooms[`${this.nodePos}`] = this;
       } else { // less than 4 paths available
         shuffle(pathsArr); // randomize the path choices
         newPaths.push(entryDir); // MUST ALWAYS have the path you enter from
@@ -84,7 +87,7 @@ class Room {
         assignBlockedPaths(this, newPaths);
         walls = this.buildRoomWalls(newPaths);
         this.walls.push(...walls);
-        Global.ROOMS[`${this.nodePos}`] = this;
+        Global.SESSION.rooms[`${this.nodePos}`] = this;
       }
     } else {
       numPaths = randNumPaths(paths.length);
@@ -93,7 +96,7 @@ class Room {
         this.background = Global.BG_IMGS[`${numPaths}${paths}${randIdx}`];
         walls = this.buildRoomWalls(paths);
         this.walls.push(...walls);
-        Global.ROOMS[`${this.nodePos}`] = this;
+        Global.SESSION.rooms[`${this.nodePos}`] = this;
       } else {
         shuffle(pathsArr);
         for (let i = 0; i < numPaths; i++) { newPaths.push(pathsArr.pop()) }
@@ -103,27 +106,57 @@ class Room {
         assignBlockedPaths(this, newPaths);
         walls = this.buildRoomWalls(newPaths);
         this.walls.push(...walls);
-        Global.ROOMS[`${this.nodePos}`] = this;
+        Global.SESSION.rooms[`${this.nodePos}`] = this;
       }
     }
-    this.animatedObjects = {};
-    Object.values(this.coins).forEach(coin => {
-      this.animatedObjects[`coin-${coin.pos}`] = coin;
-    });
-
-    
+    this.generateEnemies();
+    // this.animatedObjects = {};
+    // Object.values(this.coins).forEach(coin => {
+    //   this.animatedObjects[`coin-${coin.pos}`] = coin;
+    // });
 
   }
 
+  generateEnemies() {
+    const numEnemies = Math.floor(Object.keys(Global.SESSION.rooms).length/2);
+    this.enemies = {};
+    for (let i = 0; i < numEnemies; i++) {
+      let x = Math.floor(Math.random()*592) + 64;
+      while (x > 336 && x < 384) x = Math.floor(Math.random()*592) + 64;
+      let y = Math.floor(Math.random()*592) + 64;
+      while (y > 336 && y < 384) y = Math.floor(Math.random()*592) + 64;
+      let pos = [x,y];
+      const enemy = new Enemy(pos, 48,48,Global.SPRITES.monsters, "blob", 200 + (numEnemies * 50));
+      this.enemies[`${enemy.pos}`] = enemy;
+    }
+  };
+
+  generateCoins() {
+    const numCoins = randNumCoins();
+    this.coins = {};
+    for (let i = 0; i < numCoins; i++) {
+      let x = Math.floor(Math.random()*592) + 64;
+      while (x > 336 && x < 384) x = Math.floor(Math.random()*592) + 64;
+      let y = Math.floor(Math.random()*592) + 64;
+      while (y > 336 && y < 384) y = Math.floor(Math.random()*592) + 64;
+      let pos = [x,y];
+      const coin = new Coin(pos, 16,16,Global.SPRITES.coin);
+      this.coins[`${coin.pos}`] = coin;
+    }
+  };
+
   animate() {
     this.collect();
-    Object.values(this.animatedObjects).forEach(object => object.animate())
+    Object.values(this.coins).forEach(coin => {
+      coin.animate();
+    });
+    // Object.values(this.animatedObjects).forEach(object => object.animate());
+
   }
 
   collect() {
     for (let coin of Object.values(this.coins)) {
       if (coin.collect()) {
-        delete this.animatedObjects[`coin-${coin.pos}`];
         delete this.coins[`${coin.pos}`];
         Global.SESSION.coinCount++;
         return;
@@ -135,11 +168,37 @@ class Room {
   draw(ctx) {
     ctx.drawImage(this.background, 0, 0);
     // this.walls.forEach(wall => wall.draw(ctx));
-    Object.values(this.animatedObjects).forEach(object => object.draw(ctx));
+    Object.values(this.coins).forEach(coin => coin.draw(ctx));
+    Object.values(this.enemies).forEach(enemy => enemy.draw(ctx));
     ctx.fillStyle = "#fffaf4";
     ctx.font = "20px arial";
     ctx.fillText(`Room [ ${this.nodePos} ]`, 15, 30);
     ctx.fillText(`Coins x ${Global.SESSION.coinCount}`, 590, 30);
+    ctx.beginPath()
+    ctx.strokeStyle = "#ffbb00";
+    ctx.moveTo(15, 705);
+    ctx.lineWidth = 5;
+    ctx.lineTo(15 + (Global.SESSION.player.stamina/1000) * 100, 705);
+    ctx.stroke();
+    ctx.beginPath()
+    ctx.strokeStyle = "#33ff00";
+    ctx.moveTo(15, 690);
+    ctx.lineWidth = 10;
+    ctx.lineTo(15 + (Global.SESSION.player.hp/20) * 100, 690);
+    ctx.stroke();
+    ctx.beginPath()
+    ctx.strokeStyle = "#ff0000";
+    ctx.moveTo(115 - (1 - Global.SESSION.player.hp/20) * 100, 690);
+    ctx.lineWidth = 10;
+    ctx.lineTo(115, 690);
+    ctx.stroke();
+    ctx.beginPath()
+    ctx.strokeStyle = "#00dddd";
+    ctx.moveTo(15, 699);
+    ctx.lineWidth = 5;
+    ctx.lineTo(15 + (Global.SESSION.player.invulnerable/75) * 100, 699);
+    ctx.stroke();
+    // ctx.fillText(`Stamina = ${Global.SESSION.player.stamina}`, 15, 400);
   }
 
   buildRoomWalls(paths) {

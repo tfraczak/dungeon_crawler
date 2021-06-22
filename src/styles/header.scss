@@ -68,6 +68,10 @@
         cursor: pointer;
       }
 
+      &:disabled {
+        cursor: not-allowed;
+      }
+
       
     }
 
@@ -106,7 +110,7 @@
         padding-bottom: 7px;
         font-family: $rubik;
         z-index: 1;
-        width: 250px;
+        width: 500px;
         opacity: 0;
         
         li {
@@ -127,6 +131,93 @@
           opacity: 1;
           box-shadow: 0 0 2px #000000;
         }
+
+        .explanation {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          p {
+            font-size: 16px;
+            a {
+              text-decoration: none;
+              &:hover {
+                color: $banana;
+                text-decoration: underline;
+              }
+            }
+          }
+        }
+
+        .ui {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: center;
+          width: 100%;
+          height: auto;
+
+          h3 {
+            font-weight: 500;
+            margin-bottom: 3px;
+          }
+
+          .color {
+            margin-bottom: 3px;
+          }
+
+          em {
+            color: $banana;
+            font-weight: 500;
+          }
+          
+          &.stamina {
+            margin-top: 5px;
+          }
+
+          h6 {
+            font-size: 12px;
+          }
+          .game-over {
+            color: red;
+            font-weight: 700;
+          }
+
+          .blue {
+            width: 100px;
+            height: 5px;
+            background-color: #00dddd;
+          }
+
+          .yellow {
+            width: 100px;
+            height: 5px;
+            background-color: #ffbb00;
+          }
+
+          .color-wrapper {
+            display: flex;
+            width: 100px;
+            height: 10px;
+            margin-bottom: 2px;
+
+            .green {
+              width: 70%;
+              height: 100%;
+              background-color: #33ff00;
+            }
+
+            .red {
+              width: 30%;
+              height: 100%;
+              background-color: red;
+            }
+
+            
+
+          }
+
+        }
+
       }
     }
     

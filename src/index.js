@@ -1,7 +1,7 @@
 import "./styles/index.scss";
 import installListeners from "./scripts/utils/install_listeners";
 import * as Global from "./scripts/utils/global_vars";
-import { newGame } from "./scripts/utils/func_utils";
+import GameStart from "./scripts/game_start";
 
 
 
@@ -14,12 +14,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   installListeners(Global.KEYS);
 
-  
+  // let font = new FontFace("Press Start 2P", 'url(https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap)');
+  // font.load().then(() => {
+  //   Global.FONT = font;
+  // });
+
+  // const font = new FontFace("Press Start 2P", 'url(https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap)');
+  // font.load().then(Global.FONT["font"] = font);
 
   let coinSprite = new Image();
   coinSprite.src = "./dist/assets/images/coin/coin.png";
   coinSprite.onload = () => {
     Global.SPRITES.coin = coinSprite;
+  };
+
+  let monstersSprites = new Image();
+  monstersSprites.src = "./dist/assets/images/enemies/monsters.png";
+  monstersSprites.onload = () => {
+    Global.SPRITES.monsters = monstersSprites;
   };
   
   for (let path of Global.ALL_PATHS) {
@@ -39,11 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
   playerSprite.src = "./dist/assets/images/rogue/rogue_walk.png";
   
   playerSprite.onload = () => {
-    setTimeout(() => {
-      Global.GAME_OPTIONS["ctx"] = ctx;
+    let gameStart = new GameStart(ctx, playerSprite);
+    Global.GAME_OPTIONS["ctx"] = ctx;
     Global.GAME_OPTIONS["playerSprite"] = playerSprite;
-    newGame();
-    },1000);
+    gameStart.prompt();
     
   }
 
