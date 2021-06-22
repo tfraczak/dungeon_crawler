@@ -121,10 +121,8 @@ class Room {
     const numEnemies = Math.floor(Object.keys(Global.SESSION.rooms).length/2);
     this.enemies = {};
     for (let i = 0; i < numEnemies; i++) {
-      let x = Math.floor(Math.random()*592) + 64;
-      while (x > 336 && x < 384) x = Math.floor(Math.random()*592) + 64;
-      let y = Math.floor(Math.random()*592) + 64;
-      while (y > 336 && y < 384) y = Math.floor(Math.random()*592) + 64;
+      let x = Math.floor(Math.random()*550) + 64;
+      let y = Math.floor(Math.random()*550) + 64;
       let pos = [x,y];
       const enemy = new Enemy(pos, 48,48,Global.SPRITES.monsters, "blob", 200 + (numEnemies * 50));
       this.enemies[`${enemy.pos}`] = enemy;

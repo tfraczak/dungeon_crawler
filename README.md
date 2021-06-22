@@ -39,7 +39,9 @@ Technologies employed
 
 Feature Highlights
 [Dungeon Crawler 3000](https://tfraczak.github.io/dungeon_crawler/) implements a randomly generated graph node system, to generate and keep track of rooms within the game. Each play through is different from the last. Can you find all of the extremely rare single path rooms? 
-<img src="https://github.com/tfraczak/dungeon_crawler/blob/main/design_docs/starting_new_game.gif?raw=true" />d
+<img src="https://github.com/tfraczak/dungeon_crawler/blob/main/design_docs/room_nodes.gif?raw=true" />
+
+Another feature I'm pretty proud of is the implementation of a collision box class that is attached to an entity. All collision calculations are based on the size and shape of the collision box, instead of the entire area of the sprite. This ensures an enhanced UI/UX such that the player can reliably know that they've been hit by an enemy and not guess so much where the collision detection starts and ends. The collision box is centered mainly around the feet of the character sprite.
 
 
 Timeline

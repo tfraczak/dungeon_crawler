@@ -22,7 +22,7 @@ class ColBox {
     
   }
   draw(ctx) {
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.strokeStyle = "transparent";
     ctx.strokeRect(
       this.pos[0],
