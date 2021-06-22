@@ -28,7 +28,7 @@ class Game {
   }
 
   win(){
-    return Global.SESSION.coinCount >= 10;
+    return Global.SESSION.coinCount > 9;
   }
 
   lose() {
