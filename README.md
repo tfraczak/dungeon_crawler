@@ -41,12 +41,94 @@ Feature Highlights
 [Dungeon Crawler 3000](https://tfraczak.github.io/dungeon_crawler/) implements a randomly generated graph node system, to generate and keep track of rooms within the game. Each play through is different from the last. Can you find all of the extremely rare single path rooms? 
 <img src="https://github.com/tfraczak/dungeon_crawler/blob/main/design_docs/room_nodes.gif?raw=true" />
 
-Another feature I'm pretty proud of is the implementation of a collision box class that is attached to an entity. All collision calculations are based on the size and shape of the collision box, instead of the entire area of the sprite. This ensures an enhanced UI/UX such that the player can reliably know that they've been hit by an enemy and not guess so much where the collision detection starts and ends. The collision box is centered mainly around the feet of the character sprite.
+Another feature I'm pretty proud of is the implementation of a collision box class that is attached to an entity. All collision calculations are based on the size and shape of the collision box, instead of the entire area of the sprite. This ensures an enhanced UI/UX such that the player can reliably know that they've been hit by an enemy and not guess so much where the collision detection starts and ends. The collision box is centered mainly around the feet of the character sprite as seen below.
+<img src="https://github.com/tfraczak/dungeon_crawler/blob/main/design_docs/col_box.png?raw=true" />  
+The main challenge I faced with implementing this strategy is that it requires a lot of bookkeeping in the form of variables. Even if one element in one array is off, it throws off the entire interactive nature of the collision box, which would allow players to wedge themselves through walls and the like.
 
+Here is a snippet just calcuating if one side is in contact with another object's opposing side:
 
-Timeline
+```javascript
+export const collidedWithSide = (side, thisSide, otherSide) => {
+  let collided = false;
+  let upperDiff, lowerDiff;
+  const upperBounds = 10;
+  const lowerBounds = 0;
+  if (side === "top" || side === "bottom") {
+    const thisYVal = thisSide[1];
+    const [thisXMin, thisXMax] = thisSide[0];
+    const otherYVal = otherSide[1];
+    const [otherXMin, otherXMax] = otherSide[0];
+    
+    switch (side) {
+      case "top":
+        upperDiff = (otherYVal - thisYVal) < upperBounds;
+        lowerDiff = (otherYVal - thisYVal) > lowerBounds;
+        collided = 
+          (thisYVal < otherYVal) &&
+          (thisXMin < otherXMax) &&
+          (thisXMax > otherXMin) &&
+          upperDiff && lowerDiff;
+        break;
+      case "bottom":
+        upperDiff = (thisYVal - otherYVal) < upperBounds;
+        lowerDiff = (thisYVal - otherYVal) > lowerBounds;
+        collided = 
+          (thisYVal > otherYVal) &&
+          (thisXMin < otherXMax) &&
+          (thisXMax > otherXMin) &&
+          upperDiff && lowerDiff;
+        break;
+      default:
+        break;
+    }
 
-- Get content to render and move sprite (1 day)
-- Animate sprite movement (1 day)
-- Move from one room node to another (1 day)
-- Interact with entities (1 day)
+    if (collided) return otherYVal;
+
+  } else {
+    const thisXVal = thisSide[0];
+    const [thisYMin, thisYMax] = thisSide[1];
+    const otherXVal = otherSide[0];
+    const [otherYMin, otherYMax] = otherSide[1];
+    
+    switch (side) {
+      case "left":
+        upperDiff = (otherXVal - thisXVal) < upperBounds;
+        lowerDiff = (otherXVal - thisXVal) > lowerBounds;
+        collided = 
+          (thisXVal < otherXVal) &&
+          (thisYMin < otherYMax) &&
+          (thisYMax > otherYMin) &&
+          upperDiff && lowerDiff;
+          break;
+      case "right":
+        upperDiff = (thisXVal - otherXVal) < upperBounds;
+        lowerDiff = (thisXVal - otherXVal) > lowerBounds;
+        collided = 
+          (thisXVal > otherXVal) &&
+          (thisYMin < otherYMax) &&
+          (thisYMax > otherYMin) &&
+          upperDiff && lowerDiff;
+          break;
+      default:
+        break;
+    }
+
+    if (collided) return otherXVal;
+    
+  }
+
+  return false;
+
+};
+```
+As you can see, this is just one piece of a huge machine that figures out if objects are touching. This particular code checks if a side of one object is either touching, or just beyond the other object's side. And this also is dynamic enough to account for whether it's a left meeting a right, a bottom meeting a top... etc.
+
+Other images from the app:
+
+This game is pretty difficult!  
+<img src="https://github.com/tfraczak/dungeon_crawler/blob/main/design_docs/game_over.gif?raw=true" />  
+Hover effects and canvas effects of the game start portion.  
+<img src="https://github.com/tfraczak/dungeon_crawler/blob/main/design_docs/dc_game_start.gif?raw=true" />  
+Clean image of a starting room node.  
+<img src="https://github.com/tfraczak/dungeon_crawler/blob/main/design_docs/dc3000.png?raw=true" />  
+<img src="" />
