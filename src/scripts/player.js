@@ -92,8 +92,12 @@ class Player extends Entity {
 
   }
 
+  invulCheck() {
+    return Math.floor(this.invulnerable / 10) % 2 === 0;
+  }
+
   hit() {
-    this.invulnerable = 75;
+    this.invulnerable = 60;
   }
 
   move(walls) {
@@ -197,7 +201,9 @@ class Player extends Entity {
       roomChange(exitDir, Global.SESSION.game.room);
     }
 
-    
+    if (!this.invulCheck) {
+      this.drawOptions.palX = 48 * 3;
+    }
 
     this.updateSides();
     this.drawOptions.x = this.pos[0];
