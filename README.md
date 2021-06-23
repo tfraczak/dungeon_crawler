@@ -12,7 +12,7 @@ Dungeon Crawler 3000 features:
 🟢 Animated sprite movement.  
 🟢 Move from one randomized room node to another.  
 🟢 Interact with entities (ex. items such as coins, potions... etc.).  
-🟢 Interactive enemies with their own pathfinding logic.  
+🟢 Interactive enemies with their own detection logic.  
 🔴 BONUS - Additional items, such as health potions or stamina regeneratives.    
 🔴 BONUS - Battle logic for the player to attack enemies.  
 🔴 BONUS - Difficulty settings.  
