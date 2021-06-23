@@ -2,6 +2,9 @@
 
 *[Dungeon Crawler 3000](https://tfraczak.github.io/dungeon_crawler/) is a JavaScript browser game where a player can explore a randomly generated dungeon.*
 
+[<img src="https://github.com/tfraczak/dungeon_crawler/blob/main/design_docs/main.gif?raw=true" style="height: 300px;">](https://tfraczak.github.io/dungeon_crawler/)
+
+
 ---
 
 ### Functionality & MVP
