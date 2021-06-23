@@ -122,7 +122,13 @@ class Player extends Entity {
     }
 
     if (this.stamina < 0) this.stamina = 0;
-    if (!shift && this.stamina < 1000) this.stamina += 1;
+    if (!shift && this.stamina < 1000) {
+      if (!up && !down && !right && !left) {
+        this.stamina += 2;
+      } else {
+        this.stamina += 1;
+      }
+    }
     if (this.invulnerable) this.invulnerable--;
     if (this.invulverable < 0) this.invulnerable = 0;
 
