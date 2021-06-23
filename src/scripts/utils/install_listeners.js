@@ -4,7 +4,7 @@ import { newGame } from "../utils/func_utils";
 
 export default (KEYS) => {
   document.addEventListener("keydown", e => {
-    debugger
+    
     if (e.key.toLowerCase() === "w" && !KEYS["w"]) KEYS[e.key.toLowerCase()] = true;
     if (e.key.toLowerCase() === "a" && !KEYS["a"]) KEYS[e.key.toLowerCase()] = true;
     if (e.key.toLowerCase() === "s" && !KEYS["s"]) KEYS[e.key.toLowerCase()] = true;

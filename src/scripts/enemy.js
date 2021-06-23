@@ -92,7 +92,7 @@ class Entity {
 class Enemy extends Entity {
   constructor(pos,width,height,spritePalette, type, detectDist) {
     super(pos,width,height,spritePalette);
-    this.speed = 1.2;
+    this.speed = 1;
     this.speedModifier = 0.75;
     this.pace = 24/this.speed;
     this.chasingPlayer = false;
