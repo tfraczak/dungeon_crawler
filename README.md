@@ -131,4 +131,3 @@ Hover effects and canvas effects of the game start portion.
 <img src="https://github.com/tfraczak/dungeon_crawler/blob/main/design_docs/dc_game_start.gif?raw=true" />  
 Clean image of a starting room node.  
 <img src="https://github.com/tfraczak/dungeon_crawler/blob/main/design_docs/dc3000.png?raw=true" />  
-<img src="" />
