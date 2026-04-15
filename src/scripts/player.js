@@ -130,7 +130,7 @@ class Player extends Entity {
       }
     }
     if (this.invulnerable) this.invulnerable--;
-    if (this.invulverable < 0) this.invulnerable = 0;
+    if (this.invulnerable < 0) this.invulnerable = 0;
 
     this.wallCheck(walls);
 
