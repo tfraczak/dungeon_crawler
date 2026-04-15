@@ -1,10 +1,11 @@
 import createEntity from "./entity";
+import { BASE_SPEED } from "./utils/global_vars";
 
 function createEnemy(pos, width, height, spritePalette, type, detectDist, gameState) {
   const enemy = createEntity(pos, width, height, spritePalette);
 
   enemy.gameState = gameState;
-  enemy.speed = 1;
+  enemy.speed = BASE_SPEED * 0.8;
   enemy.speedModifier = 0.75;
   enemy.pace = 24 / enemy.speed;
   enemy.chasingPlayer = false;

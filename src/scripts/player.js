@@ -1,12 +1,13 @@
 import createEntity from "./entity";
+import { BASE_SPEED } from "./utils/global_vars";
 import { roomChange } from "./utils/func_utils";
 
 function createPlayer(pos, width, height, spritePalette, gameState) {
   const player = createEntity(pos, width, height, spritePalette);
 
   player.gameState = gameState;
-  player.speed = 1.25;
-  player.normalizedSpeed = parseFloat(player.speed) / Math.sqrt(2);
+  player.speed = BASE_SPEED * 1.25;
+  player.normalizedSpeed = player.speed / Math.sqrt(2);
   player.pace = 24 / player.speed;
   player.speedModifier = 1;
   player.stamina = 1000;
