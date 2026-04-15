@@ -1,5 +1,3 @@
-import * as Global from "./global_vars";
-import Game from "../game";
 import { newGame } from "../utils/func_utils";
 
 export default (KEYS) => {
