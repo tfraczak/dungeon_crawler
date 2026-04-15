@@ -9,7 +9,6 @@ export const KEYS = {
   68: false, // D
   16: false, // L-Shift
 };
-export const FONT = {};
 
 export const SESSION = {};
 export const SPRITES = {};

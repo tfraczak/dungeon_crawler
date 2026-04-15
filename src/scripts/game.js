@@ -74,7 +74,6 @@ class Game {
           this.ctx.fillText("you'd like to play again", 48*4.2,48*7.5);
         }
         if (this.lose()) {
-          const font = Global.FONT.font;
           this.ctx.fillStyle = "rgba(0,0,0,0.5)";
           this.ctx.fillRect(0,0,720,720);
           this.ctx.fillStyle = "#fffaf4";

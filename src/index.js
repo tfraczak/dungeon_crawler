@@ -14,14 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   installListeners(Global.KEYS);
 
-  // let font = new FontFace("Press Start 2P", 'url(https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap)');
-  // font.load().then(() => {
-  //   Global.FONT = font;
-  // });
-
-  // const font = new FontFace("Press Start 2P", 'url(https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap)');
-  // font.load().then(Global.FONT["font"] = font);
-
   let coinSprite = new Image();
   coinSprite.src = "./dist/assets/images/coin/coin.png";
   coinSprite.onload = () => {
