@@ -73,12 +73,19 @@ body.mobile {
     }
   }
 
-  #sprint-btn {
+  #action-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    pointer-events: none;
+    margin-bottom: 28px;
+  }
+
+  #attack-btn, #sprint-btn {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    border: 2px solid rgba(255, 187, 0, 0.6);
-    background: rgba(255, 187, 0, 0.25);
     color: rgba(255, 255, 255, 0.9);
     font-size: 14px;
     font-weight: bold;
@@ -89,10 +96,23 @@ body.mobile {
     -webkit-user-select: none;
     cursor: pointer;
     outline: none;
-    margin-bottom: 28px;
+  }
+
+  #sprint-btn {
+    border: 2px solid rgba(255, 187, 0, 0.6);
+    background: rgba(255, 187, 0, 0.25);
 
     &:active {
       background: rgba(255, 187, 0, 0.5);
+    }
+  }
+
+  #attack-btn {
+    border: 2px solid rgba(255, 80, 80, 0.6);
+    background: rgba(255, 80, 80, 0.25);
+
+    &:active {
+      background: rgba(255, 80, 80, 0.5);
     }
   }
 

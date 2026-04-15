@@ -1,6 +1,8 @@
 import createWall from "./wall";
 import createCoin from "./coin";
 import createEnemy from "./enemy";
+import createPoof from "./poof";
+import { playPoofSound, playSlashWhiff, playSlashHit } from "./sound";
 import GAME_CONFIG from "./game_config";
 
 import {
@@ -19,6 +21,7 @@ function createRoom(neighbor, gameState) {
   const room = {
     gameState,
     walls: [],
+    poofs: [],
     neighbors: {
       up: undefined,
       down: undefined,
@@ -181,9 +184,85 @@ function createRoom(neighbor, gameState) {
     }
   };
 
+  room.resolvePlayerEnemyCollisions = (player) => {
+    const pBox = player.colBox;
+    for (const enemy of Object.values(room.enemies)) {
+      const eBox = enemy.colBox;
+
+      const overlapX = Math.min(pBox.pos[0] + pBox.width, eBox.pos[0] + eBox.width) - Math.max(pBox.pos[0], eBox.pos[0]);
+      const overlapY = Math.min(pBox.pos[1] + pBox.height, eBox.pos[1] + eBox.height) - Math.max(pBox.pos[1], eBox.pos[1]);
+
+      if (overlapX <= 0 || overlapY <= 0) continue;
+
+      const totalStrength = player.strength + enemy.strength;
+      const playerRatio = enemy.strength / totalStrength;
+      const enemyRatio = player.strength / totalStrength;
+
+      if (overlapX < overlapY) {
+        const sign = player.center[0] < enemy.center[0] ? -1 : 1;
+        player.pos[0] += sign * overlapX * playerRatio;
+        enemy.pos[0] -= sign * overlapX * enemyRatio;
+      } else {
+        const sign = player.center[1] < enemy.center[1] ? -1 : 1;
+        player.pos[1] += sign * overlapY * playerRatio;
+        enemy.pos[1] -= sign * overlapY * enemyRatio;
+      }
+
+      player.pos[0] = Math.max(-24, Math.min(696, player.pos[0]));
+      player.pos[1] = Math.max(-24, Math.min(696, player.pos[1]));
+      player.updateSides();
+      player.wallCheckKnockback(room.walls);
+      player.updateSides();
+      enemy.updateSides();
+    }
+  };
+
+  room.resolvePlayerAttack = (player) => {
+    if (!player.isAttacking()) return;
+    if (player.attackTimer !== GAME_CONFIG.player.attackDuration) return;
+
+    const hitbox = player.attackHitbox();
+    const playerCfg = GAME_CONFIG.player;
+    let hitAny = false;
+
+    for (const [key, enemy] of Object.entries(room.enemies)) {
+      const dx = enemy.center[0] - hitbox.x;
+      const dy = enemy.center[1] - hitbox.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > hitbox.range) continue;
+
+      let angle = Math.atan2(dy, dx);
+      let start = hitbox.startAngle;
+      let end = hitbox.endAngle;
+
+      // Normalize angles for comparison
+      while (angle < start) angle += Math.PI * 2;
+      while (angle > end + Math.PI * 2) angle -= Math.PI * 2;
+
+      if (angle >= start && angle <= end) {
+        hitAny = true;
+        const dmg = Math.floor(Math.random() * (playerCfg.attackDamageMax - playerCfg.attackDamageMin + 1)) + playerCfg.attackDamageMin;
+        enemy.takeDamage(dmg);
+        if (!enemy.alive()) {
+          room.poofs.push(createPoof(enemy.center[0], enemy.center[1]));
+          playPoofSound();
+          delete room.enemies[key];
+        }
+      }
+    }
+
+    if (hitAny) {
+      playSlashHit();
+    } else {
+      playSlashWhiff();
+    }
+  };
+
   room.animate = () => {
     room.collect();
     Object.values(room.coins).forEach(coin => coin.animate());
+    room.poofs.forEach(p => p.update());
+    room.poofs = room.poofs.filter(p => !p.done);
   };
 
   room.collect = () => {

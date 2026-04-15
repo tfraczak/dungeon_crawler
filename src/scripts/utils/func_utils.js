@@ -8,10 +8,9 @@ export const newGame = (gameState) => {
   createGame(gameState);
 };
 
-export const collidedWithSide = (side, thisSide, otherSide) => {
+export const collidedWithSide = (side, thisSide, otherSide, upperBounds = 5) => {
   let collided = false;
   let upperDiff, lowerDiff;
-  const upperBounds = 10;
   const lowerBounds = 0;
   if (side === "top" || side === "bottom") {
     const thisYVal = thisSide[1];
@@ -234,11 +233,6 @@ export const randNumCoins = () => {
   const randIdx = Math.floor(Math.random() * weightedNumCoins.length);
   shuffle(weightedNumCoins);
   return weightedNumCoins[randIdx];
-};
-
-export const randCoinSound = () => {
-  const i = Math.floor(Math.random() * 9);
-  return document.getElementById(`coin${i}`);
 };
 
 export const shuffle = arr => {

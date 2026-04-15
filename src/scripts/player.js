@@ -15,6 +15,7 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
   player.stamina = cfg.stamina;
   player.invulnerable = 0;
   player.hp = cfg.hp;
+  player.strength = cfg.strength;
   player.stride = {
     up:    { stepCount: 0, palY: 48 * 6 },
     down:  { stepCount: 0, palY: 48 * 0 },
@@ -78,8 +79,81 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     return Math.floor(player.invulnerable / 5) % 2 === 0;
   };
 
+  player.facing = "down";
+  player.attackTimer = 0;
+  player.attackCooldownTimer = 0;
+  player.knockbackVx = 0;
+  player.knockbackVy = 0;
+
   player.hit = () => {
     player.invulnerable = cfg.invulnerabilityFrames;
+  };
+
+  const knockbackBounds = 35;
+
+  player.wallCheckKnockback = (walls) => {
+    for (let wall of walls) { if (player.collidedOnSide("top", wall, knockbackBounds)) break; }
+    if (player.collisions.top) {
+      player.pos[1] = player.collisions.top - 32;
+      player.knockbackVy = 0;
+    }
+    for (let wall of walls) { if (player.collidedOnSide("bottom", wall, knockbackBounds)) break; }
+    if (player.collisions.bottom) {
+      player.pos[1] = player.collisions.bottom - 48;
+      player.knockbackVy = 0;
+    }
+    for (let wall of walls) { if (player.collidedOnSide("left", wall, knockbackBounds)) break; }
+    if (player.collisions.left) {
+      player.pos[0] = player.collisions.left - 12;
+      player.knockbackVx = 0;
+    }
+    for (let wall of walls) { if (player.collidedOnSide("right", wall, knockbackBounds)) break; }
+    if (player.collisions.right) {
+      player.pos[0] = player.collisions.right - 36;
+      player.knockbackVx = 0;
+    }
+  };
+
+  player.applyKnockback = (walls) => {
+    if (Math.abs(player.knockbackVx) < 0.1 && Math.abs(player.knockbackVy) < 0.1) {
+      player.knockbackVx = 0;
+      player.knockbackVy = 0;
+      return;
+    }
+    player.pos[0] += player.knockbackVx;
+    player.pos[1] += player.knockbackVy;
+
+    // Prevent knockback from pushing through exit zones
+    player.pos[0] = Math.max(-24, Math.min(696, player.pos[0]));
+    player.pos[1] = Math.max(-24, Math.min(696, player.pos[1]));
+
+    player.updateSides();
+    player.wallCheckKnockback(walls);
+    player.knockbackVx *= 0.7;
+    player.knockbackVy *= 0.7;
+    player.updateSides();
+  };
+
+  player.isAttacking = () => player.attackTimer > 0;
+
+  player.attackHitbox = () => {
+    const [cx, cy] = player.center;
+    const halfArc = cfg.attackArc / 2;
+    let baseAngle;
+    switch (player.facing) {
+      case "up":    baseAngle = -Math.PI / 2; break;
+      case "down":  baseAngle = Math.PI / 2; break;
+      case "left":  baseAngle = Math.PI; break;
+      case "right": baseAngle = 0; break;
+    }
+    return {
+      x: cx,
+      y: cy,
+      range: cfg.attackRange,
+      startAngle: baseAngle - halfArc,
+      endAngle: baseAngle + halfArc,
+      baseAngle,
+    };
   };
 
   player.move = (walls) => {
@@ -107,6 +181,22 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     }
     if (player.invulnerable) player.invulnerable--;
     if (player.invulnerable < 0) player.invulnerable = 0;
+
+    player.applyKnockback(walls);
+
+    if (player.attackCooldownTimer > 0) player.attackCooldownTimer--;
+    if (player.attackTimer > 0) player.attackTimer--;
+
+    if (keys[" "] && player.attackCooldownTimer === 0 && player.stamina >= cfg.attackStaminaCost) {
+      player.stamina -= cfg.attackStaminaCost;
+      player.attackTimer = cfg.attackDuration;
+      player.attackCooldownTimer = cfg.attackCooldown;
+    }
+
+    if (up) player.facing = "up";
+    if (down) player.facing = "down";
+    if (left) player.facing = "left";
+    if (right) player.facing = "right";
 
     player.wallCheck(walls);
 
@@ -158,21 +248,22 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
       player.drawOptions.palX = 48 * 1;
     }
 
+    const beingKnockedBack = player.knockbackVx !== 0 || player.knockbackVy !== 0;
     const [x, y] = player.pos;
     let exitDir;
-    if (x < -24) {
+    if (!beingKnockedBack && x < -24) {
       exitDir = "left";
       player.newRoomPos(exitDir);
       roomChange(exitDir, player.gameState.session.game.room, player.gameState);
-    } else if (x > 720 - 24) {
+    } else if (!beingKnockedBack && x > 720 - 24) {
       exitDir = "right";
       player.newRoomPos(exitDir);
       roomChange(exitDir, player.gameState.session.game.room, player.gameState);
-    } else if (y < -24) {
+    } else if (!beingKnockedBack && y < -24) {
       exitDir = "up";
       player.newRoomPos(exitDir);
       roomChange(exitDir, player.gameState.session.game.room, player.gameState);
-    } else if (y > 720 - 24) {
+    } else if (!beingKnockedBack && y > 720 - 24) {
       exitDir = "down";
       player.newRoomPos(exitDir);
       roomChange(exitDir, player.gameState.session.game.room, player.gameState);

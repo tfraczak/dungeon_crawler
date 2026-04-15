@@ -7,6 +7,8 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
   const cfg = GAME_CONFIG.enemy;
 
   enemy.gameState = gameState;
+  enemy.hp = cfg.hp;
+  enemy.strength = cfg.strength;
   enemy.speed = BASE_SPEED * cfg.speedMultiplier;
   enemy.speedModifier = cfg.idleSpeedModifier;
   enemy.pace = 24 / enemy.speed;
@@ -110,14 +112,70 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
 
   enemy.damage = () => Math.floor(Math.random() * (cfg.damageMax - cfg.damageMin + 1)) + cfg.damageMin;
 
-  enemy.hitPlayer = (walls) => {
+  enemy.alive = () => enemy.hp > 0;
+
+  enemy.knockbackVx = 0;
+  enemy.knockbackVy = 0;
+
+  enemy.takeDamage = (amount) => {
+    enemy.hp -= amount;
+    if (enemy.hp < 0) enemy.hp = 0;
+    const player = enemy.gameState.session.player;
+    const dx = enemy.center[0] - player.center[0];
+    const dy = enemy.center[1] - player.center[1];
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    const knockback = GAME_CONFIG.player.attackKnockback;
+    enemy.knockbackVx = (dx / dist) * knockback;
+    enemy.knockbackVy = (dy / dist) * knockback;
+  };
+
+  const knockbackBounds = 35;
+
+  enemy.applyKnockback = (walls) => {
+    if (Math.abs(enemy.knockbackVx) < 0.1 && Math.abs(enemy.knockbackVy) < 0.1) {
+      enemy.knockbackVx = 0;
+      enemy.knockbackVy = 0;
+      return;
+    }
+    enemy.pos[0] += enemy.knockbackVx;
+    enemy.pos[1] += enemy.knockbackVy;
+    enemy.updateSides();
+
+    for (let wall of walls) { if (enemy.collidedOnSide("top", wall, knockbackBounds)) break; }
+    if (enemy.collisions.top) {
+      enemy.pos[1] = enemy.collisions.top - (enemy.height - enemy.colBox.height);
+      enemy.knockbackVy = 0;
+    }
+    for (let wall of walls) { if (enemy.collidedOnSide("bottom", wall, knockbackBounds)) break; }
+    if (enemy.collisions.bottom) {
+      enemy.pos[1] = enemy.collisions.bottom - 48;
+      enemy.knockbackVy = 0;
+    }
+    for (let wall of walls) { if (enemy.collidedOnSide("left", wall, knockbackBounds)) break; }
+    if (enemy.collisions.left) {
+      enemy.pos[0] = enemy.collisions.left - (enemy.colBox.width / 2);
+      enemy.knockbackVx = 0;
+    }
+    for (let wall of walls) { if (enemy.collidedOnSide("right", wall, knockbackBounds)) break; }
+    if (enemy.collisions.right) {
+      enemy.pos[0] = enemy.collisions.right - (enemy.colBox.width + (enemy.colBox.width / 2));
+      enemy.knockbackVx = 0;
+    }
+
+    enemy.knockbackVx *= 0.7;
+    enemy.knockbackVy *= 0.7;
+    enemy.updateSides();
+  };
+
+  enemy.hitPlayer = () => {
     const player = enemy.gameState.session.player;
     if (enemy.distToPlayer() < cfg.hitDistance && !player.invulnerable) {
-      player.pos[0] -= (cfg.knockbackFactor * enemy.dx);
-      player.pos[1] -= (cfg.knockbackFactor * enemy.dy);
-      player.updateSides();
-      player.wallCheck(walls);
-      player.updateSides();
+      const dx = player.center[0] - enemy.center[0];
+      const dy = player.center[1] - enemy.center[1];
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const knockback = GAME_CONFIG.player.hitKnockback;
+      player.knockbackVx = (dx / dist) * knockback;
+      player.knockbackVy = (dy / dist) * knockback;
       player.hp -= enemy.damage();
       if (player.hp < 0) player.hp = 0;
       player.hit();
@@ -170,6 +228,7 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
     if (right && up)   { enemy.pos[0] += newVectors[0]; enemy.pos[1] += newVectors[1]; }
     if (right && down) { enemy.pos[0] += newVectors[0]; enemy.pos[1] += newVectors[1]; }
 
+    enemy.applyKnockback(walls);
     enemy.wallCheck(walls);
     enemy.updateSides();
 
@@ -195,8 +254,7 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
         break;
     }
 
-    enemy.hitPlayer(walls);
-    enemy.gameState.session.player.wallCheck(walls);
+    enemy.hitPlayer();
     enemy.updateSides();
     enemy.drawOptions.x = enemy.pos[0];
     enemy.drawOptions.y = enemy.pos[1];

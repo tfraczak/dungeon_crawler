@@ -8,6 +8,7 @@ function createGameState() {
       d: false,
       Shift: false,
       Enter: false,
+      " ": false,
     },
     session: {},
     sprites: {},

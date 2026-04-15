@@ -14,9 +14,21 @@ const GAME_CONFIG = Object.freeze({
     staminaRegenIdle: 2,
     staminaRegenMoving: 1,
     invulnerabilityFrames: 60,
+    attackDamageMin: 2,
+    attackDamageMax: 5,
+    attackRange: 50,
+    attackArc: Math.PI / 2,
+    attackCooldown: 20,
+    attackDuration: 8,
+    attackKnockback: 30,
+    attackStaminaCost: 125,
+    hitKnockback: 15,
+    strength: 10,
   },
 
   enemy: {
+    hp: 35,
+    strength: 6,
     speedMultiplier: 0.8,
     idleSpeedModifier: 0.75,
     chaseSpeedModifier: 1,
@@ -31,6 +43,16 @@ const GAME_CONFIG = Object.freeze({
 
   coin: {
     frameInterval: 12,
+  },
+
+  poof: {
+    particleCount: 10,
+    speedMin: 1,
+    speedMax: 3,
+    lifetime: 20,
+    radiusMin: 3,
+    radiusMax: 7,
+    color: [200, 200, 200],
   },
 
   game: {

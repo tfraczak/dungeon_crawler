@@ -1,6 +1,6 @@
 import createEntity from "./entity";
 import GAME_CONFIG from "./game_config";
-import { randCoinSound } from "./utils/func_utils";
+import { playCoinSound } from "./sound";
 
 function createCoin(pos, width, height, spritePalette, gameState) {
   const coin = createEntity(pos, width, height, spritePalette, { width, height });
@@ -18,7 +18,7 @@ function createCoin(pos, width, height, spritePalette, gameState) {
       coin.collidedOnSide("left", player) ||
       coin.collidedOnSide("right", player)
     ) {
-      randCoinSound().play();
+      playCoinSound();
       return true;
     }
     return false;

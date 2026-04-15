@@ -10,6 +10,7 @@ export default (gameState) => {
     if (e.key.toLowerCase() === "d" && !keys["d"]) keys[e.key.toLowerCase()] = true;
     if (e.key === "Shift" && !keys["Shift"]) keys[e.key] = true;
     if (e.key === "Enter" && !keys["Enter"]) keys[e.key] = true;
+    if (e.key === " " && !keys[" "]) { keys[" "] = true; e.preventDefault(); }
   });
 
   document.addEventListener("keyup", e => {
@@ -19,6 +20,7 @@ export default (gameState) => {
     if (e.key.toLowerCase() === "d" && keys["d"]) keys[e.key.toLowerCase()] = false;
     if (e.key === "Shift" && keys["Shift"]) keys[e.key] = false;
     if (e.key === "Enter" && keys["Enter"]) keys[e.key] = false;
+    if (e.key === " " && keys[" "]) keys[" "] = false;
   });
 
   const howTo = document.getElementById("how-to");
@@ -140,6 +142,20 @@ export default (gameState) => {
     sprintBtn.addEventListener("touchcancel", e => {
       e.preventDefault();
       keys["Shift"] = false;
+    });
+
+    const attackBtn = document.getElementById("attack-btn");
+    attackBtn.addEventListener("touchstart", e => {
+      e.preventDefault();
+      keys[" "] = true;
+    });
+    attackBtn.addEventListener("touchend", e => {
+      e.preventDefault();
+      keys[" "] = false;
+    });
+    attackBtn.addEventListener("touchcancel", e => {
+      e.preventDefault();
+      keys[" "] = false;
     });
 
     const canvas = document.getElementById("display");

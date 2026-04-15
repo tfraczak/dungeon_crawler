@@ -52,10 +52,10 @@ function createEntity(pos, width, height, spritePalette, colBoxOptions) {
     entity.right = entity.colBox.right;
   };
 
-  entity.collidedOnSide = (side, otherObject) => {
+  entity.collidedOnSide = (side, otherObject, upperBounds) => {
     const opposites = { top: "bottom", bottom: "top", left: "right", right: "left" };
     const otherSide = opposites[side] || null;
-    entity.collisions[side] = collidedWithSide(side, entity[side], otherObject[otherSide]);
+    entity.collisions[side] = collidedWithSide(side, entity[side], otherObject[otherSide], upperBounds);
     return entity.collisions[side];
   };
 

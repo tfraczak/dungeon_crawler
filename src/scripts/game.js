@@ -1,6 +1,7 @@
 import createPlayer from "./player";
 import createRoom from "./room";
 import createCamera from "./camera";
+import drawSwordSlash from "./sword";
 import { SPRITE_DIMS } from "./utils/global_vars";
 import GAME_CONFIG from "./game_config";
 
@@ -48,6 +49,10 @@ function createGame(gameState) {
       game.player.move(game.room.walls);
       Object.values(game.room.enemies).forEach(enemy => enemy.move(game.room.walls));
       game.room.resolveEnemyCollisions();
+      game.room.resolvePlayerEnemyCollisions(game.player);
+      game.room.resolvePlayerAttack(game.player);
+      game.player.wallCheck(game.room.walls);
+      game.player.updateSides();
       game.room.animate();
 
       if (game.camera) {
@@ -66,6 +71,12 @@ function createGame(gameState) {
         return (a.pos[0] + a.width) - (b.pos[0] + b.width);
       });
       entities.forEach(entity => entity.draw(ctx));
+
+      if (game.player.isAttacking()) {
+        drawSwordSlash(ctx, game.player);
+      }
+
+      game.room.poofs.forEach(p => p.draw(ctx));
 
       if (game.camera) {
         ctx.restore();

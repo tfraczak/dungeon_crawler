@@ -7,7 +7,7 @@ function createGameStart(gameState) {
 
   const gs = {
     fpsInterval: 1000 / 60,
-    theta: 0,
+    theta: Math.random() * Math.PI * 20,
   };
 
   gs.step = () => {
