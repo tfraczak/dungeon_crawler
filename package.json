@@ -19,7 +19,7 @@
     "url": "https://github.com/tfraczak/dungeon_crawler/issues"
   },
   "homepage": "https://github.com/tfraczak/dungeon_crawler#readme",
-  "dependencies": {
+  "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/plugin-proposal-optional-chaining": "^7.14.2",
     "@babel/preset-env": "^7.14.4",
