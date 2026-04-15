@@ -23,25 +23,25 @@ export default (gameState) => {
 
   const howTo = document.getElementById("how-to");
   
-  howTo.addEventListener("mouseenter", e => {
+  howTo.addEventListener("mouseenter", () => {
     document.getElementById("how-to-pointer").classList.add("active");
     document.getElementById("how-to-sound").play();
     document.getElementById("how-to").classList.add("active");
     document.querySelector("#how-to > ul").classList.add("active");
   });
-  howTo.addEventListener("mouseleave", e => {
+  howTo.addEventListener("mouseleave", () => {
     document.getElementById("how-to").classList.remove("active");
     document.getElementById("how-to-pointer").classList.remove("active");
     document.querySelector("#how-to > ul").classList.remove("active");
   });
 
   const restart = document.getElementById("restart");
-  restart.addEventListener("mouseenter", e => {
+  restart.addEventListener("mouseenter", () => {
     document.getElementById("restart-sound").play();
     document.getElementById("restart").classList.add("active");
     document.getElementById("restart-pointer").classList.add("active");
   });
-  restart.addEventListener("mouseleave", e => {
+  restart.addEventListener("mouseleave", () => {
     document.getElementById("restart").classList.remove("active");
     document.getElementById("restart-pointer").classList.remove("active");
   });
