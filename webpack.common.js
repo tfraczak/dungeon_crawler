@@ -7,7 +7,7 @@ module.exports = {
   output: {
     path: path.join(__dirname, outputDir),
     filename: "[name].js",
-    publicPath: "/dist/",
+    publicPath: "auto",
   },
   resolve: {
     extensions: [".js"],
