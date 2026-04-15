@@ -16,7 +16,7 @@ class Wall {
 
   draw(ctx) {
     ctx.beginPath();
-    ctx.fillStyle = "#transparent";
+    ctx.fillStyle = "transparent";
     ctx.fillRect(...this.pos, this.width, this.height);
   }
 
