@@ -136,7 +136,7 @@ class Player extends Entity {
 
     // W key movements and sprite direction
     if (up) {
-      if (left || right && !this.collisions.top) {
+      if ((left || right) && !this.collisions.top) { // normalize diagonal speed unless blocked on top
         this.pos[1] += -this.normalizedSpeed * this.speedModifier;
       } else {
         this.pos[1] += -this.speed * this.speedModifier;
@@ -162,7 +162,7 @@ class Player extends Entity {
 
     // A key movement
     if (left) {
-      if (up || down && !this.collisions.left) {
+      if ((up || down) && !this.collisions.left) { // normalize diagonal speed unless blocked on left
         this.pos[0] += -this.normalizedSpeed * this.speedModifier;
       } else {
         this.pos[0] += -this.speed * this.speedModifier;
