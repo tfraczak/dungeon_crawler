@@ -1,16 +1,16 @@
-import ColBox from "./collision_box";
+import createColBox from "./collision_box";
 import { collidedWithSide } from "./utils/func_utils";
 
-class Entity {
-  constructor(pos,width,height,spritePalette,colBoxOptions) {
-    this.pos = pos;
-    this.width = width;
-    this.height = height;
-    const colBoxWidth = colBoxOptions?.width ?? width/2;
-    const colBoxHeight = colBoxOptions?.height ?? height/3;
-    
-    this.spritePalette = spritePalette;
-    this.drawOptions = {
+function createEntity(pos, width, height, spritePalette, colBoxOptions) {
+  const colBoxWidth = colBoxOptions?.width ?? width / 2;
+  const colBoxHeight = colBoxOptions?.height ?? height / 3;
+
+  const entity = {
+    pos,
+    width,
+    height,
+    spritePalette,
+    drawOptions: {
       image: spritePalette,
       palX: 0,
       palY: 0,
@@ -20,68 +20,52 @@ class Entity {
       y: pos[1],
       _dWidth: width,
       _dHeight: height,
-    };
-    this.colBox = new ColBox(this,colBoxWidth,colBoxHeight);
-    this.top = this.colBox.top;
-    this.bottom = this.colBox.bottom;
-    this.left = this.colBox.left;
-    this.right = this.colBox.right;
-    this.center = this.colBox.center;
-    this.collisions = {
+    },
+    collisions: {
       top: false,
       bottom: false,
       left: false,
       right: false,
-    };
-    
-  }
+    },
+  };
 
-  colBoxHook() { // this will center the colBox on the bottom
-    let [x,y] = [this.pos[0],this.pos[1]];
-    let [cx,cy] = [
-      x+((this.width - this.colBox.width)/2),
-      y+(this.height - this.colBox.height),
-    ];
-    return [cx,cy];
-  }
+  entity.colBox = createColBox(entity, colBoxWidth, colBoxHeight);
+  entity.top = entity.colBox.top;
+  entity.bottom = entity.colBox.bottom;
+  entity.left = entity.colBox.left;
+  entity.right = entity.colBox.right;
+  entity.center = entity.colBox.center;
 
-  updateSides() {
-    this.colBox.updateSides();
-    this.center = this.colBox.center;
-    this.top = this.colBox.top;
-    this.bottom = this.colBox.bottom;
-    this.left = this.colBox.left;
-    this.right = this.colBox.right;
-  }
+  entity.colBoxHook = () => {
+    const [x, y] = entity.pos;
+    const cx = x + ((entity.width - entity.colBox.width) / 2);
+    const cy = y + (entity.height - entity.colBox.height);
+    return [cx, cy];
+  };
 
-  collidedOnSide(side, otherObject) {
-    let otherSide;
-    switch(side) {
-      case "top":
-        otherSide = "bottom";
-        break;
-      case "bottom":
-        otherSide = "top";
-        break;
-      case "left":
-        otherSide = "right";
-        break;
-      case "right":
-        otherSide = "left";
-        break;
-      default:
-        otherSide = null;
-        break;
-    }
-    this.collisions[side] = collidedWithSide(side, this[side], otherObject[otherSide]);
-    return this.collisions[side];
-  }
+  entity.updateSides = () => {
+    entity.colBox.updateSides();
+    entity.center = entity.colBox.center;
+    entity.top = entity.colBox.top;
+    entity.bottom = entity.colBox.bottom;
+    entity.left = entity.colBox.left;
+    entity.right = entity.colBox.right;
+  };
 
-  draw(ctx) {
-    ctx.drawImage(...Object.values(this.drawOptions));
-    this.colBox.centerOnEntity();
-    this.colBox.draw(ctx);
-  }
+  entity.collidedOnSide = (side, otherObject) => {
+    const opposites = { top: "bottom", bottom: "top", left: "right", right: "left" };
+    const otherSide = opposites[side] || null;
+    entity.collisions[side] = collidedWithSide(side, entity[side], otherObject[otherSide]);
+    return entity.collisions[side];
+  };
+
+  entity.draw = (ctx) => {
+    ctx.drawImage(...Object.values(entity.drawOptions));
+    entity.colBox.centerOnEntity();
+    entity.colBox.draw(ctx);
+  };
+
+  return entity;
 }
 
-export default Entity;
+export default createEntity;

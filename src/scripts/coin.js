@@ -1,62 +1,57 @@
-import Entity from "./entity";
+import createEntity from "./entity";
 import { randCoinSound } from "./utils/func_utils";
 
-class Coin extends Entity {
-  constructor(pos, width, height, spritePalette, gameState) {
-    super(pos, width, height, spritePalette, { width, height });
-    this.gameState = gameState;
-    this.frameInterval = 12;
-    this.frameCount = 0;
-    this.drawOptions.palY = 0;
-  }
+function createCoin(pos, width, height, spritePalette, gameState) {
+  const coin = createEntity(pos, width, height, spritePalette, { width, height });
 
-  collect() {
-    const player = this.gameState.session.player;
+  coin.gameState = gameState;
+  coin.frameInterval = 12;
+  coin.frameCount = 0;
+  coin.drawOptions.palY = 0;
+
+  coin.collect = () => {
+    const player = coin.gameState.session.player;
     if (
-      this.collidedOnSide("top", player) ||
-      this.collidedOnSide("bottom", player) ||
-      this.collidedOnSide("left", player) ||
-      this.collidedOnSide("right", player)
+      coin.collidedOnSide("top", player) ||
+      coin.collidedOnSide("bottom", player) ||
+      coin.collidedOnSide("left", player) ||
+      coin.collidedOnSide("right", player)
     ) {
       randCoinSound().play();
       return true;
     }
     return false;
-  }
+  };
 
-  animate() {
-    const i = this.frameInterval;
-    const c = this.frameCount;
-    const w = this.width;
+  coin.animate = () => {
+    const i = coin.frameInterval;
+    const c = coin.frameCount;
+    const w = coin.width;
     if (c < i) {
-      this.drawOptions.palX = w * 0;
-      this.frameCount++;
-    } else if (c < i*2) {
-      this.drawOptions.palX = w * 1;
-      this.frameCount++;
-    } else if (c < i*3) {
-      this.drawOptions.palX = w * 2;
-      this.frameCount++;
-    } else if (c < i*4) {
-      this.drawOptions.palX = w * 3;
-      this.frameCount++;
-    } else if (c < i*5) {
-      this.drawOptions.palX = w * 4;
-      this.frameCount++;
-    } else if (c < i*6) {
-      this.drawOptions.palX = w * 5;
-      this.frameCount++;
-    } else if (c < i*7) {
-      this.drawOptions.palX = w * 6;
-      this.frameCount++;
-    } else if (c < i*8) {
-      this.drawOptions.palX = w * 7;
-      this.frameCount++;
+      coin.drawOptions.palX = w * 0;
+    } else if (c < i * 2) {
+      coin.drawOptions.palX = w * 1;
+    } else if (c < i * 3) {
+      coin.drawOptions.palX = w * 2;
+    } else if (c < i * 4) {
+      coin.drawOptions.palX = w * 3;
+    } else if (c < i * 5) {
+      coin.drawOptions.palX = w * 4;
+    } else if (c < i * 6) {
+      coin.drawOptions.palX = w * 5;
+    } else if (c < i * 7) {
+      coin.drawOptions.palX = w * 6;
+    } else if (c < i * 8) {
+      coin.drawOptions.palX = w * 7;
     } else {
-      this.drawOptions.palX = w * 0;
-      this.frameCount = 0;
+      coin.drawOptions.palX = w * 0;
+      coin.frameCount = 0;
+      return;
     }
-  }
+    coin.frameCount++;
+  };
+
+  return coin;
 }
 
-export default Coin;
+export default createCoin;

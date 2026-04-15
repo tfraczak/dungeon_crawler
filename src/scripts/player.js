@@ -1,222 +1,188 @@
-import Entity from "./entity";
+import createEntity from "./entity";
 import { roomChange } from "./utils/func_utils";
 
-class Player extends Entity {
-  constructor(pos, width, height, spritePalette, gameState) {
-    super(pos, width, height, spritePalette);
-    this.gameState = gameState;
-    this.speed = 1.25;
-    this.normalizedSpeed = parseFloat(this.speed) / Math.sqrt(2);
-    this.pace = 24/this.speed;
-    this.speedModifier = 1;
-    this.stamina = 1000;
-    this.invulnerable = 0;
-    this.hp = 20;
-    this.stride = {
-      up: {
-        stepCount: 0,
-        palY: 48 * 6,
-      },
-      down: {
-        stepCount: 0,
-        palY: 48 * 0,
-      },
-      left: {
-        stepCount: 0,
-        palY: 48 * 2,
-      },
-      right: {
-        stepCount: 0,
-        palY: 48 * 4,
-      },
-    };
-  }
+function createPlayer(pos, width, height, spritePalette, gameState) {
+  const player = createEntity(pos, width, height, spritePalette);
 
-  newRoomPos(dir) {
-    switch(dir) {
-      case "up":
-        this.pos[1] = 720-24;
-        break;
-      case "down":
-        this.pos[1] = -24;
-        break;
-      case "left":
-        this.pos[0] = 720-24;
-        break;
-      case "right":
-        this.pos[0] = -24;
-        break;
+  player.gameState = gameState;
+  player.speed = 1.25;
+  player.normalizedSpeed = parseFloat(player.speed) / Math.sqrt(2);
+  player.pace = 24 / player.speed;
+  player.speedModifier = 1;
+  player.stamina = 1000;
+  player.invulnerable = 0;
+  player.hp = 20;
+  player.stride = {
+    up:    { stepCount: 0, palY: 48 * 6 },
+    down:  { stepCount: 0, palY: 48 * 0 },
+    left:  { stepCount: 0, palY: 48 * 2 },
+    right: { stepCount: 0, palY: 48 * 4 },
+  };
+
+  player.newRoomPos = (dir) => {
+    switch (dir) {
+      case "up":    player.pos[1] = 720 - 24; break;
+      case "down":  player.pos[1] = -24; break;
+      case "left":  player.pos[0] = 720 - 24; break;
+      case "right": player.pos[0] = -24; break;
     }
-  }
+  };
 
-  stridePalettePos(direction) {
-    this.pace = 24 / (this.speed * this.speedModifier);
-    if (this.stride[direction].stepCount <= this.pace) {
-      this.stride[direction].stepCount++;
+  player.stridePalettePos = (direction) => {
+    player.pace = 24 / (player.speed * player.speedModifier);
+    const stride = player.stride[direction];
+    if (stride.stepCount <= player.pace) {
+      stride.stepCount++;
       return 48 * 1;
-    } else if (this.stride[direction].stepCount <= 2 * this.pace) {
-      this.stride[direction].stepCount++;
+    } else if (stride.stepCount <= 2 * player.pace) {
+      stride.stepCount++;
       return 48 * 0;
-    } else if (this.stride[direction].stepCount <= 3 * this.pace) {
-      this.stride[direction].stepCount++;
+    } else if (stride.stepCount <= 3 * player.pace) {
+      stride.stepCount++;
       return 48 * 1;
-    } else if (this.stride[direction].stepCount <= 4 * this.pace) {
-      this.stride[direction].stepCount++;
+    } else if (stride.stepCount <= 4 * player.pace) {
+      stride.stepCount++;
       return 48 * 2;
-    } else if (this.stride[direction].stepCount > 4 * this.pace) {
-      this.stride[direction].stepCount = 0;
+    } else if (stride.stepCount > 4 * player.pace) {
+      stride.stepCount = 0;
       return 48 * 1;
     }
-  }
+  };
 
-  wallCheck(walls) {
-      for(let wall of walls) { if (this.collidedOnSide("top", wall)) break }
-      if (this.collisions.top) {
-        this.pos[1] = this.collisions.top - 32;
-      }
+  player.wallCheck = (walls) => {
+    for (let wall of walls) { if (player.collidedOnSide("top", wall)) break; }
+    if (player.collisions.top) {
+      player.pos[1] = player.collisions.top - 32;
+    }
 
-      for(let wall of walls) { if (this.collidedOnSide("bottom", wall)) break }
-      if (this.collisions.bottom) {
-        this.pos[1] = this.collisions.bottom - 48;
-      }
+    for (let wall of walls) { if (player.collidedOnSide("bottom", wall)) break; }
+    if (player.collisions.bottom) {
+      player.pos[1] = player.collisions.bottom - 48;
+    }
 
-      for(let wall of walls) { if (this.collidedOnSide("left", wall)) break }
-      if (this.collisions.left) {
-        this.pos[0] = this.collisions.left - 12;
-      }
+    for (let wall of walls) { if (player.collidedOnSide("left", wall)) break; }
+    if (player.collisions.left) {
+      player.pos[0] = player.collisions.left - 12;
+    }
 
-      for(let wall of walls) { if (this.collidedOnSide("right", wall)) break }
-      if (this.collisions.right) {
-        this.pos[0] = this.collisions.right - 36;
-      }
+    for (let wall of walls) { if (player.collidedOnSide("right", wall)) break; }
+    if (player.collisions.right) {
+      player.pos[0] = player.collisions.right - 36;
+    }
+  };
 
-  }
+  player.invulCheck = () => {
+    return Math.floor(player.invulnerable / 5) % 2 === 0;
+  };
 
-  invulCheck() {
-    return Math.floor(this.invulnerable / 5) % 2 === 0;
-  }
+  player.hit = () => {
+    player.invulnerable = 60;
+  };
 
-  hit() {
-    this.invulnerable = 60;
-  }
-
-  move(walls) {
-    const keys = this.gameState.keys;
-    const [
-      up,
-      down,
-      left,
-      right,
-      shift
-    ] = [
-      keys["w"],
-      keys["s"],
-      keys["a"],
-      keys["d"],
-      keys["Shift"],
+  player.move = (walls) => {
+    const keys = player.gameState.keys;
+    const [up, down, left, right, shift] = [
+      keys["w"], keys["s"], keys["a"], keys["d"], keys["Shift"],
     ];
-    if (shift && this.stamina > 0) {
-      this.speedModifier = 1.5;
-      this.stamina -= 4;
+
+    if (shift && player.stamina > 0) {
+      player.speedModifier = 1.5;
+      player.stamina -= 4;
     } else {
-      this.speedModifier = 1;
+      player.speedModifier = 1;
     }
 
-    if (this.stamina < 0) this.stamina = 0;
-    if (!shift && this.stamina < 1000) {
+    if (player.stamina < 0) player.stamina = 0;
+    if (!shift && player.stamina < 1000) {
       if (!up && !down && !right && !left) {
-        this.stamina += 2;
+        player.stamina += 2;
       } else {
-        this.stamina += 1;
+        player.stamina += 1;
       }
     }
-    if (this.invulnerable) this.invulnerable--;
-    if (this.invulnerable < 0) this.invulnerable = 0;
+    if (player.invulnerable) player.invulnerable--;
+    if (player.invulnerable < 0) player.invulnerable = 0;
 
-    this.wallCheck(walls);
+    player.wallCheck(walls);
 
-    // W key movements and sprite direction
     if (up) {
-      if ((left || right) && !this.collisions.top) { // normalize diagonal speed unless blocked on top
-        this.pos[1] += -this.normalizedSpeed * this.speedModifier;
+      if ((left || right) && !player.collisions.top) { // normalize diagonal speed unless blocked on top
+        player.pos[1] += -player.normalizedSpeed * player.speedModifier;
       } else {
-        this.pos[1] += -this.speed * this.speedModifier;
+        player.pos[1] += -player.speed * player.speedModifier;
       }
-      this.drawOptions.palY = this.stride.up.palY;
+      player.drawOptions.palY = player.stride.up.palY;
       if (!left && !right) {
-        this.drawOptions.palX = this.stridePalettePos("up");
+        player.drawOptions.palX = player.stridePalettePos("up");
       }
     }
 
-    // S key movements and sprite direction
     if (down) {
       if (left || right) {
-        this.pos[1] += this.normalizedSpeed * this.speedModifier;
+        player.pos[1] += player.normalizedSpeed * player.speedModifier;
       } else {
-        this.pos[1] += this.speed * this.speedModifier;
+        player.pos[1] += player.speed * player.speedModifier;
       }
-      this.drawOptions.palY = this.stride.down.palY;
+      player.drawOptions.palY = player.stride.down.palY;
       if (!left && !right) {
-        this.drawOptions.palX = this.stridePalettePos("down");
+        player.drawOptions.palX = player.stridePalettePos("down");
       }
     }
 
-    // A key movement
     if (left) {
-      if ((up || down) && !this.collisions.left) { // normalize diagonal speed unless blocked on left
-        this.pos[0] += -this.normalizedSpeed * this.speedModifier;
+      if ((up || down) && !player.collisions.left) { // normalize diagonal speed unless blocked on left
+        player.pos[0] += -player.normalizedSpeed * player.speedModifier;
       } else {
-        this.pos[0] += -this.speed * this.speedModifier;
+        player.pos[0] += -player.speed * player.speedModifier;
       }
-      this.drawOptions.palY = this.stride.left.palY;
-      this.drawOptions.palX = this.stridePalettePos("left");
+      player.drawOptions.palY = player.stride.left.palY;
+      player.drawOptions.palX = player.stridePalettePos("left");
     }
 
-    // D key movement
     if (right) {
       if (up || down) {
-        this.pos[0] += this.normalizedSpeed * this.speedModifier;
+        player.pos[0] += player.normalizedSpeed * player.speedModifier;
       } else {
-        this.pos[0] += this.speed * this.speedModifier;
+        player.pos[0] += player.speed * player.speedModifier;
       }
-      this.drawOptions.palY = this.stride.right.palY;
-      this.drawOptions.palX = this.stridePalettePos("right");
+      player.drawOptions.palY = player.stride.right.palY;
+      player.drawOptions.palX = player.stridePalettePos("right");
     }
 
-    // if none of the keys are being pressed, go to default stance
     if (!up && !down && !right && !left) {
-      this.drawOptions.palX = 48 * 1;
+      player.drawOptions.palX = 48 * 1;
     }
 
-    const [x,y] = this.pos;
+    const [x, y] = player.pos;
     let exitDir;
     if (x < -24) {
       exitDir = "left";
-      this.newRoomPos(exitDir);
-      roomChange(exitDir, this.gameState.session.game.room, this.gameState);
-    } else if (x > 720-24) {
+      player.newRoomPos(exitDir);
+      roomChange(exitDir, player.gameState.session.game.room, player.gameState);
+    } else if (x > 720 - 24) {
       exitDir = "right";
-      this.newRoomPos(exitDir);
-      roomChange(exitDir, this.gameState.session.game.room, this.gameState);
+      player.newRoomPos(exitDir);
+      roomChange(exitDir, player.gameState.session.game.room, player.gameState);
     } else if (y < -24) {
       exitDir = "up";
-      this.newRoomPos(exitDir);
-      roomChange(exitDir, this.gameState.session.game.room, this.gameState);
-    } else if (y > 720-24) {
+      player.newRoomPos(exitDir);
+      roomChange(exitDir, player.gameState.session.game.room, player.gameState);
+    } else if (y > 720 - 24) {
       exitDir = "down";
-      this.newRoomPos(exitDir);
-      roomChange(exitDir, this.gameState.session.game.room, this.gameState);
+      player.newRoomPos(exitDir);
+      roomChange(exitDir, player.gameState.session.game.room, player.gameState);
     }
 
-    if (!this.invulCheck()) {
-      this.drawOptions.palX = 48 * 3;
+    if (!player.invulCheck()) {
+      player.drawOptions.palX = 48 * 3;
     }
 
-    this.updateSides();
-    this.drawOptions.x = this.pos[0];
-    this.drawOptions.y = this.pos[1];
-  }
+    player.updateSides();
+    player.drawOptions.x = player.pos[0];
+    player.drawOptions.y = player.pos[1];
+  };
 
+  return player;
 }
 
-export default Player;
+export default createPlayer;

@@ -1,11 +1,11 @@
 import { WEIGHTS, COIN_WEIGHTS } from "./global_vars";
-import Room from "../room";
-import Game from "../game";
+import createRoom from "../room";
+import createGame from "../game";
 
 
 export const newGame = (gameState) => {
   gameState.reset();
-  new Game(gameState);
+  createGame(gameState);
 };
 
 export const collidedWithSide = (side, thisSide, otherSide) => {
@@ -102,7 +102,7 @@ export const roomChange = (exitDir, currRoom, gameState) => {
     session.game.room = session.rooms[`${nextNodePos}`];
   } else {
     const neighbor = { [exitDir]: currRoom };
-    session.game.room = new Room(neighbor, gameState);
+    session.game.room = createRoom(neighbor, gameState);
     addValidNeighbors(currRoom, gameState);
     addValidNeighbors(session.game.room, gameState);
   }

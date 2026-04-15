@@ -1,11 +1,11 @@
 import "./styles/index.scss";
 import installListeners from "./scripts/utils/install_listeners";
 import { WIDTH, HEIGHT, ALL_PATHS } from "./scripts/utils/global_vars";
-import GameState from "./scripts/game_state";
-import GameStart from "./scripts/game_start";
+import createGameState from "./scripts/game_state";
+import createGameStart from "./scripts/game_start";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const gameState = new GameState();
+  const gameState = createGameState();
 
   const canvas = document.getElementById("display");
   canvas.width = WIDTH;
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
   playerSprite.onload = () => {
     gameState.gameOptions.ctx = ctx;
     gameState.gameOptions.playerSprite = playerSprite;
-    let gameStart = new GameStart(gameState);
+    const gameStart = createGameStart(gameState);
     gameStart.prompt();
   }
 });

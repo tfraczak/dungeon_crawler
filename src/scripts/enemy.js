@@ -1,279 +1,205 @@
-import Entity from "./entity";
+import createEntity from "./entity";
 
-class Enemy extends Entity {
-  constructor(pos, width, height, spritePalette, type, detectDist, gameState) {
-    super(pos, width, height, spritePalette);
-    this.gameState = gameState;
-    this.speed = 1;
-    this.speedModifier = 0.75;
-    this.pace = 24/this.speed;
-    this.chasingPlayer = false;
-    this.detectDist = detectDist;
-    this.idleCount = 0;
-    this.idleMax = 60;
-    this.type = type;
-    this.movement = {
-      up: false,
-      down: false,
-      left: false,
-      right: false,
-    };
-    let x, y;
-    switch(type) {
-      case "blob":
-        x = 48 * 3;
-        y = 48 * 0;
-        break;
-      case "bat":
-        x = 48 * 0;
-        y = 48 * 0;
-        break;
-      case "ghost":
-        x = 48 * 6;
-        y = 48 * 4;
-        break;
+function createEnemy(pos, width, height, spritePalette, type, detectDist, gameState) {
+  const enemy = createEntity(pos, width, height, spritePalette);
+
+  enemy.gameState = gameState;
+  enemy.speed = 1;
+  enemy.speedModifier = 0.75;
+  enemy.pace = 24 / enemy.speed;
+  enemy.chasingPlayer = false;
+  enemy.detectDist = detectDist;
+  enemy.idleCount = 0;
+  enemy.idleMax = 60;
+  enemy.type = type;
+  enemy.movement = { up: false, down: false, left: false, right: false };
+
+  let x, y;
+  switch (type) {
+    case "blob":  x = 48 * 3; y = 48 * 0; break;
+    case "bat":   x = 48 * 0; y = 48 * 0; break;
+    case "ghost": x = 48 * 6; y = 48 * 4; break;
+  }
+  enemy.palXOffset = x;
+  enemy.stride = {
+    up:    { stepCount: 0, palY: (48 * 3) + y },
+    down:  { stepCount: 0, palY: (48 * 0) + y },
+    left:  { stepCount: 0, palY: (48 * 1) + y },
+    right: { stepCount: 0, palY: (48 * 2) + y },
+  };
+
+  enemy.stridePalettePos = (direction) => {
+    enemy.pace = 24 / (enemy.speed * enemy.speedModifier);
+    const stride = enemy.stride[direction];
+    if (stride.stepCount <= enemy.pace) {
+      stride.stepCount++;
+      return (48 * 1) + enemy.palXOffset;
+    } else if (stride.stepCount <= 2 * enemy.pace) {
+      stride.stepCount++;
+      return (48 * 0) + enemy.palXOffset;
+    } else if (stride.stepCount <= 3 * enemy.pace) {
+      stride.stepCount++;
+      return (48 * 1) + enemy.palXOffset;
+    } else if (stride.stepCount <= 4 * enemy.pace) {
+      stride.stepCount++;
+      return (48 * 2) + enemy.palXOffset;
+    } else if (stride.stepCount > 4 * enemy.pace) {
+      stride.stepCount = 0;
+      return (48 * 1) + enemy.palXOffset;
     }
-    this.palXOffset = x;
-    this.stride = {
-      up: {
-        stepCount: 0,
-        palY: (48 * 3) + y,
-      },
-      down: {
-        stepCount: 0,
-        palY: (48 * 0) + y,
-      },
-      left: {
-        stepCount: 0,
-        palY: (48 * 1) + y,
-      },
-      right: {
-        stepCount: 0,
-        palY: (48 * 2) + y,
-      },
-    };
-  }
+  };
 
-  stridePalettePos(direction) {
-    this.pace = 24 / (this.speed * this.speedModifier);
-    if (this.stride[direction].stepCount <= this.pace) {
-      this.stride[direction].stepCount++;
-      return (48 * 1) + this.palXOffset;
-    } else if (this.stride[direction].stepCount <= 2 * this.pace) {
-      this.stride[direction].stepCount++;
-      return (48 * 0) + this.palXOffset;
-    } else if (this.stride[direction].stepCount <= 3 * this.pace) {
-      this.stride[direction].stepCount++;
-      return (48 * 1) + this.palXOffset;
-    } else if (this.stride[direction].stepCount <= 4 * this.pace) {
-      this.stride[direction].stepCount++;
-      return (48 * 2) + this.palXOffset;
-    } else if (this.stride[direction].stepCount > 4 * this.pace) {
-      this.stride[direction].stepCount = 0;
-      return (48 * 1) + this.palXOffset;
-    }
-  }
+  enemy.distToPlayer = () => {
+    const player = enemy.gameState.session.player;
+    const dx = enemy.center[0] - player.center[0];
+    const dy = enemy.center[1] - player.center[1];
+    return Math.sqrt(dx * dx + dy * dy);
+  };
 
-  distToPlayer() {
-    const mx = this.center[0];
-    const my = this.center[1];
-    const ex = this.gameState.session.player.center[0];
-    const ey = this.gameState.session.player.center[1];
-    let dx = mx - ex;
-    let dy = my - ey;
-    const dist = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-    return dist;
-  }
+  enemy.normalizedVectorPos = () => {
+    const player = enemy.gameState.session.player;
+    let dx = enemy.center[0] - player.center[0];
+    let dy = enemy.center[1] - player.center[1];
 
-  normalizedVectorPos() {
-    const mx = this.center[0];
-    const my = this.center[1];
-    const ex = this.gameState.session.player.center[0];
-    const ey = this.gameState.session.player.center[1];
-    let dx = mx - ex;
-    let dy = my - ey;
-
-    if (!this.chasingPlayer && !this.idleCount) {
+    if (!enemy.chasingPlayer && !enemy.idleCount) {
       const randAngle = Math.random() * 2 * Math.PI;
-      this.dx = Math.cos(randAngle) * this.speed * this.speedModifier;
-      this.dy = Math.sin(randAngle) * this.speed * this.speedModifier;
-      this.idleCount = 1;
-    }
-    
-    if (!this.chasingPlayer && this.idleCount) this.idleCount++;
-    
-    if (this.chasingPlayer) {
-      this.dx = dx;
-      this.dy = dy;
+      enemy.dx = Math.cos(randAngle) * enemy.speed * enemy.speedModifier;
+      enemy.dy = Math.sin(randAngle) * enemy.speed * enemy.speedModifier;
+      enemy.idleCount = 1;
     }
 
+    if (!enemy.chasingPlayer && enemy.idleCount) enemy.idleCount++;
 
-    if(this.idleCount >= this.idleMax) this.idleCount = 0;
-
-    this.angle = Math.atan(this.dy/this.dx);
-    const ny = Math.sin(this.angle) * this.speed * this.speedModifier;
-    const nx = Math.cos(this.angle) * this.speed * this.speedModifier;
-    if (this.dy > 0) {
-      this.movement["up"] = true;
-      this.movement["down"] = false;
-      if (Math.abs(this.dy) > Math.abs(this.dx)) this.spriteDir = "up";
-    }
-    
-    if (this.dy < 0) {
-      this.movement["down"] = true;
-      this.movement["up"] = false;
-      if (Math.abs(this.dy) > Math.abs(this.dx)) this.spriteDir = "down";
-    }
-    
-    if (this.dx > 0) {
-      this.movement["left"] = true;
-      this.movement["right"] = false;
-      if (Math.abs(this.dx) > Math.abs(this.dy)) this.spriteDir = "left";
-    }
-    
-    if (this.dx < 0) {
-      this.movement["right"] = true;
-      this.movement["left"] = false;
-      if (Math.abs(this.dx) > Math.abs(this.dy)) this.spriteDir = "right";
+    if (enemy.chasingPlayer) {
+      enemy.dx = dx;
+      enemy.dy = dy;
     }
 
-    return [nx,ny];
-  }
+    if (enemy.idleCount >= enemy.idleMax) enemy.idleCount = 0;
 
-  damage() {
-    return Math.floor((Math.random()*4)+1);
-  }
+    enemy.angle = Math.atan(enemy.dy / enemy.dx);
+    const ny = Math.sin(enemy.angle) * enemy.speed * enemy.speedModifier;
+    const nx = Math.cos(enemy.angle) * enemy.speed * enemy.speedModifier;
 
-  hitPlayer(walls) {
-    const player = this.gameState.session.player;
+    if (enemy.dy > 0) {
+      enemy.movement["up"] = true;
+      enemy.movement["down"] = false;
+      if (Math.abs(enemy.dy) > Math.abs(enemy.dx)) enemy.spriteDir = "up";
+    }
+    if (enemy.dy < 0) {
+      enemy.movement["down"] = true;
+      enemy.movement["up"] = false;
+      if (Math.abs(enemy.dy) > Math.abs(enemy.dx)) enemy.spriteDir = "down";
+    }
+    if (enemy.dx > 0) {
+      enemy.movement["left"] = true;
+      enemy.movement["right"] = false;
+      if (Math.abs(enemy.dx) > Math.abs(enemy.dy)) enemy.spriteDir = "left";
+    }
+    if (enemy.dx < 0) {
+      enemy.movement["right"] = true;
+      enemy.movement["left"] = false;
+      if (Math.abs(enemy.dx) > Math.abs(enemy.dy)) enemy.spriteDir = "right";
+    }
 
-    if (this.distToPlayer() < 32 && !player.invulnerable) {
-      player.pos[0] -= (0.4 * this.dx);
-      player.pos[1] -= (0.4 * this.dy);
+    return [nx, ny];
+  };
+
+  enemy.damage = () => Math.floor((Math.random() * 4) + 1);
+
+  enemy.hitPlayer = (walls) => {
+    const player = enemy.gameState.session.player;
+    if (enemy.distToPlayer() < 32 && !player.invulnerable) {
+      player.pos[0] -= (0.4 * enemy.dx);
+      player.pos[1] -= (0.4 * enemy.dy);
       player.updateSides();
       player.wallCheck(walls);
       player.updateSides();
-      player.hp -= this.damage();
+      player.hp -= enemy.damage();
       if (player.hp < 0) player.hp = 0;
       player.hit();
     }
+  };
 
-  }
-
-  wallCheck(walls) {
-    const {
-      up,
-      down,
-      left,
-      right
-    } = this.movement;
+  enemy.wallCheck = (walls) => {
+    const { up, down, left, right } = enemy.movement;
 
     if (up) {
-      for(let wall of walls) { if (this.collidedOnSide("top", wall)) break; }
-      if (this.collisions.top) {
-        this.pos[1] = this.collisions.top - (this.height-this.colBox.height);
+      for (let wall of walls) { if (enemy.collidedOnSide("top", wall)) break; }
+      if (enemy.collisions.top) {
+        enemy.pos[1] = enemy.collisions.top - (enemy.height - enemy.colBox.height);
       }
     }
-
     if (down) {
-      for(let wall of walls) { if (this.collidedOnSide("bottom", wall)) break; }
-      if (this.collisions.bottom) {
-        this.pos[1] = this.collisions.bottom - 48;
+      for (let wall of walls) { if (enemy.collidedOnSide("bottom", wall)) break; }
+      if (enemy.collisions.bottom) {
+        enemy.pos[1] = enemy.collisions.bottom - 48;
       }
     }
-
     if (left) {
-      for(let wall of walls) { if (this.collidedOnSide("left", wall)) break; }
-      if (this.collisions.left) {
-        this.pos[0] = this.collisions.left - (this.colBox.width/2);
+      for (let wall of walls) { if (enemy.collidedOnSide("left", wall)) break; }
+      if (enemy.collisions.left) {
+        enemy.pos[0] = enemy.collisions.left - (enemy.colBox.width / 2);
       }
     }
-
     if (right) {
-      for(let wall of walls) { if (this.collidedOnSide("right", wall)) break; }
-      if (this.collisions.right) {
-        this.pos[0] = this.collisions.right - (this.colBox.width + (this.colBox.width/2));
+      for (let wall of walls) { if (enemy.collidedOnSide("right", wall)) break; }
+      if (enemy.collisions.right) {
+        enemy.pos[0] = enemy.collisions.right - (enemy.colBox.width + (enemy.colBox.width / 2));
       }
     }
+  };
 
-  }
-
-
-
-  move(walls) {
-
-    if (this.distToPlayer() < this.detectDist) {
-      this.chasingPlayer = true;
-      this.speedModifier = 1;
+  enemy.move = (walls) => {
+    if (enemy.distToPlayer() < enemy.detectDist) {
+      enemy.chasingPlayer = true;
+      enemy.speedModifier = 1;
     } else {
-      this.chasingPlayer = false;
-      this.speedModifier = 0.75;
-    }
-    
-    let newVectors = this.normalizedVectorPos();
-
-    const {
-      up,
-      down,
-      left,
-      right
-    } = this.movement;
-
-    if (left && up) {
-      this.pos[0] -= newVectors[0];
-      this.pos[1] -= newVectors[1];
-    } 
-    
-    if (left && down) {
-      this.pos[0] -= newVectors[0];
-      this.pos[1] -= newVectors[1];
-    }
-    
-    if (right && up) {
-      this.pos[0] += newVectors[0];
-      this.pos[1] += newVectors[1];
-    } 
-    
-    if (right && down) {
-      this.pos[0] += newVectors[0];
-      this.pos[1] += newVectors[1];
+      enemy.chasingPlayer = false;
+      enemy.speedModifier = 0.75;
     }
 
-    this.wallCheck(walls);
+    let newVectors = enemy.normalizedVectorPos();
+    const { up, down, left, right } = enemy.movement;
 
-    this.updateSides();
+    if (left && up)    { enemy.pos[0] -= newVectors[0]; enemy.pos[1] -= newVectors[1]; }
+    if (left && down)  { enemy.pos[0] -= newVectors[0]; enemy.pos[1] -= newVectors[1]; }
+    if (right && up)   { enemy.pos[0] += newVectors[0]; enemy.pos[1] += newVectors[1]; }
+    if (right && down) { enemy.pos[0] += newVectors[0]; enemy.pos[1] += newVectors[1]; }
 
-    switch (this.spriteDir) {
+    enemy.wallCheck(walls);
+    enemy.updateSides();
+
+    switch (enemy.spriteDir) {
       case "up":
-        this.drawOptions.palY = this.stride.up.palY;
-        this.drawOptions.palX = this.stridePalettePos("up");
+        enemy.drawOptions.palY = enemy.stride.up.palY;
+        enemy.drawOptions.palX = enemy.stridePalettePos("up");
         break;
       case "down":
-        
-        this.drawOptions.palY = this.stride.down.palY;
-        this.drawOptions.palX = this.stridePalettePos("down");
+        enemy.drawOptions.palY = enemy.stride.down.palY;
+        enemy.drawOptions.palX = enemy.stridePalettePos("down");
         break;
       case "left":
-        this.drawOptions.palY = this.stride.left.palY;
-        this.drawOptions.palX = this.stridePalettePos("left");
+        enemy.drawOptions.palY = enemy.stride.left.palY;
+        enemy.drawOptions.palX = enemy.stridePalettePos("left");
         break;
       case "right":
-        this.drawOptions.palY = this.stride.right.palY;
-        this.drawOptions.palX = this.stridePalettePos("right");
+        enemy.drawOptions.palY = enemy.stride.right.palY;
+        enemy.drawOptions.palX = enemy.stridePalettePos("right");
         break;
       default:
-        this.drawOptions.palX = 48 * 1;
+        enemy.drawOptions.palX = 48 * 1;
         break;
     }
 
-    
-    this.hitPlayer(walls);
-    this.gameState.session.player.wallCheck(walls);
-    this.updateSides();
-    this.drawOptions.x = this.pos[0];
-    this.drawOptions.y = this.pos[1];
-  }
+    enemy.hitPlayer(walls);
+    enemy.gameState.session.player.wallCheck(walls);
+    enemy.updateSides();
+    enemy.drawOptions.x = enemy.pos[0];
+    enemy.drawOptions.y = enemy.pos[1];
+  };
 
+  return enemy;
 }
 
-export default Enemy;
+export default createEnemy;
