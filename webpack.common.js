@@ -16,70 +16,48 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
+        exclude: /node_modules/,
         use: {
           loader: "babel-loader",
           options: {
             presets: ["@babel/preset-env"],
-            plugins: ["@babel/plugin-proposal-optional-chaining"],
-            exclude: /node_modules/,
           },
         },
       },
       {
         test: /\.css$/,
         use: [
-          {
-            loader: MiniCssExtractPlugin.loader,
-            options: {
-              publicPath: "../",
-            },
-          },
+          MiniCssExtractPlugin.loader,
           "css-loader",
           "postcss-loader",
         ],
       },
       {
         test: /\.(png|jpe?g|gif)$/i,
-        use: [
-          {
-            loader: "file-loader",
-            options: {
-              name: "[path][name].[ext]",
-              outputPath: "",
-              publicPath: "",
-            },
-          },
-        ],
+        type: "asset/resource",
+        generator: {
+          filename: "[path][name][ext]",
+        },
       },
       {
-        test: /\.s[ca]ss/i,
+        test: /\.s[ca]ss$/i,
         use: [
+          MiniCssExtractPlugin.loader,
+          "css-loader",
+          "postcss-loader",
           {
-            loader: MiniCssExtractPlugin.loader,
+            loader: "sass-loader",
             options: {
-              publicPath: "../",
+              implementation: require("sass"),
             },
           },
-          "css-loader",
-          {
-            loader: "sass-loader", 
-            options: {
-              implementation: require('sass')
-            }
-          },
-          "postcss-loader",
         ],
       },
     ],
   },
   plugins: [
     new MiniCssExtractPlugin({
-      // Options similar to the same options in webpackOptions.output
-      // all options are optional
       filename: "[name].css",
-      chunkFilename: "[id].css",
-      ignoreOrder: false, // Enable to remove warnings about conflicting order
     }),
-    require("autoprefixer"),
   ],
 };
