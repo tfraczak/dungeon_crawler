@@ -208,7 +208,6 @@ class Player extends Entity {
     }
 
     if (!this.invulCheck()) {
-      debugger
       this.drawOptions.palX = 48 * 3;
     }
 
