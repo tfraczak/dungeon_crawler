@@ -198,38 +198,46 @@ function createRoom(neighbor, gameState) {
     ];
   };
 
-  room.draw = (ctx) => {
+  room.draw = (ctx, camera) => {
     ctx.drawImage(room.background, 0, 0);
+
+    const ox = camera ? camera.x : 0;
+    const oy = camera ? camera.y : 0;
+    const viewW = camera ? camera.viewWidth : 720;
+
     ctx.fillStyle = "#fffaf4";
     ctx.font = "20px arial";
-    ctx.fillText(`Room [ ${room.nodePos} ]`, 15, 30);
+    ctx.fillText(`Room [ ${room.nodePos} ]`, ox + 15, oy + 30);
 
     const session = gameState.session;
     const player = session.player;
-    ctx.fillText(`Coins x ${session.coinCount}`, 590, 30);
+    ctx.fillText(`Coins x ${session.coinCount}`, ox + viewW - 130, oy + 30);
+
+    const barY = camera ? oy + camera.viewHeight : 705;
+
     ctx.beginPath();
     ctx.strokeStyle = "#ffbb00";
-    ctx.moveTo(15, 705);
+    ctx.moveTo(ox + 15, barY);
     ctx.lineWidth = 5;
-    ctx.lineTo(15 + (player.stamina / 1000) * 100, 705);
+    ctx.lineTo(ox + 15 + (player.stamina / 1000) * 100, barY);
     ctx.stroke();
     ctx.beginPath();
     ctx.strokeStyle = "#33ff00";
-    ctx.moveTo(15, 690);
+    ctx.moveTo(ox + 15, barY - 15);
     ctx.lineWidth = 10;
-    ctx.lineTo(15 + (player.hp / 20) * 100, 690);
+    ctx.lineTo(ox + 15 + (player.hp / 20) * 100, barY - 15);
     ctx.stroke();
     ctx.beginPath();
     ctx.strokeStyle = "#ff0000";
-    ctx.moveTo(115 - (1 - player.hp / 20) * 100, 690);
+    ctx.moveTo(ox + 115 - (1 - player.hp / 20) * 100, barY - 15);
     ctx.lineWidth = 10;
-    ctx.lineTo(115, 690);
+    ctx.lineTo(ox + 115, barY - 15);
     ctx.stroke();
     ctx.beginPath();
     ctx.strokeStyle = "#00dddd";
-    ctx.moveTo(15, 699);
+    ctx.moveTo(ox + 15, barY - 6);
     ctx.lineWidth = 5;
-    ctx.lineTo(15 + (player.invulnerable / 75) * 100, 699);
+    ctx.lineTo(ox + 15 + (player.invulnerable / 75) * 100, barY - 6);
     ctx.stroke();
   };
 

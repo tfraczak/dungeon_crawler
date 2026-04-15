@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta content="./design_docs/dungeon_crawler.gif"/>
     <meta property="og:locale" content="en_US" />
@@ -106,6 +106,16 @@
     </header>
     <div id="display-wrapper">
       <canvas id="display">Your browser does not support cavnas.</canvas>
+    </div>
+    <div id="touch-controls">
+      <div id="joystick">
+        <div id="joystick-knob"></div>
+      </div>
+      <button id="sprint-btn" aria-label="Sprint">Sprint</button>
+    </div>
+    <div id="rotate-overlay">
+      <p>&#x1F504;</p>
+      <p>Rotate your device to landscape</p>
     </div>
     <audio id="restart-sound" src="./src/assets/audio/click.mp3"></audio>
     <audio id="how-to-sound" src="./src/assets/audio/click.mp3"></audio>

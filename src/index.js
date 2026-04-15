@@ -8,9 +8,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const gameState = createGameState();
 
   const canvas = document.getElementById("display");
-  canvas.width = WIDTH;
-  canvas.height = HEIGHT;
   const ctx = canvas.getContext("2d");
+
+  if (gameState.isMobile) {
+    document.body.classList.add("mobile");
+    const MOBILE_ZOOM = 1.5;
+    canvas.width = Math.floor(window.innerWidth / MOBILE_ZOOM);
+    canvas.height = Math.floor(window.innerHeight / MOBILE_ZOOM);
+
+    const updateOrientation = () => {
+      if (window.innerWidth > window.innerHeight) {
+        document.body.classList.remove("portrait");
+        canvas.width = Math.floor(window.innerWidth / MOBILE_ZOOM);
+        canvas.height = Math.floor(window.innerHeight / MOBILE_ZOOM);
+      } else {
+        document.body.classList.add("portrait");
+      }
+    };
+    updateOrientation();
+    window.addEventListener("resize", updateOrientation);
+    window.addEventListener("orientationchange", () => {
+      setTimeout(updateOrientation, 100);
+    });
+  } else {
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
+  }
 
   installListeners(gameState);
 

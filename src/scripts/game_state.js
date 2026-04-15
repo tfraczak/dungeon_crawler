@@ -1,5 +1,6 @@
 function createGameState() {
   return {
+    isMobile: navigator.maxTouchPoints > 0 && matchMedia('(hover: none)').matches,
     keys: {
       w: false,
       a: false,

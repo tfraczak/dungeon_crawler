@@ -1,0 +1,139 @@
+#touch-controls {
+  display: none;
+}
+
+#rotate-overlay {
+  display: none;
+}
+
+body.mobile {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+
+  #header {
+    display: none;
+  }
+
+  #display-wrapper {
+    margin: 0;
+    padding: 0;
+    height: auto;
+
+    #display {
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      border: none;
+      image-rendering: pixelated;
+    }
+  }
+
+  #touch-controls {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 16px 24px;
+    pointer-events: none;
+    z-index: 10;
+    touch-action: manipulation;
+  }
+
+  #joystick {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: rgba(0, 0, 0, 0.3);
+    position: relative;
+    pointer-events: auto;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+
+    #joystick-knob {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      border: 2px solid rgba(255, 255, 255, 0.7);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -24px;
+      margin-left: -24px;
+      transition: none;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+  }
+
+  #sprint-btn {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 187, 0, 0.6);
+    background: rgba(255, 187, 0, 0.25);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    pointer-events: auto;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: pointer;
+    outline: none;
+    margin-bottom: 28px;
+
+    &:active {
+      background: rgba(255, 187, 0, 0.5);
+    }
+  }
+
+  &.portrait {
+    #display-wrapper,
+    #touch-controls {
+      display: none;
+    }
+
+    #rotate-overlay {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 100;
+      color: #fffaf4;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+
+      p:first-child {
+        font-size: 64px;
+        margin-bottom: 24px;
+        animation: spin 2s ease-in-out infinite;
+      }
+
+      p:last-child {
+        font-size: 18px;
+        padding: 0 32px;
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(90deg); }
+  100% { transform: rotate(0deg); }
+}
