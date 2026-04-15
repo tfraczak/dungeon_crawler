@@ -86,7 +86,9 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
       keys["w"], keys["s"], keys["a"], keys["d"], keys["Shift"],
     ];
 
-    if (shift && player.stamina > 0) {
+    const moving = up || down || left || right;
+
+    if (shift && player.stamina > 0 && moving) {
       player.speedModifier = 1.5;
       player.stamina -= 4;
     } else {
@@ -94,10 +96,10 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     }
 
     if (player.stamina < 0) player.stamina = 0;
-    if (!shift && player.stamina < 1000) {
-      if (!up && !down && !right && !left) {
+    if (player.stamina < 1000) {
+      if (!moving) {
         player.stamina += 2;
-      } else {
+      } else if (!shift) {
         player.stamina += 1;
       }
     }
