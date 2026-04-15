@@ -95,7 +95,6 @@ class Game {
   play() {
     this.then = Date.now();
     this.gameStep();
-    requestAnimationFrame(this.gameStep);
   }
 }
 
