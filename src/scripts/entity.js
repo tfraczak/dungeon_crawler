@@ -2,12 +2,12 @@ import ColBox from "./collision_box";
 import { collidedWithSide } from "./utils/func_utils";
 
 class Entity {
-  constructor(pos,width,height,spritePalette) {
+  constructor(pos,width,height,spritePalette,colBoxOptions) {
     this.pos = pos;
     this.width = width;
     this.height = height;
-    const colBoxWidth = width/2;
-    const colBoxHeight = height/3;
+    const colBoxWidth = colBoxOptions?.width ?? width/2;
+    const colBoxHeight = colBoxOptions?.height ?? height/3;
     
     this.spritePalette = spritePalette;
     this.drawOptions = {
