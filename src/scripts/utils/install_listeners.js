@@ -1,23 +1,24 @@
-import { newGame } from "../utils/func_utils";
+import { newGame } from "./func_utils";
 
-export default (KEYS) => {
+export default (gameState) => {
+  const keys = gameState.keys;
+
   document.addEventListener("keydown", e => {
-    
-    if (e.key.toLowerCase() === "w" && !KEYS["w"]) KEYS[e.key.toLowerCase()] = true;
-    if (e.key.toLowerCase() === "a" && !KEYS["a"]) KEYS[e.key.toLowerCase()] = true;
-    if (e.key.toLowerCase() === "s" && !KEYS["s"]) KEYS[e.key.toLowerCase()] = true;
-    if (e.key.toLowerCase() === "d" && !KEYS["d"]) KEYS[e.key.toLowerCase()] = true;
-    if (e.key === "Shift" && !KEYS["Shift"]) KEYS[e.key] = true;
-    if (e.key === "Enter" && !KEYS["Enter"]) KEYS[e.key] = true;
-
+    if (e.key.toLowerCase() === "w" && !keys["w"]) keys[e.key.toLowerCase()] = true;
+    if (e.key.toLowerCase() === "a" && !keys["a"]) keys[e.key.toLowerCase()] = true;
+    if (e.key.toLowerCase() === "s" && !keys["s"]) keys[e.key.toLowerCase()] = true;
+    if (e.key.toLowerCase() === "d" && !keys["d"]) keys[e.key.toLowerCase()] = true;
+    if (e.key === "Shift" && !keys["Shift"]) keys[e.key] = true;
+    if (e.key === "Enter" && !keys["Enter"]) keys[e.key] = true;
   });
+
   document.addEventListener("keyup", e => {
-    if (e.key.toLowerCase() === "w" && KEYS["w"]) KEYS[e.key.toLowerCase()] = false;
-    if (e.key.toLowerCase() === "a" && KEYS["a"]) KEYS[e.key.toLowerCase()] = false;
-    if (e.key.toLowerCase() === "s" && KEYS["s"]) KEYS[e.key.toLowerCase()] = false;
-    if (e.key.toLowerCase() === "d" && KEYS["d"]) KEYS[e.key.toLowerCase()] = false;
-    if (e.key === "Shift" && KEYS["Shift"]) KEYS[e.key] = false;
-    if (e.key === "Enter" && KEYS["Enter"]) KEYS[e.key] = false;
+    if (e.key.toLowerCase() === "w" && keys["w"]) keys[e.key.toLowerCase()] = false;
+    if (e.key.toLowerCase() === "a" && keys["a"]) keys[e.key.toLowerCase()] = false;
+    if (e.key.toLowerCase() === "s" && keys["s"]) keys[e.key.toLowerCase()] = false;
+    if (e.key.toLowerCase() === "d" && keys["d"]) keys[e.key.toLowerCase()] = false;
+    if (e.key === "Shift" && keys["Shift"]) keys[e.key] = false;
+    if (e.key === "Enter" && keys["Enter"]) keys[e.key] = false;
   });
 
   const howTo = document.getElementById("how-to");
@@ -46,7 +47,6 @@ export default (KEYS) => {
   });
   restart.addEventListener("click", e => {
     e.preventDefault();
-    newGame();
+    newGame(gameState);
   });
-
 }

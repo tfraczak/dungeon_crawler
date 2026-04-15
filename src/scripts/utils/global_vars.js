@@ -2,18 +2,6 @@ export const WIDTH = 720;
 export const HEIGHT = 720;
 export const SPRITE_DIMS = [48,48];
 export const FPS = 1000/60;
-export const KEYS = {
-  w: false,
-  a: false,
-  s: false,
-  d: false,
-  Shift: false,
-  Enter: false,
-};
-
-export const SESSION = {};
-export const SPRITES = {};
-export const BG_IMGS = {};
 
 export const COIN_WEIGHTS = {
   3: 2,
@@ -57,6 +45,3 @@ export const WEIGHTS = {
     1: 10,
   },
 };
-
-export const GAME_OPTIONS = {};
-export const REQUEST = {};

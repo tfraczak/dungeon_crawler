@@ -1,9 +1,10 @@
-import * as Global from "./utils/global_vars";
 import { newGame } from "./utils/func_utils";
+
 class GameStart {
-  constructor(ctx, playerSprite) {
-    this.ctx = ctx;
-    this.playerSprite = playerSprite;
+  constructor(gameState) {
+    this.gameState = gameState;
+    this.ctx = gameState.gameOptions.ctx;
+    this.playerSprite = gameState.gameOptions.playerSprite;
     this.fpsInterval = 1000/60;
     this.theta = 0;
     this.step = this.step.bind(this);
@@ -21,7 +22,7 @@ class GameStart {
       const blue = Math.floor(127 * Math.sin(1.5 * this.theta) + 1);
       const color = `rgba(${red},${green},${blue}, 0.7)`;
       this.ctx.clearRect(0,0,720,720);
-      this.ctx.drawImage(Global.BG_IMGS["4DLRU0"], 0, 0);
+      this.ctx.drawImage(this.gameState.bgImgs["4DLRU0"], 0, 0);
       this.ctx.fillStyle = color;
       this.ctx.fillRect(0,0,720,720);
       this.ctx.fillStyle = "#fffaf4";
@@ -32,11 +33,11 @@ class GameStart {
 
       this.ctx.drawImage(this.playerSprite, 48, 0, 48, 48, 48 * 7, 48 * 7, 48, 48);
 
-      if (Global.KEYS["Enter"]) {
+      if (this.gameState.keys["Enter"]) {
         cancelAnimationFrame(this.requestId);
         const restart = document.getElementById("restart");
         restart.removeAttribute("disabled");
-        newGame();
+        newGame(this.gameState);
       }
     }
   }
@@ -44,9 +45,7 @@ class GameStart {
   prompt() {
     this.then = Date.now();
     this.step();
-
   }
-
 }
 
 export default GameStart;

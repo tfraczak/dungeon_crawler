@@ -1,10 +1,10 @@
 import Entity from "./entity";
-import * as Global from "./utils/global_vars";
 import { roomChange } from "./utils/func_utils";
 
 class Player extends Entity {
-  constructor(pos,width,height,spritePalette) {
-    super(pos,width,height,spritePalette);
+  constructor(pos, width, height, spritePalette, gameState) {
+    super(pos, width, height, spritePalette);
+    this.gameState = gameState;
     this.speed = 1.25;
     this.normalizedSpeed = parseFloat(this.speed) / Math.sqrt(2);
     this.pace = 24/this.speed;
@@ -101,6 +101,7 @@ class Player extends Entity {
   }
 
   move(walls) {
+    const keys = this.gameState.keys;
     const [
       up,
       down,
@@ -108,11 +109,11 @@ class Player extends Entity {
       right,
       shift
     ] = [
-      Global.KEYS["w"],
-      Global.KEYS["s"],
-      Global.KEYS["a"],
-      Global.KEYS["d"],
-      Global.KEYS["Shift"],
+      keys["w"],
+      keys["s"],
+      keys["a"],
+      keys["d"],
+      keys["Shift"],
     ];
     if (shift && this.stamina > 0) {
       this.speedModifier = 1.5;
@@ -192,19 +193,19 @@ class Player extends Entity {
     if (x < -24) {
       exitDir = "left";
       this.newRoomPos(exitDir);
-      roomChange(exitDir, Global.SESSION.game.room);
+      roomChange(exitDir, this.gameState.session.game.room, this.gameState);
     } else if (x > 720-24) {
       exitDir = "right";
       this.newRoomPos(exitDir);
-      roomChange(exitDir, Global.SESSION.game.room);
+      roomChange(exitDir, this.gameState.session.game.room, this.gameState);
     } else if (y < -24) {
       exitDir = "up";
       this.newRoomPos(exitDir);
-      roomChange(exitDir, Global.SESSION.game.room);
+      roomChange(exitDir, this.gameState.session.game.room, this.gameState);
     } else if (y > 720-24) {
       exitDir = "down";
       this.newRoomPos(exitDir);
-      roomChange(exitDir, Global.SESSION.game.room);
+      roomChange(exitDir, this.gameState.session.game.room, this.gameState);
     }
 
     if (!this.invulCheck()) {

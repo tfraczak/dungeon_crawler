@@ -1,9 +1,9 @@
 import Entity from "./entity";
-import * as Global from "./utils/global_vars";
 
 class Enemy extends Entity {
-  constructor(pos,width,height,spritePalette, type, detectDist) {
-    super(pos,width,height,spritePalette);
+  constructor(pos, width, height, spritePalette, type, detectDist, gameState) {
+    super(pos, width, height, spritePalette);
+    this.gameState = gameState;
     this.speed = 1;
     this.speedModifier = 0.75;
     this.pace = 24/this.speed;
@@ -77,8 +77,8 @@ class Enemy extends Entity {
   distToPlayer() {
     const mx = this.center[0];
     const my = this.center[1];
-    const ex = Global.SESSION.player.center[0];
-    const ey = Global.SESSION.player.center[1];
+    const ex = this.gameState.session.player.center[0];
+    const ey = this.gameState.session.player.center[1];
     let dx = mx - ex;
     let dy = my - ey;
     const dist = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
@@ -88,8 +88,8 @@ class Enemy extends Entity {
   normalizedVectorPos() {
     const mx = this.center[0];
     const my = this.center[1];
-    const ex = Global.SESSION.player.center[0];
-    const ey = Global.SESSION.player.center[1];
+    const ex = this.gameState.session.player.center[0];
+    const ey = this.gameState.session.player.center[1];
     let dx = mx - ex;
     let dy = my - ey;
 
@@ -145,10 +145,9 @@ class Enemy extends Entity {
   }
 
   hitPlayer(walls) {
+    const player = this.gameState.session.player;
 
-    const player = Global.SESSION.player;
-
-    if (this.distToPlayer() < 32 && !Global.SESSION.player.invulnerable) {
+    if (this.distToPlayer() < 32 && !player.invulnerable) {
       player.pos[0] -= (0.4 * this.dx);
       player.pos[1] -= (0.4 * this.dy);
       player.updateSides();
@@ -269,7 +268,7 @@ class Enemy extends Entity {
 
     
     this.hitPlayer(walls);
-    Global.SESSION.player.wallCheck(walls);
+    this.gameState.session.player.wallCheck(walls);
     this.updateSides();
     this.drawOptions.x = this.pos[0];
     this.drawOptions.y = this.pos[1];

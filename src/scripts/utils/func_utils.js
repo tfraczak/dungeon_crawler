@@ -1,17 +1,11 @@
-import * as Global from "./global_vars";
+import { WEIGHTS, COIN_WEIGHTS } from "./global_vars";
 import Room from "../room";
 import Game from "../game";
 
 
-export const newGame = () => {
-  if (Global.SESSION.game) {
-    Global.SESSION.game.requestStop = true;
-    delete Global.SESSION["game"];
-    delete Global.SESSION["player"];
-    delete Global.SESSION["coinCount"];
-    delete Global.SESSION["rooms"];
-  }
-  new Game(...Object.values(Global.GAME_OPTIONS));
+export const newGame = (gameState) => {
+  gameState.reset();
+  new Game(gameState);
 };
 
 export const collidedWithSide = (side, thisSide, otherSide) => {
@@ -87,7 +81,8 @@ export const collidedWithSide = (side, thisSide, otherSide) => {
 
 };
 
-export const roomChange = (exitDir, currRoom) => {
+export const roomChange = (exitDir, currRoom, gameState) => {
+  const session = gameState.session;
   let nextNodePos = [...currRoom.nodePos];
   switch(exitDir) {
     case "up":
@@ -103,30 +98,30 @@ export const roomChange = (exitDir, currRoom) => {
       nextNodePos[0] += 1;
       break;
   }
-  if (Global.SESSION.rooms[`${nextNodePos}`]) {
-    Global.SESSION.game.room = Global.SESSION.rooms[`${nextNodePos}`];
+  if (session.rooms[`${nextNodePos}`]) {
+    session.game.room = session.rooms[`${nextNodePos}`];
   } else {
     const neighbor = { [exitDir]: currRoom };
-    Global.SESSION.game.room = new Room(neighbor);
-    addValidNeighbors(currRoom);
-    addValidNeighbors(Global.SESSION.game.room);
+    session.game.room = new Room(neighbor, gameState);
+    addValidNeighbors(currRoom, gameState);
+    addValidNeighbors(session.game.room, gameState);
   }
 };
 
 export const randNumPaths = max => {
   let paths = [];
   if (max > 3) {
-    for (let i = 0; i < Global.WEIGHTS[max][4]; i++) { paths.push(4) }
-    for (let i = 0; i < Global.WEIGHTS[max][3]; i++) { paths.push(3) }
-    for (let i = 0; i < Global.WEIGHTS[max][2]; i++) { paths.push(2) }
-    for (let i = 0; i < Global.WEIGHTS[max][1]; i++) { paths.push(1) }
+    for (let i = 0; i < WEIGHTS[max][4]; i++) { paths.push(4) }
+    for (let i = 0; i < WEIGHTS[max][3]; i++) { paths.push(3) }
+    for (let i = 0; i < WEIGHTS[max][2]; i++) { paths.push(2) }
+    for (let i = 0; i < WEIGHTS[max][1]; i++) { paths.push(1) }
   } else if (max > 2) {
-    for (let i = 0; i < Global.WEIGHTS[max][3]; i++) { paths.push(3) }
-    for (let i = 0; i < Global.WEIGHTS[max][2]; i++) { paths.push(2) }
-    for (let i = 0; i < Global.WEIGHTS[max][1]; i++) { paths.push(1) }
+    for (let i = 0; i < WEIGHTS[max][3]; i++) { paths.push(3) }
+    for (let i = 0; i < WEIGHTS[max][2]; i++) { paths.push(2) }
+    for (let i = 0; i < WEIGHTS[max][1]; i++) { paths.push(1) }
   } else if (max > 1) {
-    for (let i = 0; i < Global.WEIGHTS[max][2]; i++) { paths.push(2) }
-    for (let i = 0; i < Global.WEIGHTS[max][1]; i++) { paths.push(1) }
+    for (let i = 0; i < WEIGHTS[max][2]; i++) { paths.push(2) }
+    for (let i = 0; i < WEIGHTS[max][1]; i++) { paths.push(1) }
   } else {
     paths.push(1);
   }
@@ -134,10 +129,10 @@ export const randNumPaths = max => {
   shuffle(paths);
 
   return paths[Math.floor(Math.random()*paths.length)];
-  
 };
 
-export const addValidNeighbors = room => {
+export const addValidNeighbors = (room, gameState) => {
+  const rooms = gameState.session.rooms;
   let up = [...room.nodePos];
   up[1] += 1;
   up = up.toString();
@@ -151,40 +146,41 @@ export const addValidNeighbors = room => {
   right[0] += 1;
   right = right.toString();
   if (
-    Global.SESSION.rooms[up] && 
-    (Global.SESSION.rooms[up].neighbors.down !== "X") && 
+    rooms[up] && 
+    (rooms[up].neighbors.down !== "X") && 
     !room.neighbors.up
   ) {
-    room.neighbors.up = Global.SESSION.rooms[up];
-    Global.SESSION.rooms[up].neighbors.down = room;
+    room.neighbors.up = rooms[up];
+    rooms[up].neighbors.down = room;
   }
   if (
-    Global.SESSION.rooms[down] && 
-    (Global.SESSION.rooms[down].neighbors.up !== "X") && 
+    rooms[down] && 
+    (rooms[down].neighbors.up !== "X") && 
     !room.neighbors.down
   ) {
-    room.neighbors.down = Global.SESSION.rooms[down];
-    Global.SESSION.rooms[down].neighbors.up = room;
+    room.neighbors.down = rooms[down];
+    rooms[down].neighbors.up = room;
   }
   if (
-    Global.SESSION.rooms[left] && 
-    (Global.SESSION.rooms[left].neighbors.right !== "X") && 
+    rooms[left] && 
+    (rooms[left].neighbors.right !== "X") && 
     !room.neighbors.left
   ) {
-    room.neighbors.left = Global.SESSION.rooms[left];
-    Global.SESSION.rooms[left].neighbors.right = room;
+    room.neighbors.left = rooms[left];
+    rooms[left].neighbors.right = room;
   }
   if (
-    Global.SESSION.rooms[right] && 
-    (Global.SESSION.rooms[right].neighbors.left !== "X") && 
+    rooms[right] && 
+    (rooms[right].neighbors.left !== "X") && 
     !room.neighbors.right
   ) {
-    room.neighbors.right = Global.SESSION.rooms[right];
-    Global.SESSION.rooms[right].neighbors.left = room;
+    room.neighbors.right = rooms[right];
+    rooms[right].neighbors.left = room;
   }
 };
 
-export const buildPaths = room => {
+export const buildPaths = (room, gameState) => {
+  const rooms = gameState.session.rooms;
   let paths = [];
   let up = [...room.nodePos];
   up[1] += 1;
@@ -198,16 +194,16 @@ export const buildPaths = room => {
   let right = [...room.nodePos];
   right[0] += 1;
   right = right.toString();
-  if (!Global.SESSION.rooms[up] || (Global.SESSION.rooms[up].neighbors.down !== "X")) {
+  if (!rooms[up] || (rooms[up].neighbors.down !== "X")) {
     paths.push("U");
   }
-  if (!Global.SESSION.rooms[down] || (Global.SESSION.rooms[down].neighbors.up !== "X")) {
+  if (!rooms[down] || (rooms[down].neighbors.up !== "X")) {
     paths.push("D");
   }
-  if (!Global.SESSION.rooms[left] || (Global.SESSION.rooms[left].neighbors.right !== "X")) {
+  if (!rooms[left] || (rooms[left].neighbors.right !== "X")) {
     paths.push("L");
   }
-  if (!Global.SESSION.rooms[right] || (Global.SESSION.rooms[right].neighbors.left !== "X")) {
+  if (!rooms[right] || (rooms[right].neighbors.left !== "X")) {
     paths.push("R");
   }
   return paths.sort().join("");
@@ -230,10 +226,10 @@ export const assignBlockedPaths = (room, paths) => {
 
 export const randNumCoins = () => {
   let weightedNumCoins = [];
-  for (let i = 0; i < Global.COIN_WEIGHTS[3]; i++) { weightedNumCoins.push(3) }
-  for (let i = 0; i < Global.COIN_WEIGHTS[2]; i++) { weightedNumCoins.push(2) }
-  for (let i = 0; i < Global.COIN_WEIGHTS[1]; i++) { weightedNumCoins.push(1) }
-  for (let i = 0; i < Global.COIN_WEIGHTS[0]; i++) { weightedNumCoins.push(0) }
+  for (let i = 0; i < COIN_WEIGHTS[3]; i++) { weightedNumCoins.push(3) }
+  for (let i = 0; i < COIN_WEIGHTS[2]; i++) { weightedNumCoins.push(2) }
+  for (let i = 0; i < COIN_WEIGHTS[1]; i++) { weightedNumCoins.push(1) }
+  for (let i = 0; i < COIN_WEIGHTS[0]; i++) { weightedNumCoins.push(0) }
   const randIdx = Math.floor(Math.random() * weightedNumCoins.length);
   shuffle(weightedNumCoins);
   return weightedNumCoins[randIdx];

@@ -1,7 +1,7 @@
-@import "./_reset.scss";
-@import "./_vars.scss";
-@import "./layouts.scss";
-@import "./header.scss";
+@use 'reset';
+@use 'vars' as *;
+@use 'layouts';
+@use 'header';
 
 * {
   color: $off-white;

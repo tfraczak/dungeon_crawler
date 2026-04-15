@@ -1,4 +1,3 @@
-import * as Global from "./utils/global_vars";
 import Wall from "./wall";
 import Coin from "./coin";
 import Enemy from "./enemy";
@@ -14,7 +13,8 @@ import {
 
 
 class Room {
-  constructor(neighbor) {
+  constructor(neighbor, gameState) {
+    this.gameState = gameState;
     this.generateCoins();
     this.walls = [];
     let randIdx;
@@ -55,58 +55,56 @@ class Room {
       this.nodePos = [0,0];
     }
     
-    Global.SESSION.rooms[`${this.nodePos}`] = this;
+    const session = gameState.session;
+    const bgImgs = gameState.bgImgs;
+    session.rooms[`${this.nodePos}`] = this;
 
-    addValidNeighbors(this);
+    addValidNeighbors(this, gameState);
     let walls, numPaths, randPaths;
     let newPaths = [];
-    let paths = buildPaths(this);
+    let paths = buildPaths(this, gameState);
     let pathsArr = paths.split("");
     if (neighbor) {
-      // if not initial room
-      pathsArr = pathsArr.filter(path => path !== entryDir); // remove entryDir from paths
-      numPaths = randNumPaths(paths.length); // weighted random number generator, prefers more paths
-      if (numPaths === paths.length) { // if all 4 paths are available
+      pathsArr = pathsArr.filter(path => path !== entryDir);
+      numPaths = randNumPaths(paths.length);
+      if (numPaths === paths.length) {
         randIdx = Math.floor(Math.random()*3);
-        this.background = Global.BG_IMGS[`${numPaths}${paths}${randIdx}`];
+        this.background = bgImgs[`${numPaths}${paths}${randIdx}`];
         assignBlockedPaths(this, paths);
         walls = this.buildRoomWalls(paths);
         this.walls.push(...walls);
-        Global.SESSION.rooms[`${this.nodePos}`] = this;
-      } else { // less than 4 paths available
-        shuffle(pathsArr); // randomize the path choices
-        newPaths.push(entryDir); // MUST ALWAYS have the path you enter from
+        session.rooms[`${this.nodePos}`] = this;
+      } else {
+        shuffle(pathsArr);
+        newPaths.push(entryDir);
         numPaths--;
         for (let i = 0; i < numPaths; i++) { newPaths.push(pathsArr.pop()) }
         newPaths = newPaths.sort().join("");
         randIdx = Math.floor(Math.random()*3);
-        this.background = Global.BG_IMGS[`${numPaths+1}${newPaths}${randIdx}`];
-        if (!this.background) {
-          
-        }
+        this.background = bgImgs[`${numPaths+1}${newPaths}${randIdx}`];
         assignBlockedPaths(this, newPaths);
         walls = this.buildRoomWalls(newPaths);
         this.walls.push(...walls);
-        Global.SESSION.rooms[`${this.nodePos}`] = this;
+        session.rooms[`${this.nodePos}`] = this;
       }
     } else {
       numPaths = randNumPaths(paths.length);
       if (numPaths === paths.length) {
         randIdx = Math.floor(Math.random()*3);
-        this.background = Global.BG_IMGS[`${numPaths}${paths}${randIdx}`];
+        this.background = bgImgs[`${numPaths}${paths}${randIdx}`];
         walls = this.buildRoomWalls(paths);
         this.walls.push(...walls);
-        Global.SESSION.rooms[`${this.nodePos}`] = this;
+        session.rooms[`${this.nodePos}`] = this;
       } else {
         shuffle(pathsArr);
         for (let i = 0; i < numPaths; i++) { newPaths.push(pathsArr.pop()) }
         newPaths = newPaths.sort().join("");
         randIdx = Math.floor(Math.random()*3);
-        this.background = Global.BG_IMGS[`${numPaths}${newPaths}${randIdx}`];
+        this.background = bgImgs[`${numPaths}${newPaths}${randIdx}`];
         assignBlockedPaths(this, newPaths);
         walls = this.buildRoomWalls(newPaths);
         this.walls.push(...walls);
-        Global.SESSION.rooms[`${this.nodePos}`] = this;
+        session.rooms[`${this.nodePos}`] = this;
       }
     }
     this.generateEnemies();
@@ -118,13 +116,13 @@ class Room {
   }
 
   generateEnemies() {
-    const numEnemies = Math.floor(Object.keys(Global.SESSION.rooms).length/2);
+    const numEnemies = Math.floor(Object.keys(this.gameState.session.rooms).length/2);
     this.enemies = {};
     for (let i = 0; i < numEnemies; i++) {
       let x = Math.floor(Math.random()*550) + 64;
       let y = Math.floor(Math.random()*550) + 64;
       let pos = [x,y];
-      const enemy = new Enemy(pos, 48,48,Global.SPRITES.monsters, "blob", 200 + (numEnemies * 50));
+      const enemy = new Enemy(pos, 48, 48, this.gameState.sprites.monsters, "blob", 200 + (numEnemies * 50), this.gameState);
       this.enemies[`${enemy.pos}`] = enemy;
     }
   };
@@ -138,7 +136,7 @@ class Room {
       let y = Math.floor(Math.random()*592) + 64;
       while (y > 336 && y < 384) y = Math.floor(Math.random()*592) + 64;
       let pos = [x,y];
-      const coin = new Coin(pos, 16,16,Global.SPRITES.coin);
+      const coin = new Coin(pos, 16, 16, this.gameState.sprites.coin, this.gameState);
       this.coins[`${coin.pos}`] = coin;
     }
   };
@@ -156,7 +154,7 @@ class Room {
     for (let coin of Object.values(this.coins)) {
       if (coin.collect()) {
         delete this.coins[`${coin.pos}`];
-        Global.SESSION.coinCount++;
+        this.gameState.session.coinCount++;
         return;
       }
     }
@@ -171,22 +169,24 @@ class Room {
     ctx.fillStyle = "#fffaf4";
     ctx.font = "20px arial";
     ctx.fillText(`Room [ ${this.nodePos} ]`, 15, 30);
-    ctx.fillText(`Coins x ${Global.SESSION.coinCount}`, 590, 30);
+    const session = this.gameState.session;
+    const player = session.player;
+    ctx.fillText(`Coins x ${session.coinCount}`, 590, 30);
     ctx.beginPath()
     ctx.strokeStyle = "#ffbb00";
     ctx.moveTo(15, 705);
     ctx.lineWidth = 5;
-    ctx.lineTo(15 + (Global.SESSION.player.stamina/1000) * 100, 705);
+    ctx.lineTo(15 + (player.stamina/1000) * 100, 705);
     ctx.stroke();
     ctx.beginPath()
     ctx.strokeStyle = "#33ff00";
     ctx.moveTo(15, 690);
     ctx.lineWidth = 10;
-    ctx.lineTo(15 + (Global.SESSION.player.hp/20) * 100, 690);
+    ctx.lineTo(15 + (player.hp/20) * 100, 690);
     ctx.stroke();
     ctx.beginPath()
     ctx.strokeStyle = "#ff0000";
-    ctx.moveTo(115 - (1 - Global.SESSION.player.hp/20) * 100, 690);
+    ctx.moveTo(115 - (1 - player.hp/20) * 100, 690);
     ctx.lineWidth = 10;
     ctx.lineTo(115, 690);
     ctx.stroke();
@@ -194,9 +194,8 @@ class Room {
     ctx.strokeStyle = "#00dddd";
     ctx.moveTo(15, 699);
     ctx.lineWidth = 5;
-    ctx.lineTo(15 + (Global.SESSION.player.invulnerable/75) * 100, 699);
+    ctx.lineTo(15 + (player.invulnerable/75) * 100, 699);
     ctx.stroke();
-    // ctx.fillText(`Stamina = ${Global.SESSION.player.stamina}`, 15, 400);
   }
 
   buildRoomWalls(paths) {

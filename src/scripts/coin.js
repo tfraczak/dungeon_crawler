@@ -1,21 +1,22 @@
 import Entity from "./entity";
 import { randCoinSound } from "./utils/func_utils";
-import * as Global from "./utils/global_vars";
 
 class Coin extends Entity {
-  constructor(pos, width, height, spritePalette) {
+  constructor(pos, width, height, spritePalette, gameState) {
     super(pos, width, height, spritePalette, { width, height });
+    this.gameState = gameState;
     this.frameInterval = 12;
     this.frameCount = 0;
     this.drawOptions.palY = 0;
   }
 
   collect() {
+    const player = this.gameState.session.player;
     if (
-      this.collidedOnSide("top", Global.SESSION.game.player) ||
-      this.collidedOnSide("bottom", Global.SESSION.game.player) ||
-      this.collidedOnSide("left", Global.SESSION.game.player) ||
-      this.collidedOnSide("right", Global.SESSION.game.player)
+      this.collidedOnSide("top", player) ||
+      this.collidedOnSide("bottom", player) ||
+      this.collidedOnSide("left", player) ||
+      this.collidedOnSide("right", player)
     ) {
       randCoinSound().play();
       return true;

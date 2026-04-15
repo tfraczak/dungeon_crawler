@@ -1,26 +1,27 @@
 import Player from "./player";
 import Room from "./room";
-import * as Global from "./utils/global_vars";
+import { SPRITE_DIMS, WIDTH, HEIGHT } from "./utils/global_vars";
 
 class Game {
-  constructor(ctx, playerSprite) {
+  constructor(gameState) {
+    this.gameState = gameState;
+    const { ctx, playerSprite } = gameState.gameOptions;
     this.fpsInterval = 1000/60;
     this.toPlayer = 100;
     const startingPos = [48*7, 48*7];
-    this.player = new Player(startingPos, ...Global.SPRITE_DIMS, playerSprite);
-    Global.SESSION.player = this.player;
+    this.player = new Player(startingPos, ...SPRITE_DIMS, playerSprite, gameState);
     this.ctx = ctx;
-    // const room = { "left": new Room() }; // testing new Room(room)
-    Global.SESSION.rooms = {};
-    this.startingRoom = new Room();
+    gameState.session.player = this.player;
+    gameState.session.rooms = {};
+    gameState.session.game = this;
+    gameState.session.stop = false;
+    gameState.session.coinCount = 0;
+    this.startingRoom = new Room(null, gameState);
     this.room = this.startingRoom;
     this.player.draw(ctx);
-    Global.SESSION.game = this;
-    Global.SESSION.stop = false;
-    Global.SESSION.coinCount = 0;
     this.gameStep = this.gameStep.bind(this);
     this.stop = this.stop.bind(this);
-    Global.SESSION.game.play();
+    this.play();
   }
 
   gameOver() {
@@ -28,14 +29,12 @@ class Game {
   }
 
   win(){
-    return Global.SESSION.coinCount > 9;
+    return this.gameState.session.coinCount > 9;
   }
 
   lose() {
     return this.player.hp <= 0;
   }
-
-
 
   stop() {
     if (this.gameOver()) {
@@ -50,13 +49,12 @@ class Game {
 
     if (elapsed > this.fpsInterval) {
       this.then = now - (elapsed % this.fpsInterval);
-      const player = Global.SESSION.player;
-      this.ctx.clearRect(0,0, Global.WIDTH, Global.HEIGHT);
-      player.move(this.room.walls);
+      this.ctx.clearRect(0, 0, WIDTH, HEIGHT);
+      this.player.move(this.room.walls);
       Object.values(this.room.enemies).forEach(enemy => enemy.move(this.room.walls));
       this.room.animate();
       this.room.draw(this.ctx);
-      player.draw(this.ctx);
+      this.player.draw(this.ctx);
       this.stop();
       if (this.requestStop) {
         cancelAnimationFrame(this.requestId);
