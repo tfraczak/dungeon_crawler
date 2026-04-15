@@ -43,9 +43,18 @@ function createGame(gameState) {
       ctx.clearRect(0, 0, WIDTH, HEIGHT);
       game.player.move(game.room.walls);
       Object.values(game.room.enemies).forEach(enemy => enemy.move(game.room.walls));
+      game.room.resolveEnemyCollisions();
       game.room.animate();
       game.room.draw(ctx);
-      game.player.draw(ctx);
+
+      const entities = game.room.allEntities(game.player);
+      entities.sort((a, b) => {
+        const ay = a.pos[1] + a.height;
+        const by = b.pos[1] + b.height;
+        if (ay !== by) return ay - by;
+        return (a.pos[0] + a.width) - (b.pos[0] + b.width);
+      });
+      entities.forEach(entity => entity.draw(ctx));
       game.stop();
       if (game.requestStop) {
         cancelAnimationFrame(game.requestId);

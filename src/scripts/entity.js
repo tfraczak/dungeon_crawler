@@ -44,7 +44,7 @@ function createEntity(pos, width, height, spritePalette, colBoxOptions) {
   };
 
   entity.updateSides = () => {
-    entity.colBox.updateSides();
+    entity.colBox.centerOnEntity();
     entity.center = entity.colBox.center;
     entity.top = entity.colBox.top;
     entity.bottom = entity.colBox.bottom;

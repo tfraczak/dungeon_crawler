@@ -134,6 +134,47 @@ function createRoom(neighbor, gameState) {
     room.enemies[`${enemy.pos}`] = enemy;
   }
 
+  room.scatterEnemies = () => {
+    for (const enemy of Object.values(room.enemies)) {
+      enemy.pos[0] = Math.floor(Math.random() * 550) + 64;
+      enemy.pos[1] = Math.floor(Math.random() * 550) + 64;
+      enemy.chasingPlayer = false;
+      enemy.idleCount = 0;
+      enemy.updateSides();
+    }
+  };
+
+  room.resolveEnemyCollisions = () => {
+    const enemies = Object.values(room.enemies);
+    for (let i = 0; i < enemies.length; i++) {
+      for (let j = i + 1; j < enemies.length; j++) {
+        const a = enemies[i];
+        const b = enemies[j];
+        const aBox = a.colBox;
+        const bBox = b.colBox;
+
+        const overlapX = Math.min(aBox.pos[0] + aBox.width, bBox.pos[0] + bBox.width) - Math.max(aBox.pos[0], bBox.pos[0]);
+        const overlapY = Math.min(aBox.pos[1] + aBox.height, bBox.pos[1] + bBox.height) - Math.max(aBox.pos[1], bBox.pos[1]);
+
+        if (overlapX <= 0 || overlapY <= 0) continue;
+
+        // Push apart along the axis with the smaller overlap
+        if (overlapX < overlapY) {
+          const sign = a.center[0] < b.center[0] ? -1 : 1;
+          a.pos[0] += sign * (overlapX / 2);
+          b.pos[0] -= sign * (overlapX / 2);
+        } else {
+          const sign = a.center[1] < b.center[1] ? -1 : 1;
+          a.pos[1] += sign * (overlapY / 2);
+          b.pos[1] -= sign * (overlapY / 2);
+        }
+
+        a.updateSides();
+        b.updateSides();
+      }
+    }
+  };
+
   room.animate = () => {
     room.collect();
     Object.values(room.coins).forEach(coin => coin.animate());
@@ -149,10 +190,16 @@ function createRoom(neighbor, gameState) {
     }
   };
 
+  room.allEntities = (player) => {
+    return [
+      player,
+      ...Object.values(room.enemies),
+      ...Object.values(room.coins),
+    ];
+  };
+
   room.draw = (ctx) => {
     ctx.drawImage(room.background, 0, 0);
-    Object.values(room.coins).forEach(coin => coin.draw(ctx));
-    Object.values(room.enemies).forEach(enemy => enemy.draw(ctx));
     ctx.fillStyle = "#fffaf4";
     ctx.font = "20px arial";
     ctx.fillText(`Room [ ${room.nodePos} ]`, 15, 30);

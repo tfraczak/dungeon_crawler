@@ -98,6 +98,7 @@ export const roomChange = (exitDir, currRoom, gameState) => {
       nextNodePos[0] += 1;
       break;
   }
+  currRoom.scatterEnemies();
   if (session.rooms[`${nextNodePos}`]) {
     session.game.room = session.rooms[`${nextNodePos}`];
   } else {
