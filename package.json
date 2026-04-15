@@ -18,6 +18,7 @@
     "url": "https://github.com/tfraczak/dungeon_crawler/issues"
   },
   "homepage": "https://github.com/tfraczak/dungeon_crawler#readme",
+  "packageManager": "yarn@4.13.0",
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@babel/preset-env": "^7.26.0",

@@ -1,3 +1,12 @@
 node_modules/
 tmp
 .cursor/
+
+# Yarn 4 PnP
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
