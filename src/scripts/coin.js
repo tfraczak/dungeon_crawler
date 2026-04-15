@@ -1,11 +1,12 @@
 import createEntity from "./entity";
+import GAME_CONFIG from "./game_config";
 import { randCoinSound } from "./utils/func_utils";
 
 function createCoin(pos, width, height, spritePalette, gameState) {
   const coin = createEntity(pos, width, height, spritePalette, { width, height });
 
   coin.gameState = gameState;
-  coin.frameInterval = 12;
+  coin.frameInterval = GAME_CONFIG.coin.frameInterval;
   coin.frameCount = 0;
   coin.drawOptions.palY = 0;
 

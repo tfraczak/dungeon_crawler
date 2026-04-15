@@ -1,17 +1,19 @@
 import createEntity from "./entity";
 import { BASE_SPEED } from "./utils/global_vars";
+import GAME_CONFIG from "./game_config";
 
 function createEnemy(pos, width, height, spritePalette, type, detectDist, gameState) {
   const enemy = createEntity(pos, width, height, spritePalette);
+  const cfg = GAME_CONFIG.enemy;
 
   enemy.gameState = gameState;
-  enemy.speed = BASE_SPEED * 0.8;
-  enemy.speedModifier = 0.75;
+  enemy.speed = BASE_SPEED * cfg.speedMultiplier;
+  enemy.speedModifier = cfg.idleSpeedModifier;
   enemy.pace = 24 / enemy.speed;
   enemy.chasingPlayer = false;
   enemy.detectDist = detectDist;
   enemy.idleCount = 0;
-  enemy.idleMax = 60;
+  enemy.idleMax = cfg.idleMaxFrames;
   enemy.type = type;
   enemy.movement = { up: false, down: false, left: false, right: false };
 
@@ -106,13 +108,13 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
     return [nx, ny];
   };
 
-  enemy.damage = () => Math.floor((Math.random() * 4) + 1);
+  enemy.damage = () => Math.floor(Math.random() * (cfg.damageMax - cfg.damageMin + 1)) + cfg.damageMin;
 
   enemy.hitPlayer = (walls) => {
     const player = enemy.gameState.session.player;
-    if (enemy.distToPlayer() < 32 && !player.invulnerable) {
-      player.pos[0] -= (0.4 * enemy.dx);
-      player.pos[1] -= (0.4 * enemy.dy);
+    if (enemy.distToPlayer() < cfg.hitDistance && !player.invulnerable) {
+      player.pos[0] -= (cfg.knockbackFactor * enemy.dx);
+      player.pos[1] -= (cfg.knockbackFactor * enemy.dy);
       player.updateSides();
       player.wallCheck(walls);
       player.updateSides();
@@ -154,10 +156,10 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
   enemy.move = (walls) => {
     if (enemy.distToPlayer() < enemy.detectDist) {
       enemy.chasingPlayer = true;
-      enemy.speedModifier = 1;
+      enemy.speedModifier = cfg.chaseSpeedModifier;
     } else {
       enemy.chasingPlayer = false;
-      enemy.speedModifier = 0.75;
+      enemy.speedModifier = cfg.idleSpeedModifier;
     }
 
     let newVectors = enemy.normalizedVectorPos();

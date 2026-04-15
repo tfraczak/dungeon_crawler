@@ -1,18 +1,20 @@
 import createEntity from "./entity";
 import { BASE_SPEED } from "./utils/global_vars";
+import GAME_CONFIG from "./game_config";
 import { roomChange } from "./utils/func_utils";
 
 function createPlayer(pos, width, height, spritePalette, gameState) {
   const player = createEntity(pos, width, height, spritePalette);
+  const cfg = GAME_CONFIG.player;
 
   player.gameState = gameState;
-  player.speed = BASE_SPEED * 1.25;
+  player.speed = BASE_SPEED * cfg.speedMultiplier;
   player.normalizedSpeed = player.speed / Math.sqrt(2);
   player.pace = 24 / player.speed;
   player.speedModifier = 1;
-  player.stamina = 1000;
+  player.stamina = cfg.stamina;
   player.invulnerable = 0;
-  player.hp = 20;
+  player.hp = cfg.hp;
   player.stride = {
     up:    { stepCount: 0, palY: 48 * 6 },
     down:  { stepCount: 0, palY: 48 * 0 },
@@ -77,7 +79,7 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
   };
 
   player.hit = () => {
-    player.invulnerable = 60;
+    player.invulnerable = cfg.invulnerabilityFrames;
   };
 
   player.move = (walls) => {
@@ -89,18 +91,18 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     const moving = up || down || left || right;
 
     if (shift && player.stamina > 0 && moving) {
-      player.speedModifier = 1.5;
-      player.stamina -= 4;
+      player.speedModifier = cfg.sprintMultiplier;
+      player.stamina -= cfg.staminaDrain;
     } else {
       player.speedModifier = 1;
     }
 
     if (player.stamina < 0) player.stamina = 0;
-    if (player.stamina < 1000) {
+    if (player.stamina < cfg.stamina) {
       if (!moving) {
-        player.stamina += 2;
+        player.stamina += cfg.staminaRegenIdle;
       } else if (!shift) {
-        player.stamina += 1;
+        player.stamina += cfg.staminaRegenMoving;
       }
     }
     if (player.invulnerable) player.invulnerable--;

@@ -1,6 +1,7 @@
 import createWall from "./wall";
 import createCoin from "./coin";
 import createEnemy from "./enemy";
+import GAME_CONFIG from "./game_config";
 
 import {
   randNumPaths,
@@ -13,6 +14,8 @@ import {
 
 
 function createRoom(neighbor, gameState) {
+  const spawnCfg = GAME_CONFIG.spawn;
+  const enemyCfg = GAME_CONFIG.enemy;
   const room = {
     gameState,
     walls: [],
@@ -27,11 +30,12 @@ function createRoom(neighbor, gameState) {
   // Generate coins
   const numCoins = randNumCoins();
   room.coins = {};
+  const coinRange = spawnCfg.coinMax - spawnCfg.coinMin;
   for (let i = 0; i < numCoins; i++) {
-    let x = Math.floor(Math.random() * 592) + 64;
-    while (x > 336 && x < 384) x = Math.floor(Math.random() * 592) + 64;
-    let y = Math.floor(Math.random() * 592) + 64;
-    while (y > 336 && y < 384) y = Math.floor(Math.random() * 592) + 64;
+    let x = Math.floor(Math.random() * coinRange) + spawnCfg.coinMin;
+    while (x > spawnCfg.coinExcludeMin && x < spawnCfg.coinExcludeMax) x = Math.floor(Math.random() * coinRange) + spawnCfg.coinMin;
+    let y = Math.floor(Math.random() * coinRange) + spawnCfg.coinMin;
+    while (y > spawnCfg.coinExcludeMin && y < spawnCfg.coinExcludeMax) y = Math.floor(Math.random() * coinRange) + spawnCfg.coinMin;
     let pos = [x, y];
     const coin = createCoin(pos, 16, 16, gameState.sprites.coin, gameState);
     room.coins[`${coin.pos}`] = coin;
@@ -126,18 +130,20 @@ function createRoom(neighbor, gameState) {
   // Generate enemies
   const numEnemies = Math.floor(Object.keys(session.rooms).length / 2);
   room.enemies = {};
+  const enemyRange = spawnCfg.enemyMax - spawnCfg.enemyMin;
   for (let i = 0; i < numEnemies; i++) {
-    let x = Math.floor(Math.random() * 550) + 64;
-    let y = Math.floor(Math.random() * 550) + 64;
+    let x = Math.floor(Math.random() * enemyRange) + spawnCfg.enemyMin;
+    let y = Math.floor(Math.random() * enemyRange) + spawnCfg.enemyMin;
     let pos = [x, y];
-    const enemy = createEnemy(pos, 48, 48, gameState.sprites.monsters, "blob", 200 + (numEnemies * 50), gameState);
+    const detectDist = enemyCfg.baseDetectDistance + (numEnemies * enemyCfg.detectDistancePerEnemy);
+    const enemy = createEnemy(pos, 48, 48, gameState.sprites.monsters, "blob", detectDist, gameState);
     room.enemies[`${enemy.pos}`] = enemy;
   }
 
   room.scatterEnemies = () => {
     for (const enemy of Object.values(room.enemies)) {
-      enemy.pos[0] = Math.floor(Math.random() * 550) + 64;
-      enemy.pos[1] = Math.floor(Math.random() * 550) + 64;
+      enemy.pos[0] = Math.floor(Math.random() * enemyRange) + spawnCfg.enemyMin;
+      enemy.pos[1] = Math.floor(Math.random() * enemyRange) + spawnCfg.enemyMin;
       enemy.chasingPlayer = false;
       enemy.idleCount = 0;
       enemy.updateSides();
@@ -219,17 +225,19 @@ function createRoom(neighbor, gameState) {
     ctx.strokeStyle = "#ffbb00";
     ctx.moveTo(ox + 15, barY);
     ctx.lineWidth = 5;
-    ctx.lineTo(ox + 15 + (player.stamina / 1000) * 100, barY);
+    const maxStamina = GAME_CONFIG.player.stamina;
+    const maxHp = GAME_CONFIG.player.hp;
+    ctx.lineTo(ox + 15 + (player.stamina / maxStamina) * 100, barY);
     ctx.stroke();
     ctx.beginPath();
     ctx.strokeStyle = "#33ff00";
     ctx.moveTo(ox + 15, barY - 15);
     ctx.lineWidth = 10;
-    ctx.lineTo(ox + 15 + (player.hp / 20) * 100, barY - 15);
+    ctx.lineTo(ox + 15 + (player.hp / maxHp) * 100, barY - 15);
     ctx.stroke();
     ctx.beginPath();
     ctx.strokeStyle = "#ff0000";
-    ctx.moveTo(ox + 115 - (1 - player.hp / 20) * 100, barY - 15);
+    ctx.moveTo(ox + 115 - (1 - player.hp / maxHp) * 100, barY - 15);
     ctx.lineWidth = 10;
     ctx.lineTo(ox + 115, barY - 15);
     ctx.stroke();

@@ -2,13 +2,15 @@ import createPlayer from "./player";
 import createRoom from "./room";
 import createCamera from "./camera";
 import { SPRITE_DIMS } from "./utils/global_vars";
+import GAME_CONFIG from "./game_config";
 
 function createGame(gameState) {
   const { ctx, playerSprite } = gameState.gameOptions;
-  const startingPos = [48 * 7, 48 * 7];
+  const tile = GAME_CONFIG.world.tileSize;
+  const startingPos = [tile * 7, tile * 7];
 
   const game = {
-    fpsInterval: 1000 / 60,
+    fpsInterval: 1000 / GAME_CONFIG.game.fps,
     toPlayer: 100,
     ctx,
     player: createPlayer(startingPos, ...SPRITE_DIMS, playerSprite, gameState),
@@ -26,7 +28,7 @@ function createGame(gameState) {
   game.player.draw(ctx);
 
   game.gameOver = () => game.win() || game.lose();
-  game.win = () => gameState.session.coinCount > 9;
+  game.win = () => gameState.session.coinCount >= GAME_CONFIG.game.winCoinCount;
   game.lose = () => game.player.hp <= 0;
 
   game.stop = () => {
