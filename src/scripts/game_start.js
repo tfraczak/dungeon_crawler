@@ -1,4 +1,4 @@
-import { newGame } from "./utils/func_utils";
+import { newGame } from "./utils/game_lifecycle";
 import { WIDTH, HEIGHT } from "./utils/global_vars";
 
 function createGameStart(gameState) {

@@ -5,14 +5,14 @@ import createPoof from "./poof";
 import { playPoofSound, playSlashWhiff, playSlashHit } from "./sound";
 import GAME_CONFIG from "./game_config";
 
+import { shuffle } from "./utils/helpers";
 import {
   randNumPaths,
   addValidNeighbors,
   buildPaths,
-  shuffle,
   assignBlockedPaths,
-  randNumCoins
-} from "./utils/func_utils";
+  randNumCoins,
+} from "./utils/room_generation";
 
 
 function createRoom(neighbor, gameState) {

@@ -1,7 +1,7 @@
 import createEntity from "./entity";
 import { BASE_SPEED } from "./utils/global_vars";
 import GAME_CONFIG from "./game_config";
-import { roomChange } from "./utils/func_utils";
+import { roomChange } from "./utils/room_generation";
 
 function createPlayer(pos, width, height, spritePalette, gameState) {
   const player = createEntity(pos, width, height, spritePalette);

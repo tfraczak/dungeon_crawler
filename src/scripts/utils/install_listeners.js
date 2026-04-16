@@ -1,4 +1,4 @@
-import { newGame } from "./func_utils";
+import { newGame } from "./game_lifecycle";
 
 export default (gameState) => {
   const keys = gameState.keys;
