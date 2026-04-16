@@ -1,16 +1,23 @@
-import createEntity from "./entity";
-import GAME_CONFIG from "./game_config";
-import { playCoinSound } from "./sound";
+import createEntity from "../entity";
+import GAME_CONFIG from "../../core/game_config";
+import { playCoinSound, playCoinDrop } from "../../sounds";
+import applyDropBehavior from "../../effects/drop";
+
+let coinIdCounter = 0;
 
 function createCoin(pos, width, height, spritePalette, gameState) {
   const coin = createEntity(pos, width, height, spritePalette, { width, height });
 
+  coin.id = `coin_${coinIdCounter++}`;
   coin.gameState = gameState;
   coin.frameInterval = GAME_CONFIG.coin.frameInterval;
   coin.frameCount = 0;
   coin.drawOptions.palY = 0;
 
+  applyDropBehavior(coin, playCoinDrop);
+
   coin.collect = () => {
+    if (coin.dropping) return false;
     const player = coin.gameState.session.player;
     if (
       coin.collidedOnSide("top", player) ||
@@ -24,7 +31,12 @@ function createCoin(pos, width, height, spritePalette, gameState) {
     return false;
   };
 
-  coin.animate = () => {
+  coin.animate = (room) => {
+    if (coin.dropping) {
+      coin.updateDrop(room);
+      return;
+    }
+
     const i = coin.frameInterval;
     const c = coin.frameCount;
     const w = coin.width;

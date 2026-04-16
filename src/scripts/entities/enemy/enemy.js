@@ -1,6 +1,7 @@
-import createEntity from "./entity";
-import { BASE_SPEED } from "./utils/global_vars";
-import GAME_CONFIG from "./game_config";
+import createEntity from "../entity";
+import createCoin from "../coin/coin";
+import { BASE_SPEED } from "../../utils/global_vars";
+import GAME_CONFIG from "../../core/game_config";
 
 function createEnemy(pos, width, height, spritePalette, type, detectDist, gameState) {
   const enemy = createEntity(pos, width, height, spritePalette);
@@ -16,6 +17,8 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
   enemy.detectDist = detectDist;
   enemy.idleCount = 0;
   enemy.idleMax = cfg.idleMaxFrames;
+  enemy.idlePaused = false;
+  enemy.idlePauseTimer = 0;
   enemy.type = type;
   enemy.movement = { up: false, down: false, left: false, right: false };
 
@@ -66,21 +69,38 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
     let dx = enemy.center[0] - player.center[0];
     let dy = enemy.center[1] - player.center[1];
 
-    if (!enemy.chasingPlayer && !enemy.idleCount) {
-      const randAngle = Math.random() * 2 * Math.PI;
-      enemy.dx = Math.cos(randAngle) * enemy.speed * enemy.speedModifier;
-      enemy.dy = Math.sin(randAngle) * enemy.speed * enemy.speedModifier;
-      enemy.idleCount = 1;
-    }
-
-    if (!enemy.chasingPlayer && enemy.idleCount) enemy.idleCount++;
-
     if (enemy.chasingPlayer) {
+      enemy.idlePaused = false;
+      enemy.idlePauseTimer = 0;
       enemy.dx = dx;
       enemy.dy = dy;
+    } else if (enemy.idlePaused) {
+      enemy.idlePauseTimer--;
+      if (enemy.idlePauseTimer <= 0) {
+        enemy.idlePaused = false;
+        enemy.idleCount = 0;
+      }
+      enemy.movement = { up: false, down: false, left: false, right: false };
+      return [0, 0];
+    } else {
+      if (!enemy.idleCount) {
+        const randAngle = Math.random() * 2 * Math.PI;
+        enemy.dx = Math.cos(randAngle) * enemy.speed * enemy.speedModifier;
+        enemy.dy = Math.sin(randAngle) * enemy.speed * enemy.speedModifier;
+        enemy.idleCount = 1;
+      }
+      enemy.idleCount++;
+      if (enemy.idleCount >= enemy.idleMax) {
+        enemy.idleCount = 0;
+        if (Math.random() < cfg.idlePauseChance) {
+          enemy.idlePaused = true;
+          enemy.idlePauseTimer = cfg.idlePauseMin +
+            Math.floor(Math.random() * (cfg.idlePauseMax - cfg.idlePauseMin));
+          enemy.movement = { up: false, down: false, left: false, right: false };
+          return [0, 0];
+        }
+      }
     }
-
-    if (enemy.idleCount >= enemy.idleMax) enemy.idleCount = 0;
 
     enemy.angle = Math.atan(enemy.dy / enemy.dx);
     const ny = Math.sin(enemy.angle) * enemy.speed * enemy.speedModifier;
@@ -113,6 +133,23 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
   enemy.damage = () => Math.floor(Math.random() * (cfg.damageMax - cfg.damageMin + 1)) + cfg.damageMin;
 
   enemy.alive = () => enemy.hp > 0;
+
+  // Roll each entry in the drop table and return spawned items by type
+  enemy.drop = () => {
+    const items = { coins: [] };
+    for (const drop of cfg.drops) {
+      if (Math.random() >= drop.chance) continue;
+      if (drop.type === "coin") {
+        const coin = createCoin(
+          [enemy.center[0] - 8, enemy.center[1] - 8],
+          16, 16, gameState.sprites.coin, gameState,
+        );
+        coin.startDrop(enemy.center[0], enemy.center[1]);
+        items.coins.push(coin);
+      }
+    }
+    return items;
+  };
 
   enemy.knockbackVx = 0;
   enemy.knockbackVy = 0;

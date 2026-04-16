@@ -1,8 +1,9 @@
-import createEntity from "./entity";
-import createSword from "./items/equipment/weapons/swords/sword";
-import { BASE_SPEED } from "./utils/global_vars";
-import GAME_CONFIG from "./game_config";
-import { roomChange } from "./utils/room_generation";
+import createEntity from "../entity";
+import createSword from "../../items/equipment/weapons/swords/sword";
+import { BASE_SPEED } from "../../utils/global_vars";
+import GAME_CONFIG from "../../core/game_config";
+import { roomChange } from "../../utils/room_generation";
+import { playFootstep } from "../../sounds";
 
 function createPlayer(pos, width, height, spritePalette, gameState) {
   const player = createEntity(pos, width, height, spritePalette);
@@ -40,12 +41,14 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
       stride.stepCount++;
       return 48 * 1;
     } else if (stride.stepCount <= 2 * player.pace) {
+      if (stride.stepCount <= player.pace + 1) playFootstep(player.speedModifier > 1);
       stride.stepCount++;
       return 48 * 0;
     } else if (stride.stepCount <= 3 * player.pace) {
       stride.stepCount++;
       return 48 * 1;
     } else if (stride.stepCount <= 4 * player.pace) {
+      if (stride.stepCount <= 3 * player.pace + 1) playFootstep(player.speedModifier > 1);
       stride.stepCount++;
       return 48 * 2;
     } else if (stride.stepCount > 4 * player.pace) {

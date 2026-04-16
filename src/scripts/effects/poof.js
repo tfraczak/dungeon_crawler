@@ -1,4 +1,4 @@
-import GAME_CONFIG from "./game_config";
+import GAME_CONFIG from "../core/game_config";
 
 function createPoof(x, y) {
   const cfg = GAME_CONFIG.poof;

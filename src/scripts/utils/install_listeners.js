@@ -27,7 +27,7 @@ export default (gameState) => {
   
   howTo.addEventListener("mouseenter", () => {
     document.getElementById("how-to-pointer").classList.add("active");
-    document.getElementById("how-to-sound").play();
+    document.getElementById("how-to-sound").play().catch(() => {});
     document.getElementById("how-to").classList.add("active");
     document.querySelector("#how-to > ul").classList.add("active");
   });
@@ -39,7 +39,7 @@ export default (gameState) => {
 
   const restart = document.getElementById("restart");
   restart.addEventListener("mouseenter", () => {
-    document.getElementById("restart-sound").play();
+    document.getElementById("restart-sound").play().catch(() => {});
     document.getElementById("restart").classList.add("active");
     document.getElementById("restart-pointer").classList.add("active");
   });

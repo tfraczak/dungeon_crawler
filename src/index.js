@@ -1,8 +1,8 @@
 import "./styles/index.scss";
 import installListeners from "./scripts/utils/install_listeners";
 import { WIDTH, HEIGHT, ALL_PATHS } from "./scripts/utils/global_vars";
-import createGameState from "./scripts/game_state";
-import createGameStart from "./scripts/game_start";
+import createGameState from "./scripts/core/game_state";
+import createGameStart from "./scripts/main";
 
 document.addEventListener("DOMContentLoaded", () => {
   const gameState = createGameState();

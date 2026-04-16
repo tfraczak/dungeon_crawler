@@ -1,18 +1,18 @@
 import createWall from "./wall";
-import createCoin from "./coin";
-import createEnemy from "./enemy";
-import createPoof from "./poof";
-import { playPoofSound, playSlashWhiff, playSlashHit } from "./sound";
-import GAME_CONFIG from "./game_config";
+import createCoin from "../entities/coin/coin";
+import createEnemy from "../entities/enemy/enemy";
+import createPoof from "../effects/poof";
+import { playPoofSound, swordSounds } from "../sounds";
+import GAME_CONFIG from "../core/game_config";
 
-import { shuffle } from "./utils/helpers";
+import { shuffle } from "../utils/helpers";
 import {
   randNumPaths,
   addValidNeighbors,
   buildPaths,
   assignBlockedPaths,
   randNumCoins,
-} from "./utils/room_generation";
+} from "../utils/room_generation";
 
 
 function createRoom(neighbor, gameState) {
@@ -41,7 +41,7 @@ function createRoom(neighbor, gameState) {
     while (y > spawnCfg.coinExcludeMin && y < spawnCfg.coinExcludeMax) y = Math.floor(Math.random() * coinRange) + spawnCfg.coinMin;
     let pos = [x, y];
     const coin = createCoin(pos, 16, 16, gameState.sprites.coin, gameState);
-    room.coins[`${coin.pos}`] = coin;
+    room.coins[coin.id] = coin;
   }
 
   let randIdx;
@@ -238,21 +238,25 @@ function createRoom(neighbor, gameState) {
         if (!enemy.alive()) {
           room.poofs.push(createPoof(enemy.center[0], enemy.center[1]));
           playPoofSound();
+          const drops = enemy.drop();
+          for (const coin of drops.coins) {
+            room.coins[coin.id] = coin;
+          }
           delete room.enemies[key];
         }
       }
     }
 
     if (hitAny) {
-      playSlashHit();
+      swordSounds.playSlashHit();
     } else if (player.attackTimer === 1 && player.attackHitIds.size === 0) {
-      playSlashWhiff();
+      swordSounds.playSlashWhiff();
     }
   };
 
   room.animate = () => {
     room.collect();
-    Object.values(room.coins).forEach(coin => coin.animate());
+    Object.values(room.coins).forEach(coin => coin.animate(room));
     room.poofs.forEach(p => p.update());
     room.poofs = room.poofs.filter(p => !p.done);
   };
@@ -260,7 +264,7 @@ function createRoom(neighbor, gameState) {
   room.collect = () => {
     for (let coin of Object.values(room.coins)) {
       if (coin.collect()) {
-        delete room.coins[`${coin.pos}`];
+        delete room.coins[coin.id];
         gameState.session.coinCount++;
         return;
       }

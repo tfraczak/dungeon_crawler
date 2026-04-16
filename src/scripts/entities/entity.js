@@ -1,5 +1,5 @@
-import createColBox from "./collision_box";
-import { collidedWithSide } from "./utils/collision";
+import createColBox from "../core/collision_box";
+import { collidedWithSide } from "../utils/collision";
 
 function createEntity(pos, width, height, spritePalette, colBoxOptions) {
   const colBoxWidth = colBoxOptions?.width ?? width / 2;

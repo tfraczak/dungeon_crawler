@@ -1,8 +1,8 @@
-import createPlayer from "./player";
-import createRoom from "./room";
-import createCamera from "./camera";
+import createPlayer from "./entities/player/player";
+import createRoom from "./world/room";
+import createCamera from "./core/camera";
 import { SPRITE_DIMS } from "./utils/global_vars";
-import GAME_CONFIG from "./game_config";
+import GAME_CONFIG from "./core/game_config";
 
 function createGame(gameState) {
   const { ctx, playerSprite } = gameState.gameOptions;

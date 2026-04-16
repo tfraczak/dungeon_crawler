@@ -1,6 +1,6 @@
 import { WEIGHTS, COIN_WEIGHTS } from "./global_vars";
 import { shuffle } from "./helpers";
-import createRoom from "../room";
+import createRoom from "../world/room";
 
 export const roomChange = (exitDir, currRoom, gameState) => {
   const session = gameState.session;

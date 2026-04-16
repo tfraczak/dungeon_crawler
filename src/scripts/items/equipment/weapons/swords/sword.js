@@ -1,5 +1,5 @@
 import createWeapon from "../weapon";
-import GAME_CONFIG from "../../../../game_config";
+import GAME_CONFIG from "../../../../core/game_config";
 
 // Sword: an arc-shaped melee weapon.
 // Inherits from createWeapon (equipment > item). Instance stats default

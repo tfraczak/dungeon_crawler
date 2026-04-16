@@ -1,4 +1,4 @@
-import { WIDTH, HEIGHT } from "./utils/global_vars";
+import { WIDTH, HEIGHT } from "../utils/global_vars";
 
 function createCamera() {
   const canvas = document.getElementById("display");
