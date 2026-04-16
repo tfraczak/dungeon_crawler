@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (gameState.isMobile) {
     document.body.classList.add("mobile");
-    const MOBILE_ZOOM = 1.5;
+    const MOBILE_ZOOM = 1.35;
     canvas.width = Math.floor(window.innerWidth / MOBILE_ZOOM);
     canvas.height = Math.floor(window.innerHeight / MOBILE_ZOOM);
 
