@@ -361,131 +361,39 @@ function createRoom(neighbor, gameState) {
 }
 
 function buildRoomWalls(paths) {
-  let walls = [];
-  switch (paths) {
-    case "DLRU":
-      walls.push(createWall([0, 0], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 0], 48 * 6, 48));
-      walls.push(createWall([0, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([0, 0], 48, 48 * 6));
-      walls.push(createWall([0, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 0], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 48 * 9], 48, 48 * 6));
-      return walls;
-    case "DLU":
-      walls.push(createWall([0, 0], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 0], 48 * 6, 48));
-      walls.push(createWall([0, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([0, 0], 48, 48 * 6));
-      walls.push(createWall([0, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 0], 48, 720));
-      return walls;
-    case "LRU":
-      walls.push(createWall([0, 0], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 0], 48 * 6, 48));
-      walls.push(createWall([0, 0], 48, 48 * 6));
-      walls.push(createWall([0, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 0], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([0, 720 - 48], 720, 48));
-      return walls;
-    case "DRU":
-      walls.push(createWall([0, 0], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 0], 48 * 6, 48));
-      walls.push(createWall([0, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([720 - 48, 0], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([0, 0], 48, 720));
-      return walls;
-    case "DLR":
-      walls.push(createWall([0, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([0, 0], 48, 48 * 6));
-      walls.push(createWall([0, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 0], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([0, 0], 720, 48));
-      return walls;
-    case "LU":
-      walls.push(createWall([0, 0], 48, 48 * 6));
-      walls.push(createWall([0, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([0, 0], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 0], 48 * 6, 48));
-      walls.push(createWall([720 - 48, 0], 48, 720));
-      walls.push(createWall([0, 720 - 48], 720, 48));
-      return walls;
-    case "DU":
-      walls.push(createWall([0, 0], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 0], 48 * 6, 48));
-      walls.push(createWall([0, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([0, 0], 48, 720));
-      walls.push(createWall([720 - 48, 0], 48, 720));
-      return walls;
-    case "RU":
-      walls.push(createWall([720 - 48, 0], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([0, 0], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 0], 48 * 6, 48));
-      walls.push(createWall([0, 720 - 48], 720, 48));
-      walls.push(createWall([0, 0], 48, 720));
-      return walls;
-    case "DL":
-      walls.push(createWall([0, 0], 48, 48 * 6));
-      walls.push(createWall([0, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([0, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([0, 0], 720, 48));
-      walls.push(createWall([720 - 48, 0], 48, 720));
-      return walls;
-    case "DR":
-      walls.push(createWall([720 - 48, 0], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([0, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([0, 0], 48, 720));
-      walls.push(createWall([0, 0], 720, 48));
-      return walls;
-    case "LR":
-      walls.push(createWall([0, 0], 48, 48 * 6));
-      walls.push(createWall([0, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 0], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([0, 720 - 48], 720, 48));
-      walls.push(createWall([0, 0], 720, 48));
-      return walls;
-    case "L":
-      walls.push(createWall([0, 0], 48, 48 * 6));
-      walls.push(createWall([0, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 0], 48, 720));
-      walls.push(createWall([0, 720 - 48], 720, 48));
-      walls.push(createWall([0, 0], 720, 48));
-      return walls;
-    case "R":
-      walls.push(createWall([720 - 48, 0], 48, 48 * 6));
-      walls.push(createWall([720 - 48, 48 * 9], 48, 48 * 6));
-      walls.push(createWall([0, 720 - 48], 720, 48));
-      walls.push(createWall([0, 0], 48, 720));
-      walls.push(createWall([0, 0], 720, 48));
-      return walls;
-    case "U":
-      walls.push(createWall([0, 0], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 0], 48 * 6, 48));
-      walls.push(createWall([720 - 48, 0], 48, 720));
-      walls.push(createWall([0, 720 - 48], 720, 48));
-      walls.push(createWall([0, 0], 48, 720));
-      return walls;
-    case "D":
-      walls.push(createWall([0, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([48 * 9, 720 - 48], 48 * 6, 48));
-      walls.push(createWall([720 - 48, 0], 48, 720));
-      walls.push(createWall([0, 0], 48, 720));
-      walls.push(createWall([0, 0], 720, 48));
-      return walls;
+  const T = GAME_CONFIG.world.tileSize;
+  const S = T * 15;
+  const walls = [];
+
+  if (paths.includes("U")) {
+    walls.push(createWall([0, 0], T * 6, T));
+    walls.push(createWall([T * 9, 0], T * 6, T));
+  } else {
+    walls.push(createWall([0, 0], S, T));
   }
+
+  if (paths.includes("D")) {
+    walls.push(createWall([0, S - T], T * 6, T));
+    walls.push(createWall([T * 9, S - T], T * 6, T));
+  } else {
+    walls.push(createWall([0, S - T], S, T));
+  }
+
+  if (paths.includes("L")) {
+    walls.push(createWall([0, 0], T, T * 6));
+    walls.push(createWall([0, T * 9], T, T * 6));
+  } else {
+    walls.push(createWall([0, 0], T, S));
+  }
+
+  if (paths.includes("R")) {
+    walls.push(createWall([S - T, 0], T, T * 6));
+    walls.push(createWall([S - T, T * 9], T, T * 6));
+  } else {
+    walls.push(createWall([S - T, 0], T, S));
+  }
+
+  return walls;
 }
 
 export default createRoom;
