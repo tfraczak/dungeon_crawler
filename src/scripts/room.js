@@ -217,32 +217,24 @@ function createRoom(neighbor, gameState) {
     }
   };
 
+  // Runs every frame while the player is attacking. The weapon's full
+  // arc hitbox is tested against each enemy's collision box. Each enemy
+  // can only be hit once per swing (tracked by player.attackHitIds).
+  // On contact: roll damage, apply knockback, and kill if HP depleted.
+  // Whiff sound plays only if the entire swing completes with zero hits.
   room.resolvePlayerAttack = (player) => {
     if (!player.isAttacking()) return;
-    if (player.attackTimer !== GAME_CONFIG.player.attackDuration) return;
 
+    const weapon = player.weapon;
     const hitbox = player.attackHitbox();
-    const playerCfg = GAME_CONFIG.player;
     let hitAny = false;
 
     for (const [key, enemy] of Object.entries(room.enemies)) {
-      const dx = enemy.center[0] - hitbox.x;
-      const dy = enemy.center[1] - hitbox.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > hitbox.range) continue;
-
-      let angle = Math.atan2(dy, dx);
-      let start = hitbox.startAngle;
-      let end = hitbox.endAngle;
-
-      // Normalize angles for comparison
-      while (angle < start) angle += Math.PI * 2;
-      while (angle > end + Math.PI * 2) angle -= Math.PI * 2;
-
-      if (angle >= start && angle <= end) {
+      if (player.attackHitIds.has(key)) continue;
+      if (weapon.hitsTarget(hitbox, enemy.colBox)) {
         hitAny = true;
-        const dmg = Math.floor(Math.random() * (playerCfg.attackDamageMax - playerCfg.attackDamageMin + 1)) + playerCfg.attackDamageMin;
-        enemy.takeDamage(dmg);
+        player.attackHitIds.add(key);
+        enemy.takeDamage(weapon.rollDamage(), weapon.knockback);
         if (!enemy.alive()) {
           room.poofs.push(createPoof(enemy.center[0], enemy.center[1]));
           playPoofSound();
@@ -253,7 +245,7 @@ function createRoom(neighbor, gameState) {
 
     if (hitAny) {
       playSlashHit();
-    } else {
+    } else if (player.attackTimer === 1 && player.attackHitIds.size === 0) {
       playSlashWhiff();
     }
   };

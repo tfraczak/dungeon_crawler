@@ -1,7 +1,6 @@
 import createPlayer from "./player";
 import createRoom from "./room";
 import createCamera from "./camera";
-import drawSwordSlash from "./sword";
 import { SPRITE_DIMS } from "./utils/global_vars";
 import GAME_CONFIG from "./game_config";
 
@@ -73,7 +72,7 @@ function createGame(gameState) {
       entities.forEach(entity => entity.draw(ctx));
 
       if (game.player.isAttacking()) {
-        drawSwordSlash(ctx, game.player);
+        game.player.weapon.drawSlash(ctx, game.player.center, game.player.facing, game.player.attackTimer);
       }
 
       game.room.poofs.forEach(p => p.draw(ctx));

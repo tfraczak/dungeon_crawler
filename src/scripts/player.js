@@ -1,4 +1,5 @@
 import createEntity from "./entity";
+import createSword from "./items/equipment/weapons/swords/sword";
 import { BASE_SPEED } from "./utils/global_vars";
 import GAME_CONFIG from "./game_config";
 import { roomChange } from "./utils/room_generation";
@@ -79,9 +80,11 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     return Math.floor(player.invulnerable / 5) % 2 === 0;
   };
 
+  player.weapon = createSword();
   player.facing = "down";
-  player.attackTimer = 0;
-  player.attackCooldownTimer = 0;
+  player.attackTimer = 0;          // frames remaining in current swing
+  player.attackCooldownTimer = 0;  // frames before next swing allowed
+  player.attackHitIds = new Set(); // enemy keys already hit this swing
   player.knockbackVx = 0;
   player.knockbackVy = 0;
 
@@ -136,25 +139,8 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
 
   player.isAttacking = () => player.attackTimer > 0;
 
-  player.attackHitbox = () => {
-    const [cx, cy] = player.center;
-    const halfArc = cfg.attackArc / 2;
-    let baseAngle;
-    switch (player.facing) {
-      case "up":    baseAngle = -Math.PI / 2; break;
-      case "down":  baseAngle = Math.PI / 2; break;
-      case "left":  baseAngle = Math.PI; break;
-      case "right": baseAngle = 0; break;
-    }
-    return {
-      x: cx,
-      y: cy,
-      range: cfg.attackRange,
-      startAngle: baseAngle - halfArc,
-      endAngle: baseAngle + halfArc,
-      baseAngle,
-    };
-  };
+  player.attackHitbox = () =>
+    player.weapon.computeHitbox(player.center, player.facing);
 
   player.move = (walls) => {
     const keys = player.gameState.keys;
@@ -187,10 +173,13 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     if (player.attackCooldownTimer > 0) player.attackCooldownTimer--;
     if (player.attackTimer > 0) player.attackTimer--;
 
-    if (keys[" "] && player.attackCooldownTimer === 0 && player.stamina >= cfg.attackStaminaCost) {
-      player.stamina -= cfg.attackStaminaCost;
-      player.attackTimer = cfg.attackDuration;
-      player.attackCooldownTimer = cfg.attackCooldown;
+    // Start a new attack: drain stamina, set timers, clear hit tracking
+    const weapon = player.weapon;
+    if (keys[" "] && player.attackCooldownTimer === 0 && player.stamina >= weapon.staminaCost) {
+      player.stamina -= weapon.staminaCost;
+      player.attackTimer = weapon.duration;
+      player.attackCooldownTimer = weapon.cooldown;
+      player.attackHitIds.clear();
     }
 
     if (up) player.facing = "up";

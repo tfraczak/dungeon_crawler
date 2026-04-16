@@ -117,14 +117,13 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
   enemy.knockbackVx = 0;
   enemy.knockbackVy = 0;
 
-  enemy.takeDamage = (amount) => {
+  enemy.takeDamage = (amount, knockback) => {
     enemy.hp -= amount;
     if (enemy.hp < 0) enemy.hp = 0;
     const player = enemy.gameState.session.player;
     const dx = enemy.center[0] - player.center[0];
     const dy = enemy.center[1] - player.center[1];
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-    const knockback = GAME_CONFIG.player.attackKnockback;
     enemy.knockbackVx = (dx / dist) * knockback;
     enemy.knockbackVy = (dy / dist) * knockback;
   };
