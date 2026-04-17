@@ -1,6 +1,6 @@
 import createEntity from "../entity";
 import createCoin from "../coin/coin";
-import createPotion from "../potion/potion";
+import createHpPotion from "../hp_potion/hp_potion";
 import { BASE_SPEED } from "../../utils/global_vars";
 import GAME_CONFIG from "../../core/game_config";
 import DEV_FLAGS from "../../core/dev_flags";
@@ -11,6 +11,9 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
 
   enemy.gameState = gameState;
   enemy.hp = DEV_FLAGS.enemyHp ?? cfg.hp;
+  // Snapshot the spawn HP so the dev-only bar renders a stable ratio — later
+  // mutations to `DEV_FLAGS.enemyHp` only affect newly-spawned enemies.
+  enemy.maxHp = enemy.hp;
   enemy.strength = cfg.strength;
   enemy.speed = BASE_SPEED * cfg.speedMultiplier;
   enemy.speedModifier = cfg.idleSpeedModifier;
@@ -132,7 +135,7 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
   // The `enemy_item_drop_rate` dev flag (when set) replaces every entry's
   // configured chance for easier testing of drop-dependent mechanics.
   enemy.drop = () => {
-    const items = { coins: [], potions: [] };
+    const items = { coins: [], hpPotions: [] };
     for (const drop of cfg.drops) {
       const chance = DEV_FLAGS.enemyItemDropRate ?? drop.chance;
       if (Math.random() >= chance) continue;
@@ -143,13 +146,13 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
         );
         coin.startDrop(enemy.center[0], enemy.center[1]);
         items.coins.push(coin);
-      } else if (drop.type === "potion") {
-        const potion = createPotion(
+      } else if (drop.type === "hp_potion") {
+        const potion = createHpPotion(
           [enemy.center[0] - 16, enemy.center[1] - 16],
-          32, 32, gameState.sprites.potion, gameState,
+          32, 32, gameState.sprites.hpPotion, gameState,
         );
         potion.startDrop(enemy.center[0], enemy.center[1]);
-        items.potions.push(potion);
+        items.hpPotions.push(potion);
       }
     }
     return items;
@@ -303,19 +306,54 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
     enemy.drawOptions.y = enemy.pos[1];
   };
 
-  // Dev-only detection-radius overlay. Wraps the base entity draw so the
-  // circle is drawn in world-space right after the sprite. Colored green
-  // while wandering and red while chasing, so the AI state is legible at
-  // a glance.
+  // Dev-only overlays, drawn in world-space right after the sprite so the
+  // camera transform still applies.
+  //
+  //   showEnemyDetectRadius: the chase-trigger circle, green while wandering
+  //                          and red while chasing so AI state is legible.
+  //   showEnemyHp:           a small HP bar + numeric readout above the head,
+  //                          red fill for remaining HP on a dark backing.
   const baseDraw = enemy.draw;
   enemy.draw = (ctx) => {
     baseDraw(ctx);
-    if (!DEV_FLAGS.showEnemyDetectRadius) return;
-    ctx.beginPath();
-    ctx.strokeStyle = enemy.chasingPlayer ? "#ff4444" : "#44ff44";
-    ctx.lineWidth = 1;
-    ctx.arc(enemy.center[0], enemy.center[1], enemy.detectDist, 0, Math.PI * 2);
-    ctx.stroke();
+
+    if (DEV_FLAGS.showEnemyDetectRadius) {
+      ctx.beginPath();
+      ctx.strokeStyle = enemy.chasingPlayer ? "#ff4444" : "#44ff44";
+      ctx.lineWidth = 1;
+      ctx.arc(enemy.center[0], enemy.center[1], enemy.detectDist, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    if (DEV_FLAGS.showEnemyHp) {
+      const barW = 40;
+      const barH = 4;
+      const barX = Math.round(enemy.center[0] - barW / 2);
+      const barY = Math.round(enemy.pos[1] - 10);
+      const ratio = enemy.maxHp > 0 ? Math.max(0, enemy.hp / enemy.maxHp) : 0;
+
+      ctx.fillStyle = "#111";
+      ctx.fillRect(barX, barY, barW, barH);
+      ctx.fillStyle = "#d42c2c";
+      ctx.fillRect(barX, barY, Math.round(barW * ratio), barH);
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(barX + 0.5, barY + 0.5, barW - 1, barH - 1);
+
+      ctx.font = "10px arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+      const label = `${enemy.hp}/${enemy.maxHp}`;
+      const labelX = enemy.center[0];
+      const labelY = barY - 2;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#000";
+      ctx.strokeText(label, labelX, labelY);
+      ctx.fillStyle = "#fffaf4";
+      ctx.fillText(label, labelX, labelY);
+      ctx.textAlign = "start";
+      ctx.textBaseline = "alphabetic";
+    }
   };
 
   return enemy;

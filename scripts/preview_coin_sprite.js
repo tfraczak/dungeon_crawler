@@ -1,9 +1,9 @@
 /*
- * Dev-only: upscales src/assets/images/potion/potion.png by 8x with
+ * Dev-only: upscales src/assets/images/coin/coin.png by 8x with
  * nearest-neighbor so the generated sprite sheet can be reviewed visually.
- * Writes the preview to tmp/potion_preview.png.
+ * Writes the preview to tmp/coin_preview.png.
  *
- *   node scripts/preview_potion_sprite.js
+ *   node scripts/preview_coin_sprite.js
  */
 
 "use strict";
@@ -13,9 +13,9 @@ const path = require("path");
 const zlib = require("zlib");
 
 const SCALE = 8;
-const SRC = path.join(__dirname, "..", "src", "assets", "images", "potion", "potion.png");
+const SRC = path.join(__dirname, "..", "src", "assets", "images", "coin", "coin.png");
 const OUT_DIR = path.join(__dirname, "..", "tmp");
-const OUT = path.join(OUT_DIR, "potion_preview.png");
+const OUT = path.join(OUT_DIR, "coin_preview.png");
 
 // ---- minimal PNG decoder (just enough for our 8-bit RGBA, non-interlaced file) ----
 function decodePNG(buf) {
@@ -85,7 +85,7 @@ function decodePNG(buf) {
   return { width, height, pixels };
 }
 
-// ---- minimal PNG encoder (same as generate_potion_sprite.js) ----
+// ---- minimal PNG encoder (same as generate_coin_sprite.js) ----
 const PNG_SIG = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const CRC_TABLE = (() => {
   const t = new Uint32Array(256);

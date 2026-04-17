@@ -1,24 +1,24 @@
 import createEntity from "../entity";
 import GAME_CONFIG from "../../core/game_config";
-import { playPotionSound, playPotionDrop } from "../../sounds";
+import { playHpPotionSound, playHpPotionDrop } from "../../sounds";
 import applyDropBehavior from "../../effects/drop";
 
-let potionIdCounter = 0;
+let hpPotionIdCounter = 0;
 
-// Health potion: mirrors the coin animation system (128x16 sheet of 8 frames
-// x 16x16). Instead of spinning, the sheet depicts the same bottle chrome
-// across all frames with bubbles rising/popping in the liquid. Picking one
-// up heals the player and never over-heals past GAME_CONFIG.player.hp.
-function createPotion(pos, width, height, spritePalette, gameState) {
+// Health potion: mirrors the coin animation system (256x32 sheet of 8 frames
+// x 32x32). The bottle chrome is static across all frames; only the bubbling
+// liquid and outer sparkle/heal-cross VFX animate. Picking one up heals the
+// player and never over-heals past GAME_CONFIG.player.hp.
+function createHpPotion(pos, width, height, spritePalette, gameState) {
   const potion = createEntity(pos, width, height, spritePalette, { width, height });
 
-  potion.id = `potion_${potionIdCounter++}`;
+  potion.id = `hp_potion_${hpPotionIdCounter++}`;
   potion.gameState = gameState;
-  potion.frameInterval = GAME_CONFIG.potion.frameInterval;
+  potion.frameInterval = GAME_CONFIG.hpPotion.frameInterval;
   potion.frameCount = 0;
   potion.drawOptions.palY = 0;
 
-  applyDropBehavior(potion, playPotionDrop);
+  applyDropBehavior(potion, playHpPotionDrop);
 
   potion.collect = () => {
     if (potion.dropping) return false;
@@ -29,7 +29,7 @@ function createPotion(pos, width, height, spritePalette, gameState) {
       potion.collidedOnSide("left", player) ||
       potion.collidedOnSide("right", player)
     ) {
-      playPotionSound();
+      playHpPotionSound();
       return true;
     }
     return false;
@@ -71,4 +71,4 @@ function createPotion(pos, width, height, spritePalette, gameState) {
   return potion;
 }
 
-export default createPotion;
+export default createHpPotion;

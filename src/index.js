@@ -75,10 +75,10 @@ document.addEventListener("DOMContentLoaded", () => {
     gameState.sprites.coin = coinSprite;
   };
 
-  let potionSprite = new Image();
-  potionSprite.src = "./dist/assets/images/potion/potion.png";
-  potionSprite.onload = () => {
-    gameState.sprites.potion = potionSprite;
+  let hpPotionSprite = new Image();
+  hpPotionSprite.src = "./dist/assets/images/hp_potion/hp_potion.png";
+  hpPotionSprite.onload = () => {
+    gameState.sprites.hpPotion = hpPotionSprite;
   };
 
   let monstersSprites = new Image();

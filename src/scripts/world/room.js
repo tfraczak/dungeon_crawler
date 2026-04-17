@@ -39,8 +39,8 @@ function createRoom(neighbor, gameState) {
     room.coins[coin.id] = coin;
   }
 
-  // Potions only enter a room as enemy drops; no procedural spawning.
-  room.potions = {};
+  // HP potions only enter a room as enemy drops; no procedural spawning.
+  room.hpPotions = {};
 
   let randIdx;
   let entryDir;
@@ -244,8 +244,8 @@ function createRoom(neighbor, gameState) {
           for (const coin of drops.coins) {
             room.coins[coin.id] = coin;
           }
-          for (const potion of drops.potions) {
-            room.potions[potion.id] = potion;
+          for (const potion of drops.hpPotions) {
+            room.hpPotions[potion.id] = potion;
           }
           delete room.enemies[key];
         }
@@ -262,7 +262,7 @@ function createRoom(neighbor, gameState) {
   room.animate = () => {
     room.collect();
     Object.values(room.coins).forEach(coin => coin.animate(room));
-    Object.values(room.potions).forEach(potion => potion.animate(room));
+    Object.values(room.hpPotions).forEach(potion => potion.animate(room));
     room.poofs.forEach(p => p.update());
     room.poofs = room.poofs.filter(p => !p.done);
   };
@@ -278,12 +278,12 @@ function createRoom(neighbor, gameState) {
         return;
       }
     }
-    for (let potion of Object.values(room.potions)) {
+    for (let potion of Object.values(room.hpPotions)) {
       if (potion.collect()) {
-        delete room.potions[potion.id];
+        delete room.hpPotions[potion.id];
         const player = gameState.session.player;
         const maxHp = GAME_CONFIG.player.hp;
-        player.hp = Math.min(maxHp, player.hp + GAME_CONFIG.potion.healAmount);
+        player.hp = Math.min(maxHp, player.hp + GAME_CONFIG.hpPotion.healAmount);
         return;
       }
     }
@@ -294,7 +294,7 @@ function createRoom(neighbor, gameState) {
       player,
       ...Object.values(room.enemies),
       ...Object.values(room.coins),
-      ...Object.values(room.potions),
+      ...Object.values(room.hpPotions),
     ];
   };
 
@@ -330,29 +330,36 @@ function createRoom(neighbor, gameState) {
     }
     ctx.fillText(`Coins x ${session.coinCount}`, ctx.canvas.width - 130, 30);
 
+    // HP bar reads left-to-right: red fill = remaining HP on top of a solid
+    // black track (missing HP). Stamina stays yellow, invulnerability cyan.
+    const HP_FILL = "#d42c2c";
+    const HP_EMPTY = "#111";
+    const STAMINA = "#ffbb00";
+    const INVULN = "#00dddd";
+
     if (isMobile) {
       const barX = 15;
       const barY = 48;
       ctx.beginPath();
-      ctx.strokeStyle = "#33ff00";
+      ctx.strokeStyle = HP_EMPTY;
+      ctx.lineWidth = 10;
+      ctx.moveTo(barX, barY);
+      ctx.lineTo(barX + 100, barY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.strokeStyle = HP_FILL;
       ctx.lineWidth = 10;
       ctx.moveTo(barX, barY);
       ctx.lineTo(barX + (player.hp / maxHp) * 100, barY);
       ctx.stroke();
       ctx.beginPath();
-      ctx.strokeStyle = "#ff0000";
-      ctx.lineWidth = 10;
-      ctx.moveTo(barX + 100 - (1 - player.hp / maxHp) * 100, barY);
-      ctx.lineTo(barX + 100, barY);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.strokeStyle = "#00dddd";
+      ctx.strokeStyle = INVULN;
       ctx.lineWidth = 5;
       ctx.moveTo(barX, barY + 11);
       ctx.lineTo(barX + (player.invulnerable / 75) * 100, barY + 11);
       ctx.stroke();
       ctx.beginPath();
-      ctx.strokeStyle = "#ffbb00";
+      ctx.strokeStyle = STAMINA;
       ctx.lineWidth = 5;
       ctx.moveTo(barX, barY + 19);
       ctx.lineTo(barX + (player.stamina / maxStamina) * 100, barY + 19);
@@ -360,25 +367,25 @@ function createRoom(neighbor, gameState) {
     } else {
       const barY = ctx.canvas.height - 15;
       ctx.beginPath();
-      ctx.strokeStyle = "#ffbb00";
+      ctx.strokeStyle = STAMINA;
       ctx.lineWidth = 5;
       ctx.moveTo(15, barY);
       ctx.lineTo(15 + (player.stamina / maxStamina) * 100, barY);
       ctx.stroke();
       ctx.beginPath();
-      ctx.strokeStyle = "#33ff00";
+      ctx.strokeStyle = HP_EMPTY;
+      ctx.lineWidth = 10;
+      ctx.moveTo(15, barY - 15);
+      ctx.lineTo(115, barY - 15);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.strokeStyle = HP_FILL;
       ctx.lineWidth = 10;
       ctx.moveTo(15, barY - 15);
       ctx.lineTo(15 + (player.hp / maxHp) * 100, barY - 15);
       ctx.stroke();
       ctx.beginPath();
-      ctx.strokeStyle = "#ff0000";
-      ctx.lineWidth = 10;
-      ctx.moveTo(115 - (1 - player.hp / maxHp) * 100, barY - 15);
-      ctx.lineTo(115, barY - 15);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.strokeStyle = "#00dddd";
+      ctx.strokeStyle = INVULN;
       ctx.lineWidth = 5;
       ctx.moveTo(15, barY - 6);
       ctx.lineTo(15 + (player.invulnerable / 75) * 100, barY - 6);

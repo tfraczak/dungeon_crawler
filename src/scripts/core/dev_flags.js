@@ -29,6 +29,7 @@ const STORAGE_KEY = "devFlags";
 const BOOLEAN_KEYS = Object.freeze([
   "showCollisionBoxes",
   "showEnemyDetectRadius",
+  "showEnemyHp",
   "godMode",
   "infiniteStamina",
   "oneShot",

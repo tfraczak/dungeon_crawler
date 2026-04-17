@@ -1,9 +1,9 @@
 import getAudioContext from "../audio_context";
 
-// Potion drop -- muted glassy thunk when a bottle lands. A softer, lower
+// HP potion drop -- muted glassy thunk when a bottle lands. A softer, lower
 // analog of playCoinDrop so dropped potions read as a different pickup class
 // by ear alone.
-export function playPotionDrop() {
+export function playHpPotionDrop() {
   const ctx = getAudioContext();
   const now = ctx.currentTime;
   const duration = 0.12;
@@ -22,10 +22,10 @@ export function playPotionDrop() {
   osc.stop(now + duration);
 }
 
-// Potion pickup -- warm ascending 3-note chime (I-III-V) on a sine wave
+// HP potion pickup -- warm ascending 3-note chime (I-III-V) on a sine wave
 // with a gentle bell harmonic. Intentionally distinct from the metallic
 // coin ping so the player can hear the heal without looking at the HUD.
-export default function playPotionSound() {
+export default function playHpPotionSound() {
   const ctx = getAudioContext();
   const now = ctx.currentTime;
 

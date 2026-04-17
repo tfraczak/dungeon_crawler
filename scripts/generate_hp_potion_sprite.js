@@ -1,7 +1,7 @@
 /*
- * Procedurally generates the health-potion sprite sheet.
+ * Procedurally generates the HP-potion sprite sheet.
  *
- * Output: src/assets/images/potion/potion.png  (256 x 32, 8 frames of 32x32)
+ * Output: src/assets/images/hp_potion/hp_potion.png  (256 x 32, 8 frames of 32x32)
  *
  * Each frame shares the same bottle chrome (cork, neck, glass body, red
  * liquid) so the animation reads as a stationary bottle. Per-frame overlays
@@ -11,7 +11,7 @@
  *   2. Sparkles and small red heal crosses floating/rising around the bottle.
  *
  * Zero-dependency: uses Node's built-in `zlib` + `Buffer` to hand-encode the
- * PNG. Run with:  node scripts/generate_potion_sprite.js
+ * PNG. Run with:  node scripts/generate_hp_potion_sprite.js
  */
 
 "use strict";
@@ -414,8 +414,8 @@ function encodePNG(width, height, rgba) {
 function main() {
   const sheet = buildSheet();
   const png = encodePNG(SHEET_W, SHEET_H, sheet);
-  const outDir = path.join(__dirname, "..", "src", "assets", "images", "potion");
-  const outPath = path.join(outDir, "potion.png");
+  const outDir = path.join(__dirname, "..", "src", "assets", "images", "hp_potion");
+  const outPath = path.join(outDir, "hp_potion.png");
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(outPath, png);
   // eslint-disable-next-line no-console
