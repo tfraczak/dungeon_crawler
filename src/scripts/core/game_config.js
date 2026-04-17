@@ -45,6 +45,7 @@ const GAME_CONFIG = Object.freeze({
     damageMax: 4,
     drops: [
       { type: "coin", chance: 0.1 },
+      { type: "potion", chance: 0.05 },
     ],
     knockbackFactor: 0.4,
     hitDistance: 32,
@@ -53,6 +54,11 @@ const GAME_CONFIG = Object.freeze({
 
   coin: {
     frameInterval: 12,
+  },
+
+  potion: {
+    frameInterval: 14,
+    healAmount: 5,
   },
 
   poof: {

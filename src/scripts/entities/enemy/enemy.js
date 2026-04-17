@@ -1,5 +1,6 @@
 import createEntity from "../entity";
 import createCoin from "../coin/coin";
+import createPotion from "../potion/potion";
 import { BASE_SPEED } from "../../utils/global_vars";
 import GAME_CONFIG from "../../core/game_config";
 import DEV_FLAGS from "../../core/dev_flags";
@@ -131,7 +132,7 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
   // The `enemy_item_drop_rate` dev flag (when set) replaces every entry's
   // configured chance for easier testing of drop-dependent mechanics.
   enemy.drop = () => {
-    const items = { coins: [] };
+    const items = { coins: [], potions: [] };
     for (const drop of cfg.drops) {
       const chance = DEV_FLAGS.enemyItemDropRate ?? drop.chance;
       if (Math.random() >= chance) continue;
@@ -142,6 +143,13 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
         );
         coin.startDrop(enemy.center[0], enemy.center[1]);
         items.coins.push(coin);
+      } else if (drop.type === "potion") {
+        const potion = createPotion(
+          [enemy.center[0] - 16, enemy.center[1] - 16],
+          32, 32, gameState.sprites.potion, gameState,
+        );
+        potion.startDrop(enemy.center[0], enemy.center[1]);
+        items.potions.push(potion);
       }
     }
     return items;

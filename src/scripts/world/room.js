@@ -39,6 +39,9 @@ function createRoom(neighbor, gameState) {
     room.coins[coin.id] = coin;
   }
 
+  // Potions only enter a room as enemy drops; no procedural spawning.
+  room.potions = {};
+
   let randIdx;
   let entryDir;
   if (neighbor) {
@@ -241,6 +244,9 @@ function createRoom(neighbor, gameState) {
           for (const coin of drops.coins) {
             room.coins[coin.id] = coin;
           }
+          for (const potion of drops.potions) {
+            room.potions[potion.id] = potion;
+          }
           delete room.enemies[key];
         }
       }
@@ -256,15 +262,28 @@ function createRoom(neighbor, gameState) {
   room.animate = () => {
     room.collect();
     Object.values(room.coins).forEach(coin => coin.animate(room));
+    Object.values(room.potions).forEach(potion => potion.animate(room));
     room.poofs.forEach(p => p.update());
     room.poofs = room.poofs.filter(p => !p.done);
   };
 
+  // Only one item per frame is collected so each pickup reads cleanly (own
+  // sound, own HUD bump). Coins are checked first simply to match the order
+  // they were historically the only pickup.
   room.collect = () => {
     for (let coin of Object.values(room.coins)) {
       if (coin.collect()) {
         delete room.coins[coin.id];
         gameState.session.coinCount++;
+        return;
+      }
+    }
+    for (let potion of Object.values(room.potions)) {
+      if (potion.collect()) {
+        delete room.potions[potion.id];
+        const player = gameState.session.player;
+        const maxHp = GAME_CONFIG.player.hp;
+        player.hp = Math.min(maxHp, player.hp + GAME_CONFIG.potion.healAmount);
         return;
       }
     }
@@ -275,6 +294,7 @@ function createRoom(neighbor, gameState) {
       player,
       ...Object.values(room.enemies),
       ...Object.values(room.coins),
+      ...Object.values(room.potions),
     ];
   };
 
