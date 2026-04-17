@@ -19,6 +19,7 @@ export default [
         Audio: "readonly",
         URLSearchParams: "readonly",
         localStorage: "readonly",
+        process: "readonly",
       },
     },
     rules: {

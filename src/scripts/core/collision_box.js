@@ -1,3 +1,5 @@
+import DEV_FLAGS from "./dev_flags";
+
 function createColBox(entity, width, height) {
   const colBox = { entity, width, height };
 
@@ -29,8 +31,9 @@ function createColBox(entity, width, height) {
   colBox.updateSides = computeSides;
 
   colBox.draw = (ctx) => {
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "transparent";
+    if (!DEV_FLAGS.showCollisionBoxes) return;
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#ff0000";
     ctx.strokeRect(colBox.pos[0], colBox.pos[1], colBox.width, colBox.height);
   };
 

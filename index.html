@@ -36,68 +36,12 @@
           </div>
           <div class="how-to wrapper">
             <i id="how-to-pointer" class="fas fa-hand-pointer"></i>
-            <button id="how-to" class="button">How to play?
-              <ul id="dropdown-menu">
-                <li class="menu-category">Objective</li>
-                  <li class="explanation">
-                    <p>You find yourself in a dank, smelly dungeon.</p>
-                    <p>However, you chose to be here!</p>
-                    <p>You heard of great riches that lie further in the dungeon.</p>
-                    <p>10 gold coins should be enough to last a life time.</p>
-                    <p>Venture forth! But be careful...</p>
-                    <p>Danger lurks ahead...</p>
-                  </li>
-                <li class="menu-category">Controls</li>
-                  <li class="control">W - up</li>
-                  <li class="control">S - down</li>
-                  <li class="control">A - left</li>
-                  <li class="control">D - right</li>
-                  <li class="control">LShift - sprint</li>
-                <li class="menu-category">HUD</li>
-                  <li class="ui hp">
-                    <h3>HP</h3>
-                    <div class="color-wrapper">
-                      <div class="color green"></div>
-                      <div class="color red"></div>
-                    </div>
-                    <h6>"Your GP or your HP!" ~Black Mage</h6>
-                    <p>You have some HP, don't go losing it all in one place.</p>
-                    <p>Once this reaches 0, it's <span class="game-over">GAME OVER</span>.</p>
-                    <p>You lose HP by being attacked by enemies.</p>
-                  </li>
-                  <li class="ui stamina">
-                    <h3>Invulnerability</h3>
-                    <div class="color blue"></div>
-                    <p>It's not what you're thinking...</p>
-                    <p>After being hit by enemy, you have a <em>VERY</em> short</p>
-                    <p>period of time where you are invulnerable.</p>
-                    <p>Otherwise, it wouldn't be fair... to you...</p>
-                  </li>
-                  <li class="ui stamina">
-                    <h3>Stamina</h3>
-                    <div class="color yellow"></div>
-                    <p>You also have some stamina for sprinting!</p>
-                    <p>Use it wisely, it doesn't regenerate that quickly...</p>
-                  </li>
-                  <li class="ui "></li>
-                <li class="menu-category">About</li>
-                  <li class="explanation">
-                    <p>Each room is randomly generated for your enjoyment.</p>
-                    <p>This means that each playthrough is different than the last.</p>
-                    <p>How many coins can you collect??</p>
-                    <p>Check out my other projects: 
-                      <a href="https://accord-app.herokuap.com/#/">Accord</a> | 
-                      <a href="https://postcard-triplog.herokuap.com/#/">Postcard</a>
-                    </p>
-                  </li>
-              </ul>
-            </button>
+            <a id="how-to" class="button" href="#how-to-play">How to play?</a>
           </div>
-          
-          
         </div>
         <nav id="links-nav">
           <ul>
+            <li class="dev-only"><a id="dev-options-link" href="#" title="Dev Options" aria-label="Dev Options"><i class="fas fa-wrench"></i></a></li>
             <li><a href="https://www.github.com/tfraczak" target="_blank"><i class="fab fa-github"></i></a></li>
             <li><a href="https://www.linkedin.com/in/tfraczak/" target="_blank"><i class="fab fa-linkedin-in"></i></a></li>
           </ul>
@@ -119,7 +63,171 @@
     <div id="rotate-overlay">
       <p>&#x1F504;</p>
       <p>Rotate your device to landscape</p>
+      <a class="rotate-how-to" href="#how-to-play">How to play?</a>
     </div>
+
+    <main id="how-to-page" class="how-to-page" aria-hidden="true">
+      <div class="how-to-panel">
+        <header class="how-to-header">
+          <h1>How to play</h1>
+          <a id="how-to-back" class="button back-button" href="#" aria-label="Back to game">&larr; Back to game</a>
+        </header>
+
+        <div class="how-to-content">
+          <section class="how-to-section">
+            <h2>Objective</h2>
+            <p>You find yourself deep in a smelly, dank dungeon. The good news: you chose to be here. Legend tells of great riches buried deeper still, and <strong>10 gold coins</strong> is enough to retire on.</p>
+            <p>Venture forth, collect coins, and stay alive. Each room is generated procedurally, so no two runs play out the same.</p>
+            <ul class="bullets">
+              <li><strong>Win:</strong> Collect 10 coins.</li>
+              <li><strong>Lose:</strong> HP reaches 0.</li>
+            </ul>
+          </section>
+
+          <section class="how-to-section">
+            <h2>Controls</h2>
+            <div class="columns">
+              <div>
+                <h3>Desktop</h3>
+                <ul class="controls">
+                  <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> &mdash; move</li>
+                  <li><kbd>Shift</kbd> &mdash; sprint</li>
+                  <li><kbd>Space</kbd> &mdash; attack (sword)</li>
+                  <li><kbd>Enter</kbd> &mdash; start game from title screen</li>
+                </ul>
+              </div>
+              <div>
+                <h3>Mobile</h3>
+                <ul class="controls">
+                  <li>Left-thumb <strong>joystick</strong> &mdash; 8-way movement</li>
+                  <li>Right-thumb <strong>Attack</strong> button</li>
+                  <li>Right-thumb <strong>Sprint</strong> button</li>
+                  <li>Rotate to landscape to begin</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section class="how-to-section">
+            <h2>Combat</h2>
+            <p>Press <strong>Space</strong> (desktop) or the <strong>Attack button</strong> (mobile) to swing your sword in the direction you're facing.</p>
+          </section>
+
+          <section class="how-to-section">
+            <h2>Stamina</h2>
+            <p>Stamina gates sprinting and attacking. It regenerates automatically when you're walking or standing still.</p>
+            <div class="stat-row">
+              <span class="color-chip yellow"></span>
+              <span>Stamina bar (yellow)</span>
+            </div>
+            <ul class="bullets">
+              <li><strong>Sprinting:</strong> drains stamina each frame.</li>
+              <li><strong>Attacking:</strong> costs a fixed chunk per swing.</li>
+              <li><strong>Regen (idle):</strong> faster than while moving.</li>
+              <li><strong>Depleted:</strong> sprint and attack both lock out until stamina returns.</li>
+            </ul>
+          </section>
+
+          <section class="how-to-section">
+            <h2>HP &amp; Invulnerability</h2>
+            <p>When you get struck, you lose HP and enter a brief window of invulnerability &mdash; your sprite flickers and the cyan bar ticks down.</p>
+            <div class="stat-row">
+              <span class="color-chip hp"><span class="green"></span><span class="red"></span></span>
+              <span>HP (green/red)</span>
+            </div>
+            <div class="stat-row">
+              <span class="color-chip cyan"></span>
+              <span>Invulnerability window (cyan)</span>
+            </div>
+            <p class="quote">&ldquo;Your GP or your HP!&rdquo; &mdash; Black Mage</p>
+          </section>
+
+          <section class="how-to-section">
+            <h2>Enemies</h2>
+            <p><strong>Blobs</strong> wander each room until they detect you &mdash; then they'll give chase.</p>
+          </section>
+
+          <section class="how-to-section">
+            <h2>Rooms &amp; Navigation</h2>
+            <p>The dungeon is an infinite graph. Each room has 1&ndash;4 exits and is generated the moment you step through a doorway.</p>
+            <ul class="bullets">
+              <li><strong>Exit counts</strong> are weighted &mdash; 2-exit rooms are the most common, 4-exit rooms the rarest.</li>
+              <li>Rooms you've visited are <strong>preserved</strong>. Walking back retains the map topology, but enemies scatter to new positions.</li>
+              <li>Coins spawn around the edges of a room &mdash; none directly in the middle, so you always have room to maneuver.</li>
+            </ul>
+          </section>
+
+          <section class="how-to-section">
+            <h2>HUD</h2>
+            <ul class="bullets">
+              <li><strong>Top-right:</strong> coin counter (progress toward the goal of 10).</li>
+              <li><strong>Status bars</strong> (bottom-left on desktop, top-left on mobile):
+                <ul>
+                  <li>Green/red &mdash; HP</li>
+                  <li>Cyan &mdash; invulnerability window</li>
+                  <li>Yellow &mdash; stamina</li>
+                </ul>
+              </li>
+            </ul>
+          </section>
+
+          <section class="how-to-section">
+            <h2>Mobile customization</h2>
+            <p>Mobile zoom defaults to <code>1.35&times;</code>. If that feels cramped or too zoomed on your device, append <code>?zoom=&lt;n&gt;</code> to the URL (any value from 0.5 to 5):</p>
+            <pre class="example">https://tfraczak.github.io/dungeon_crawler/?zoom=1.6</pre>
+            <p>Your choice is remembered per device after the first load, so you only need to set it once.</p>
+          </section>
+
+          <section class="how-to-section">
+            <h2>About</h2>
+            <p>Built in pure JavaScript and Canvas 2D &mdash; no frameworks, no runtime dependencies. Procedurally generated rooms, arc-based melee, and a web-audio sound engine rendered from scratch.</p>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <aside id="dev-options-page" class="dev-options-page dev-only" aria-hidden="true">
+      <div class="dev-options-panel">
+        <header class="dev-options-header">
+          <h1>Dev Options</h1>
+          <button id="dev-options-close" type="button" class="button back-button" aria-label="Close">&larr; Close</button>
+        </header>
+
+        <form class="dev-options-form" onsubmit="return false;">
+          <section class="dev-options-section">
+            <h2>Player Cheats</h2>
+            <label class="dev-check"><input type="checkbox" name="godMode" /> <span>God mode</span></label>
+            <label class="dev-check"><input type="checkbox" name="infiniteStamina" /> <span>Infinite stamina</span></label>
+            <label class="dev-check"><input type="checkbox" name="oneShot" /> <span>One-shot kills</span></label>
+          </section>
+
+          <section class="dev-options-section">
+            <h2>Enemy Overrides</h2>
+            <p class="dev-options-hint">Leave blank to use the game default shown in each field. Enemy HP only affects newly-spawned enemies.</p>
+            <label class="dev-field">
+              <span>Enemy HP</span>
+              <input type="number" name="enemyHp" step="1" min="1" inputmode="numeric" />
+            </label>
+            <label class="dev-field">
+              <span>Enemy drop rate</span>
+              <input type="number" name="enemyItemDropRate" step="0.05" min="0" max="1" inputmode="decimal" />
+            </label>
+          </section>
+
+          <section class="dev-options-section">
+            <h2>Visualization</h2>
+            <label class="dev-check"><input type="checkbox" name="showCollisionBoxes" /> <span>Collision boxes</span></label>
+            <label class="dev-check"><input type="checkbox" name="showEnemyDetectRadius" /> <span>Enemy detect radius</span></label>
+          </section>
+
+          <div class="dev-options-actions">
+            <button type="button" id="dev-options-reset" class="button secondary">Reset to defaults</button>
+            <button type="submit" id="dev-options-apply" class="button apply">Apply</button>
+          </div>
+        </form>
+      </div>
+    </aside>
+
     <audio id="restart-sound" src="./src/assets/audio/click.mp3"></audio>
     <audio id="how-to-sound" src="./src/assets/audio/click.mp3"></audio>
   </body>

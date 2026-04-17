@@ -1,0 +1,248 @@
+@use 'sass:color';
+@use 'vars' as *;
+
+// Dev-only elements (header link + drawer) are hidden by default. `index.js`
+// toggles `body.dev-mode` when `process.env.NODE_ENV !== "production"`,
+// which reveals them. This keeps prod HTML clean without needing to ship
+// a separate template — the markup itself still emits, but is never shown.
+.dev-only {
+  display: none;
+}
+
+body.dev-mode .dev-only {
+  display: revert;
+}
+
+// Wrench icon trigger lives in the social-icons nav alongside GitHub /
+// LinkedIn. Keep it the same size/shape so the row reads cleanly, but tint
+// the default state subtly so it reads as "tool" rather than "social link".
+#dev-options-link {
+  color: color.adjust($off-white, $lightness: -20%);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus {
+    color: $banana;
+  }
+}
+
+// Same drawer chrome as `.how-to-page` — positioning, slide-in, gradient band
+// background, border-left, typography — so the Dev Options panel feels like a
+// sibling of the How to play drawer. Only the section/form bits below differ.
+.dev-options-page {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(440px, 100%);
+  z-index: 1000;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font-family: $rubik;
+  transform: translateX(100%);
+  transition: transform 0.25s ease-in-out;
+  pointer-events: none;
+  will-change: transform;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.5);
+
+  &.active {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .dev-options-panel {
+    min-height: 100%;
+    background-color: $menu-color;
+    background-image: repeating-linear-gradient(
+      -30deg,
+      color.adjust($menu-color, $lightness: -14%) 0,
+      color.adjust($menu-color, $lightness: -14%) 360px,
+      $menu-color 500px,
+      color.adjust($menu-color, $lightness: -14%) 640px
+    );
+    border-left: 4px solid color.adjust(white, $lightness: -15%);
+    padding: 24px 28px 40px;
+  }
+
+  .dev-options-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+
+    h1 {
+      font-family: $start-2p;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .back-button {
+      font-family: $rubik;
+      font-size: 14px;
+      padding: 8px 14px;
+      background-color: rgba(0, 0, 0, 0.25);
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      transition: all 0.15s ease-in-out;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.45);
+        border-color: $banana;
+        color: $banana;
+      }
+    }
+  }
+
+  .dev-options-form {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .dev-options-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    h2 {
+      font-family: $start-2p;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: $banana;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .dev-options-hint {
+    font-size: 13px;
+    line-height: 1.5;
+    color: color.adjust(white, $lightness: -20%);
+    font-style: italic;
+    margin-bottom: 4px;
+  }
+
+  // Checkbox + label row. The whole label is clickable.
+  .dev-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1.4;
+    padding: 6px 8px;
+    border-radius: 3px;
+    transition: background-color 0.12s ease-in-out;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: $banana;
+      cursor: pointer;
+      margin: 0;
+    }
+  }
+
+  .dev-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 15px;
+
+    > span {
+      flex: 1;
+    }
+
+    input[type="number"] {
+      width: 120px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 6px 10px;
+      background-color: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+      color: $off-white;
+      text-align: right;
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+        font-style: italic;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: $banana;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+    }
+  }
+
+  .dev-options-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 2px solid rgba(255, 255, 255, 0.25);
+
+    .button {
+      font-family: $rubik;
+      font-size: 14px;
+      padding: 10px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      background-color: rgba(0, 0, 0, 0.25);
+      transition: all 0.15s ease-in-out;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.45);
+        border-color: $banana;
+        color: $banana;
+      }
+    }
+
+    .apply {
+      background-color: $banana;
+      color: $charcoal;
+      border-color: color.adjust($banana, $lightness: -15%);
+      font-weight: 600;
+
+      &:hover {
+        background-color: color.adjust($banana, $lightness: 5%);
+        color: $charcoal;
+      }
+
+      // Brief confirmation flash after clicking Apply.
+      &.applied {
+        background-color: #7bd06b;
+        border-color: color.adjust(#7bd06b, $lightness: -10%);
+        color: $charcoal;
+      }
+    }
+  }
+
+  @media (max-width: 720px) {
+    .dev-options-panel {
+      padding: 20px 20px 32px;
+    }
+
+    .dev-options-header h1 {
+      font-size: 18px;
+    }
+
+    .dev-options-section h2 {
+      font-size: 12px;
+    }
+  }
+}

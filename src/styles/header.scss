@@ -1,4 +1,3 @@
-@use 'sass:color';
 @use 'vars' as *;
 
 #header {
@@ -79,9 +78,17 @@
     }
 
     #how-to {
+      font-size: 20px;
+      padding-bottom: 10px;
+      text-decoration: none;
+      color: $off-white;
+      cursor: pointer;
+
+      &:hover,
       &.active {
         color: $banana;
       }
+
       #how-to-pointer {
         &.active {
           visibility: visible;
@@ -91,139 +98,6 @@
       }
     }
 
-    #how-to {
-      font-size: 20px;
-      padding-bottom: 10px;
-      #dropdown-menu {
-        position: absolute;
-        top: 18px;
-        left: 50%;
-        right: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        visibility: hidden;
-        background-image: linear-gradient(-30deg, color.adjust($menu-color, $lightness: -35%), $menu-color);
-        border-radius: 3px;
-        border: 5px solid color.adjust(white, $lightness: -15%);
-        margin: 10px 0;
-        align-items: flex-start;
-        flex-direction: column;
-        padding: 0 10px;
-        padding-top: 3px;
-        padding-bottom: 7px;
-        font-family: $rubik;
-        z-index: 1;
-        width: 500px;
-        opacity: 0;
-        
-        li {
-          transform: scale(1.03, 0.97);
-        }
-        .menu-category {
-          font-size: 20px;
-          font-weight: 500;
-          margin-bottom: 5px;
-        }
-        li:not(.menu-category) {
-          font-size: 16px;
-          margin: 0 15px;
-          margin-bottom: 2px;
-        }
-        &.active {
-          visibility: visible;
-          opacity: 1;
-          box-shadow: 0 0 2px #000000;
-        }
-
-        .explanation {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          p {
-            font-size: 16px;
-            a {
-              text-decoration: none;
-              &:hover {
-                color: $banana;
-                text-decoration: underline;
-              }
-            }
-          }
-        }
-
-        .ui {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          justify-content: center;
-          width: 100%;
-          height: auto;
-
-          h3 {
-            font-weight: 500;
-            margin-bottom: 3px;
-          }
-
-          .color {
-            margin-bottom: 3px;
-          }
-
-          em {
-            color: $banana;
-            font-weight: 500;
-          }
-          
-          &.stamina {
-            margin-top: 5px;
-          }
-
-          h6 {
-            font-size: 12px;
-          }
-          .game-over {
-            color: red;
-            font-weight: 700;
-          }
-
-          .blue {
-            width: 100px;
-            height: 5px;
-            background-color: #00dddd;
-          }
-
-          .yellow {
-            width: 100px;
-            height: 5px;
-            background-color: #ffbb00;
-          }
-
-          .color-wrapper {
-            display: flex;
-            width: 100px;
-            height: 10px;
-            margin-bottom: 2px;
-
-            .green {
-              width: 70%;
-              height: 100%;
-              background-color: #33ff00;
-            }
-
-            .red {
-              width: 30%;
-              height: 100%;
-              background-color: red;
-            }
-
-            
-
-          }
-
-        }
-
-      }
-    }
-    
     #links-nav {
       & > ul {
         display: flex;

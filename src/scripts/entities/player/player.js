@@ -2,6 +2,7 @@ import createEntity from "../entity";
 import createSword from "../../items/equipment/weapons/swords/sword";
 import { BASE_SPEED } from "../../utils/global_vars";
 import GAME_CONFIG from "../../core/game_config";
+import DEV_FLAGS from "../../core/dev_flags";
 import { roomChange } from "../../utils/room_generation";
 import { playFootstep } from "../../sounds";
 
@@ -170,6 +171,7 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
         player.stamina += cfg.staminaRegenMoving;
       }
     }
+    if (DEV_FLAGS.infiniteStamina) player.stamina = cfg.stamina;
     if (player.invulnerable) player.invulnerable--;
     if (player.invulnerable < 0) player.invulnerable = 0;
 

@@ -278,11 +278,13 @@ function createRoom(neighbor, gameState) {
     ];
   };
 
-  // World-space pass: background tile only. HUD is rendered separately by
-  // drawHUD() after the game loop restores the camera transform, so the HUD
-  // can use canvas (screen) coordinates directly.
+  // World-space pass: background tile plus (dev-only) wall outlines. HUD is
+  // rendered separately by drawHUD() after the game loop restores the camera
+  // transform, so the HUD can use canvas (screen) coordinates directly.
+  // `wall.draw` is a no-op unless the collision_boxes_visible dev flag is set.
   room.draw = (ctx) => {
     ctx.drawImage(room.background, 0, 0);
+    room.walls.forEach(wall => wall.draw(ctx));
   };
 
   // Screen-space pass: room label, coin counter, and player status bars.
@@ -300,7 +302,12 @@ function createRoom(neighbor, gameState) {
 
     ctx.fillStyle = "#fffaf4";
     ctx.font = "20px arial";
-    ctx.fillText(`Room [ ${room.nodePos} ]`, 15, 30);
+    // Room coordinates are a debug aid. Webpack replaces process.env.NODE_ENV
+    // at build time, so the label drops out of the production bundle entirely
+    // (yarn serve/watch keep it visible; yarn build hides it).
+    if (process.env.NODE_ENV !== "production") {
+      ctx.fillText(`Room [ ${room.nodePos} ]`, 15, 30);
+    }
     ctx.fillText(`Coins x ${session.coinCount}`, ctx.canvas.width - 130, 30);
 
     if (isMobile) {

@@ -1,6 +1,9 @@
 import { newGame } from "./game_lifecycle";
+import installDevOptionsDrawer from "./dev_options_drawer";
 
 export default (gameState) => {
+  installDevOptionsDrawer();
+
   const keys = gameState.keys;
 
   document.addEventListener("keydown", e => {
@@ -23,19 +26,58 @@ export default (gameState) => {
     if (e.key === " " && keys[" "]) keys[" "] = false;
   });
 
+  // "How to play?" is a hash-route link (#how-to-play) that opens a slide-in
+  // drawer from the right. The game keeps running behind it — keyboard
+  // controls still route to the game loop — so players can reference the
+  // guide mid-run. Esc dismisses the drawer for a quick keyboard-only exit.
   const howTo = document.getElementById("how-to");
-  
+  const howToPointer = document.getElementById("how-to-pointer");
+  const howToPage = document.getElementById("how-to-page");
+  const howToBack = document.getElementById("how-to-back");
+
+  const closeHowTo = () => {
+    if (window.location.hash !== "#how-to-play") return;
+    if (window.history.length > 1 && document.referrer) {
+      window.history.back();
+    } else {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      syncHowToPage();
+    }
+  };
+
   howTo.addEventListener("mouseenter", () => {
-    document.getElementById("how-to-pointer").classList.add("active");
+    howToPointer.classList.add("active");
+    howTo.classList.add("active");
     document.getElementById("how-to-sound").play().catch(() => {});
-    document.getElementById("how-to").classList.add("active");
-    document.querySelector("#how-to > ul").classList.add("active");
   });
   howTo.addEventListener("mouseleave", () => {
-    document.getElementById("how-to").classList.remove("active");
-    document.getElementById("how-to-pointer").classList.remove("active");
-    document.querySelector("#how-to > ul").classList.remove("active");
+    howToPointer.classList.remove("active");
+    howTo.classList.remove("active");
   });
+
+  const syncHowToPage = () => {
+    const open = window.location.hash === "#how-to-play";
+    howToPage.classList.toggle("active", open);
+    howToPage.setAttribute("aria-hidden", open ? "false" : "true");
+    if (open) {
+      howToPage.scrollTop = 0;
+      document.body.classList.add("how-to-open");
+    } else {
+      document.body.classList.remove("how-to-open");
+    }
+  };
+
+  howToBack.addEventListener("click", (e) => {
+    e.preventDefault();
+    closeHowTo();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeHowTo();
+  });
+
+  window.addEventListener("hashchange", syncHowToPage);
+  syncHowToPage();
 
   const restart = document.getElementById("restart");
   restart.addEventListener("mouseenter", () => {

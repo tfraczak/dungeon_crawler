@@ -39,6 +39,16 @@ function createGame(gameState) {
 
   game.gameStep = () => {
     game.requestId = requestAnimationFrame(game.gameStep);
+
+    // Pause while the device is in portrait — the rotate prompt owns the
+    // screen and enemies shouldn't keep pummeling the (unable-to-respond)
+    // player. Reset `then` so the loop doesn't try to catch up on missed
+    // frames the instant we rotate back to landscape.
+    if (document.body.classList.contains("portrait")) {
+      game.then = Date.now();
+      return;
+    }
+
     let now = Date.now();
     let elapsed = now - game.then;
 

@@ -2,13 +2,14 @@ import createEntity from "../entity";
 import createCoin from "../coin/coin";
 import { BASE_SPEED } from "../../utils/global_vars";
 import GAME_CONFIG from "../../core/game_config";
+import DEV_FLAGS from "../../core/dev_flags";
 
 function createEnemy(pos, width, height, spritePalette, type, detectDist, gameState) {
   const enemy = createEntity(pos, width, height, spritePalette);
   const cfg = GAME_CONFIG.enemy;
 
   enemy.gameState = gameState;
-  enemy.hp = cfg.hp;
+  enemy.hp = DEV_FLAGS.enemyHp ?? cfg.hp;
   enemy.strength = cfg.strength;
   enemy.speed = BASE_SPEED * cfg.speedMultiplier;
   enemy.speedModifier = cfg.idleSpeedModifier;
@@ -126,11 +127,14 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
 
   enemy.alive = () => enemy.hp > 0;
 
-  // Roll each entry in the drop table and return spawned items by type
+  // Roll each entry in the drop table and return spawned items by type.
+  // The `enemy_item_drop_rate` dev flag (when set) replaces every entry's
+  // configured chance for easier testing of drop-dependent mechanics.
   enemy.drop = () => {
     const items = { coins: [] };
     for (const drop of cfg.drops) {
-      if (Math.random() >= drop.chance) continue;
+      const chance = DEV_FLAGS.enemyItemDropRate ?? drop.chance;
+      if (Math.random() >= chance) continue;
       if (drop.type === "coin") {
         const coin = createCoin(
           [enemy.center[0] - 8, enemy.center[1] - 8],
@@ -207,8 +211,12 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
       const knockback = GAME_CONFIG.player.hitKnockback;
       player.knockbackVx = (dx / dist) * knockback;
       player.knockbackVy = (dy / dist) * knockback;
-      player.hp -= enemy.damage();
-      if (player.hp < 0) player.hp = 0;
+      // god_mode: knockback + i-frames still fire so the player sees a
+      // reaction, but the actual HP subtraction is skipped.
+      if (!DEV_FLAGS.godMode) {
+        player.hp -= enemy.damage();
+        if (player.hp < 0) player.hp = 0;
+      }
       player.hit();
     }
   };
@@ -285,6 +293,21 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
     enemy.updateSides();
     enemy.drawOptions.x = enemy.pos[0];
     enemy.drawOptions.y = enemy.pos[1];
+  };
+
+  // Dev-only detection-radius overlay. Wraps the base entity draw so the
+  // circle is drawn in world-space right after the sprite. Colored green
+  // while wandering and red while chasing, so the AI state is legible at
+  // a glance.
+  const baseDraw = enemy.draw;
+  enemy.draw = (ctx) => {
+    baseDraw(ctx);
+    if (!DEV_FLAGS.showEnemyDetectRadius) return;
+    ctx.beginPath();
+    ctx.strokeStyle = enemy.chasingPlayer ? "#ff4444" : "#44ff44";
+    ctx.lineWidth = 1;
+    ctx.arc(enemy.center[0], enemy.center[1], enemy.detectDist, 0, Math.PI * 2);
+    ctx.stroke();
   };
 
   return enemy;

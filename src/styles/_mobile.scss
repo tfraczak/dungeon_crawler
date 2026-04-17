@@ -144,9 +144,31 @@ body.mobile {
         animation: spin 2s ease-in-out infinite;
       }
 
-      p:last-child {
+      p:nth-child(2) {
         font-size: 18px;
         padding: 0 32px;
+      }
+
+      // Give portrait visitors something to do: route them to the in-app
+      // How to play page instead of leaving them stuck on the rotate prompt.
+      .rotate-how-to {
+        margin-top: 32px;
+        padding: 14px 28px;
+        font-family: 'Courier New', monospace;
+        font-size: 18px;
+        color: #ffcf32;
+        background-color: rgba(255, 207, 50, 0.1);
+        border: 2px solid rgba(255, 207, 50, 0.6);
+        border-radius: 6px;
+        text-decoration: none;
+        transition: all 0.15s ease-in-out;
+        touch-action: manipulation;
+
+        &:hover,
+        &:active {
+          background-color: rgba(255, 207, 50, 0.25);
+          border-color: #ffcf32;
+        }
       }
     }
   }

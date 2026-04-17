@@ -7,6 +7,13 @@ import createGameStart from "./scripts/main";
 document.addEventListener("DOMContentLoaded", () => {
   const gameState = createGameState();
 
+  // Reveal `.dev-only` UI (wrench icon + Dev Options drawer) in non-prod
+  // builds. Webpack replaces process.env.NODE_ENV at build time, so this
+  // branch is stripped from the production bundle entirely.
+  if (process.env.NODE_ENV !== "production") {
+    document.body.classList.add("dev-mode");
+  }
+
   const canvas = document.getElementById("display");
   const ctx = canvas.getContext("2d");
 
@@ -45,6 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
         canvas.height = Math.floor(window.innerHeight / MOBILE_ZOOM);
       } else {
         document.body.classList.add("portrait");
+        // Portrait pauses the game loop; drop any stuck input so the player
+        // doesn't resume mid-sprint or mid-swing when landscape returns.
+        Object.keys(gameState.keys).forEach(k => { gameState.keys[k] = false; });
       }
     };
     updateOrientation();
