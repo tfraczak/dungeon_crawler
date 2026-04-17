@@ -60,7 +60,7 @@ function createGame(gameState) {
         ctx.translate(-game.camera.x, -game.camera.y);
       }
 
-      game.room.draw(ctx, game.camera);
+      game.room.draw(ctx);
 
       const entities = game.room.allEntities(game.player);
       entities.sort((a, b) => {
@@ -80,6 +80,8 @@ function createGame(gameState) {
       if (game.camera) {
         ctx.restore();
       }
+
+      game.room.drawHUD(ctx);
 
       game.stop();
       if (game.requestStop) {

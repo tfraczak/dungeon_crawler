@@ -2,7 +2,7 @@ import createWall from "./wall";
 import createCoin from "../entities/coin/coin";
 import createEnemy from "../entities/enemy/enemy";
 import createPoof from "../effects/poof";
-import { playPoofSound, swordSounds } from "../sounds";
+import { playPoofSound, playSlashHit, playSlashWhiff } from "../sounds";
 import GAME_CONFIG from "../core/game_config";
 
 import { shuffle } from "../utils/helpers";
@@ -33,13 +33,8 @@ function createRoom(neighbor, gameState) {
   // Generate coins
   const numCoins = randNumCoins();
   room.coins = {};
-  const coinRange = spawnCfg.coinMax - spawnCfg.coinMin;
   for (let i = 0; i < numCoins; i++) {
-    let x = Math.floor(Math.random() * coinRange) + spawnCfg.coinMin;
-    while (x > spawnCfg.coinExcludeMin && x < spawnCfg.coinExcludeMax) x = Math.floor(Math.random() * coinRange) + spawnCfg.coinMin;
-    let y = Math.floor(Math.random() * coinRange) + spawnCfg.coinMin;
-    while (y > spawnCfg.coinExcludeMin && y < spawnCfg.coinExcludeMax) y = Math.floor(Math.random() * coinRange) + spawnCfg.coinMin;
-    let pos = [x, y];
+    const pos = [randSpawnAxis(spawnCfg), randSpawnAxis(spawnCfg)];
     const coin = createCoin(pos, 16, 16, gameState.sprites.coin, gameState);
     room.coins[coin.id] = coin;
   }
@@ -139,6 +134,10 @@ function createRoom(neighbor, gameState) {
     let y = Math.floor(Math.random() * enemyRange) + spawnCfg.enemyMin;
     let pos = [x, y];
     const detectDist = enemyCfg.baseDetectDistance + (numEnemies * enemyCfg.detectDistancePerEnemy);
+    // NOTE: Only "blob" is spawned today. Per-type stats/behaviors and
+    // depth-based spawn weighting are tracked in tmp/docs/planned-features.md
+    // (Enemy Variety + Depth Scaling). The bat/ghost sprite offsets in
+    // enemy.js are intentionally retained as scaffolding for that feature.
     const enemy = createEnemy(pos, 48, 48, gameState.sprites.monsters, "blob", detectDist, gameState);
     room.enemies[`${enemy.pos}`] = enemy;
   }
@@ -248,9 +247,9 @@ function createRoom(neighbor, gameState) {
     }
 
     if (hitAny) {
-      swordSounds.playSlashHit();
+      playSlashHit();
     } else if (player.attackTimer === 1 && player.attackHitIds.size === 0) {
-      swordSounds.playSlashWhiff();
+      playSlashWhiff();
     }
   };
 
@@ -279,27 +278,34 @@ function createRoom(neighbor, gameState) {
     ];
   };
 
-  room.draw = (ctx, camera) => {
+  // World-space pass: background tile only. HUD is rendered separately by
+  // drawHUD() after the game loop restores the camera transform, so the HUD
+  // can use canvas (screen) coordinates directly.
+  room.draw = (ctx) => {
     ctx.drawImage(room.background, 0, 0);
+  };
 
-    const ox = camera ? camera.x : 0;
-    const oy = camera ? camera.y : 0;
-    const viewW = camera ? camera.viewWidth : 720;
-
-    ctx.fillStyle = "#fffaf4";
-    ctx.font = "20px arial";
-    ctx.fillText(`Room [ ${room.nodePos} ]`, ox + 15, oy + 30);
-
+  // Screen-space pass: room label, coin counter, and player status bars.
+  // Must be called AFTER ctx.restore() so coordinates are in canvas space.
+  // On mobile, the HUD is anchored to the top-left/top-right of the visible
+  // canvas. On desktop, status bars hug the bottom of the 720x720 view.
+  room.drawHUD = (ctx) => {
     const session = gameState.session;
     const player = session.player;
-    ctx.fillText(`Coins x ${session.coinCount}`, ox + viewW - 130, oy + 30);
+    if (!player) return;
 
     const maxStamina = GAME_CONFIG.player.stamina;
     const maxHp = GAME_CONFIG.player.hp;
+    const isMobile = gameState.isMobile;
 
-    if (camera) {
-      const barX = ox + 15;
-      const barY = oy + 48;
+    ctx.fillStyle = "#fffaf4";
+    ctx.font = "20px arial";
+    ctx.fillText(`Room [ ${room.nodePos} ]`, 15, 30);
+    ctx.fillText(`Coins x ${session.coinCount}`, ctx.canvas.width - 130, 30);
+
+    if (isMobile) {
+      const barX = 15;
+      const barY = 48;
       ctx.beginPath();
       ctx.strokeStyle = "#33ff00";
       ctx.lineWidth = 10;
@@ -325,35 +331,55 @@ function createRoom(neighbor, gameState) {
       ctx.lineTo(barX + (player.stamina / maxStamina) * 100, barY + 19);
       ctx.stroke();
     } else {
-      const barY = 705;
+      const barY = ctx.canvas.height - 15;
       ctx.beginPath();
       ctx.strokeStyle = "#ffbb00";
-      ctx.moveTo(15, barY);
       ctx.lineWidth = 5;
+      ctx.moveTo(15, barY);
       ctx.lineTo(15 + (player.stamina / maxStamina) * 100, barY);
       ctx.stroke();
       ctx.beginPath();
       ctx.strokeStyle = "#33ff00";
-      ctx.moveTo(15, barY - 15);
       ctx.lineWidth = 10;
+      ctx.moveTo(15, barY - 15);
       ctx.lineTo(15 + (player.hp / maxHp) * 100, barY - 15);
       ctx.stroke();
       ctx.beginPath();
       ctx.strokeStyle = "#ff0000";
-      ctx.moveTo(115 - (1 - player.hp / maxHp) * 100, barY - 15);
       ctx.lineWidth = 10;
+      ctx.moveTo(115 - (1 - player.hp / maxHp) * 100, barY - 15);
       ctx.lineTo(115, barY - 15);
       ctx.stroke();
       ctx.beginPath();
       ctx.strokeStyle = "#00dddd";
-      ctx.moveTo(15, barY - 6);
       ctx.lineWidth = 5;
+      ctx.moveTo(15, barY - 6);
       ctx.lineTo(15 + (player.invulnerable / 75) * 100, barY - 6);
       ctx.stroke();
     }
   };
 
   return room;
+}
+
+// Picks a 1-D coin spawn coordinate that avoids the central exclusion band.
+// Falls back to a clamped sample if the configured spawn range overlaps the
+// exclusion entirely (which would otherwise be an infinite loop).
+function randSpawnAxis(spawnCfg) {
+  const range = spawnCfg.coinMax - spawnCfg.coinMin;
+  const MAX_TRIES = 16;
+  for (let i = 0; i < MAX_TRIES; i++) {
+    const v = Math.floor(Math.random() * range) + spawnCfg.coinMin;
+    if (v <= spawnCfg.coinExcludeMin || v >= spawnCfg.coinExcludeMax) return v;
+  }
+  // Fallback: pick the closer non-excluded edge of the exclusion band.
+  const lowerSpan = Math.max(0, spawnCfg.coinExcludeMin - spawnCfg.coinMin);
+  const upperSpan = Math.max(0, spawnCfg.coinMax - spawnCfg.coinExcludeMax);
+  if (lowerSpan === 0 && upperSpan === 0) return spawnCfg.coinMin;
+  if (Math.random() * (lowerSpan + upperSpan) < lowerSpan) {
+    return spawnCfg.coinMin + Math.floor(Math.random() * lowerSpan);
+  }
+  return spawnCfg.coinExcludeMax + Math.floor(Math.random() * upperSpan);
 }
 
 function buildRoomWalls(paths) {

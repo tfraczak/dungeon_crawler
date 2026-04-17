@@ -36,24 +36,23 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
     right: { stepCount: 0, palY: (48 * 2) + y },
   };
 
+  // Mirror player.stridePalettePos: derive a 4-phase cycle (idle, foot-down,
+  // idle, foot-down) from stepCount/pace so fractional paces (smoothed
+  // speedModifier) animate cleanly without arithmetic edge cases.
   enemy.stridePalettePos = (direction) => {
-    enemy.pace = 24 / (enemy.speed * enemy.speedModifier);
+    const speed = Math.max(0.0001, enemy.speed * enemy.speedModifier);
+    enemy.pace = 24 / speed;
     const stride = enemy.stride[direction];
-    if (stride.stepCount <= enemy.pace) {
-      stride.stepCount++;
-      return (48 * 1) + enemy.palXOffset;
-    } else if (stride.stepCount <= 2 * enemy.pace) {
-      stride.stepCount++;
-      return (48 * 0) + enemy.palXOffset;
-    } else if (stride.stepCount <= 3 * enemy.pace) {
-      stride.stepCount++;
-      return (48 * 1) + enemy.palXOffset;
-    } else if (stride.stepCount <= 4 * enemy.pace) {
-      stride.stepCount++;
-      return (48 * 2) + enemy.palXOffset;
-    } else if (stride.stepCount > 4 * enemy.pace) {
-      stride.stepCount = 0;
-      return (48 * 1) + enemy.palXOffset;
+    const cycleLength = Math.max(1, 4 * enemy.pace);
+    const phase = Math.floor((stride.stepCount % cycleLength) / enemy.pace) % 4;
+
+    stride.stepCount++;
+    if (stride.stepCount >= cycleLength) stride.stepCount = 0;
+
+    switch (phase) {
+      case 1:  return (48 * 0) + enemy.palXOffset;
+      case 3:  return (48 * 2) + enemy.palXOffset;
+      default: return (48 * 1) + enemy.palXOffset;
     }
   };
 
@@ -66,14 +65,16 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
 
   enemy.normalizedVectorPos = () => {
     const player = enemy.gameState.session.player;
-    let dx = enemy.center[0] - player.center[0];
-    let dy = enemy.center[1] - player.center[1];
+    // Unit-ish vector pointing FROM enemy TOWARD player (canvas convention:
+    // +x is right, +y is down). Direction the enemy wants to travel.
+    let dirX = player.center[0] - enemy.center[0];
+    let dirY = player.center[1] - enemy.center[1];
 
     if (enemy.chasingPlayer) {
       enemy.idlePaused = false;
       enemy.idlePauseTimer = 0;
-      enemy.dx = dx;
-      enemy.dy = dy;
+      enemy.dirX = dirX;
+      enemy.dirY = dirY;
     } else if (enemy.idlePaused) {
       enemy.idlePauseTimer--;
       if (enemy.idlePauseTimer <= 0) {
@@ -85,8 +86,8 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
     } else {
       if (!enemy.idleCount) {
         const randAngle = Math.random() * 2 * Math.PI;
-        enemy.dx = Math.cos(randAngle) * enemy.speed * enemy.speedModifier;
-        enemy.dy = Math.sin(randAngle) * enemy.speed * enemy.speedModifier;
+        enemy.dirX = Math.cos(randAngle);
+        enemy.dirY = Math.sin(randAngle);
         enemy.idleCount = 1;
       }
       enemy.idleCount++;
@@ -102,29 +103,20 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
       }
     }
 
-    enemy.angle = Math.atan(enemy.dy / enemy.dx);
-    const ny = Math.sin(enemy.angle) * enemy.speed * enemy.speedModifier;
-    const nx = Math.cos(enemy.angle) * enemy.speed * enemy.speedModifier;
+    enemy.angle = Math.atan2(enemy.dirY, enemy.dirX);
+    const speed = enemy.speed * enemy.speedModifier;
+    const nx = Math.cos(enemy.angle) * speed;
+    const ny = Math.sin(enemy.angle) * speed;
 
-    if (enemy.dy > 0) {
-      enemy.movement["up"] = true;
-      enemy.movement["down"] = false;
-      if (Math.abs(enemy.dy) > Math.abs(enemy.dx)) enemy.spriteDir = "up";
-    }
-    if (enemy.dy < 0) {
-      enemy.movement["down"] = true;
-      enemy.movement["up"] = false;
-      if (Math.abs(enemy.dy) > Math.abs(enemy.dx)) enemy.spriteDir = "down";
-    }
-    if (enemy.dx > 0) {
-      enemy.movement["left"] = true;
-      enemy.movement["right"] = false;
-      if (Math.abs(enemy.dx) > Math.abs(enemy.dy)) enemy.spriteDir = "left";
-    }
-    if (enemy.dx < 0) {
-      enemy.movement["right"] = true;
-      enemy.movement["left"] = false;
-      if (Math.abs(enemy.dx) > Math.abs(enemy.dy)) enemy.spriteDir = "right";
+    enemy.movement.right = nx > 0;
+    enemy.movement.left  = nx < 0;
+    enemy.movement.down  = ny > 0;
+    enemy.movement.up    = ny < 0;
+
+    if (Math.abs(ny) > Math.abs(nx)) {
+      enemy.spriteDir = ny < 0 ? "up" : "down";
+    } else {
+      enemy.spriteDir = nx < 0 ? "left" : "right";
     }
 
     return [nx, ny];
@@ -161,8 +153,11 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
     const dx = enemy.center[0] - player.center[0];
     const dy = enemy.center[1] - player.center[1];
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-    enemy.knockbackVx = (dx / dist) * knockback;
-    enemy.knockbackVy = (dy / dist) * knockback;
+    // knockbackFactor scales the impulse the enemy receives — think of it as
+    // 1 - knockback resistance. 1.0 = full impulse, lower = stiffer enemy.
+    const factor = cfg.knockbackFactor ?? 1;
+    enemy.knockbackVx = (dx / dist) * knockback * factor;
+    enemy.knockbackVy = (dy / dist) * knockback * factor;
   };
 
   const knockbackBounds = 35;
@@ -248,21 +243,17 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
   };
 
   enemy.move = (walls) => {
-    if (enemy.distToPlayer() < enemy.detectDist) {
-      enemy.chasingPlayer = true;
-      enemy.speedModifier = cfg.chaseSpeedModifier;
-    } else {
-      enemy.chasingPlayer = false;
-      enemy.speedModifier = cfg.idleSpeedModifier;
-    }
+    enemy.chasingPlayer = enemy.distToPlayer() < enemy.detectDist;
+    const targetSpeedModifier = enemy.chasingPlayer
+      ? cfg.chaseSpeedModifier
+      : cfg.idleSpeedModifier;
+    // Smoothly interpolate toward target so AI doesn't snap between states.
+    const rate = cfg.speedTransitionRate ?? 1;
+    enemy.speedModifier += (targetSpeedModifier - enemy.speedModifier) * rate;
 
-    let newVectors = enemy.normalizedVectorPos();
-    const { up, down, left, right } = enemy.movement;
-
-    if (left && up)    { enemy.pos[0] -= newVectors[0]; enemy.pos[1] -= newVectors[1]; }
-    if (left && down)  { enemy.pos[0] -= newVectors[0]; enemy.pos[1] -= newVectors[1]; }
-    if (right && up)   { enemy.pos[0] += newVectors[0]; enemy.pos[1] += newVectors[1]; }
-    if (right && down) { enemy.pos[0] += newVectors[0]; enemy.pos[1] += newVectors[1]; }
+    const [nx, ny] = enemy.normalizedVectorPos();
+    enemy.pos[0] += nx;
+    enemy.pos[1] += ny;
 
     enemy.applyKnockback(walls);
     enemy.wallCheck(walls);

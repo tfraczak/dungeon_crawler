@@ -12,7 +12,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (gameState.isMobile) {
     document.body.classList.add("mobile");
-    const MOBILE_ZOOM = 1.35;
+
+    // Mobile zoom is configurable via (in priority order):
+    //   1. ?zoom=<n> query param (URL override, also persists to localStorage)
+    //   2. localStorage["mobileZoom"] (sticky user preference)
+    //   3. 1.35 default (chosen for mid-range phone density)
+    // Valid range is [0.5, 5]; out-of-range values fall back to the default.
+    const ZOOM_DEFAULT = 1.35;
+    const ZOOM_KEY = "mobileZoom";
+    const isValidZoom = (n) => Number.isFinite(n) && n >= 0.5 && n <= 5;
+    const params = new URLSearchParams(window.location.search);
+    const queryZoom = parseFloat(params.get("zoom"));
+    let storedZoom = NaN;
+    try { storedZoom = parseFloat(localStorage.getItem(ZOOM_KEY)); } catch { /* localStorage may be unavailable */ }
+
+    let MOBILE_ZOOM = ZOOM_DEFAULT;
+    if (isValidZoom(queryZoom)) {
+      MOBILE_ZOOM = queryZoom;
+      try { localStorage.setItem(ZOOM_KEY, String(queryZoom)); } catch { /* ignore */ }
+    } else if (isValidZoom(storedZoom)) {
+      MOBILE_ZOOM = storedZoom;
+    }
+    gameState.mobileZoom = MOBILE_ZOOM;
+
     canvas.width = Math.floor(window.innerWidth / MOBILE_ZOOM);
     canvas.height = Math.floor(window.innerHeight / MOBILE_ZOOM);
 

@@ -10,6 +10,7 @@ function createGameState() {
       Enter: false,
       " ": false,
     },
+    mobileZoom: 1,
     session: {},
     sprites: {},
     bgImgs: {},

@@ -19,10 +19,10 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
   player.hp = cfg.hp;
   player.strength = cfg.strength;
   player.stride = {
-    up:    { stepCount: 0, palY: 48 * 6 },
-    down:  { stepCount: 0, palY: 48 * 0 },
-    left:  { stepCount: 0, palY: 48 * 2 },
-    right: { stepCount: 0, palY: 48 * 4 },
+    up:    { stepCount: 0, lastPhase: -1, palY: 48 * 6 },
+    down:  { stepCount: 0, lastPhase: -1, palY: 48 * 0 },
+    left:  { stepCount: 0, lastPhase: -1, palY: 48 * 2 },
+    right: { stepCount: 0, lastPhase: -1, palY: 48 * 4 },
   };
 
   player.newRoomPos = (dir) => {
@@ -34,26 +34,28 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     }
   };
 
+  // Stride is a 4-phase cycle: idle, left-foot-down, idle, right-foot-down.
+  // Each phase lasts `pace` frames. We compute the current phase from
+  // stepCount and fire the footstep sound only on transitions into a
+  // foot-down phase, which is robust to fractional pace values (e.g. sprint).
   player.stridePalettePos = (direction) => {
     player.pace = 24 / (player.speed * player.speedModifier);
     const stride = player.stride[direction];
-    if (stride.stepCount <= player.pace) {
-      stride.stepCount++;
-      return 48 * 1;
-    } else if (stride.stepCount <= 2 * player.pace) {
-      if (stride.stepCount <= player.pace + 1) playFootstep(player.speedModifier > 1);
-      stride.stepCount++;
-      return 48 * 0;
-    } else if (stride.stepCount <= 3 * player.pace) {
-      stride.stepCount++;
-      return 48 * 1;
-    } else if (stride.stepCount <= 4 * player.pace) {
-      if (stride.stepCount <= 3 * player.pace + 1) playFootstep(player.speedModifier > 1);
-      stride.stepCount++;
-      return 48 * 2;
-    } else if (stride.stepCount > 4 * player.pace) {
-      stride.stepCount = 0;
-      return 48 * 1;
+    const cycleLength = Math.max(1, 4 * player.pace);
+    const phase = Math.floor((stride.stepCount % cycleLength) / player.pace) % 4;
+
+    if (phase !== stride.lastPhase) {
+      if (phase === 1 || phase === 3) playFootstep(player.speedModifier > 1);
+      stride.lastPhase = phase;
+    }
+
+    stride.stepCount++;
+    if (stride.stepCount >= cycleLength) stride.stepCount = 0;
+
+    switch (phase) {
+      case 1:  return 48 * 0;
+      case 3:  return 48 * 2;
+      default: return 48 * 1;
     }
   };
 

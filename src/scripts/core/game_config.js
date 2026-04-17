@@ -48,6 +48,7 @@ const GAME_CONFIG = Object.freeze({
     ],
     knockbackFactor: 0.4,
     hitDistance: 32,
+    speedTransitionRate: 0.08,
   },
 
   coin: {

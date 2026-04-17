@@ -17,6 +17,8 @@ export default [
         cancelAnimationFrame: "readonly",
         Image: "readonly",
         Audio: "readonly",
+        URLSearchParams: "readonly",
+        localStorage: "readonly",
       },
     },
     rules: {
