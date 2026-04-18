@@ -20,10 +20,10 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
   player.hp = cfg.hp;
   player.strength = cfg.strength;
   player.stride = {
-    up:    { stepCount: 0, lastPhase: -1, palY: 48 * 6 },
+    up:    { stepCount: 0, lastPhase: -1, palY: 48 * 3 },
     down:  { stepCount: 0, lastPhase: -1, palY: 48 * 0 },
-    left:  { stepCount: 0, lastPhase: -1, palY: 48 * 2 },
-    right: { stepCount: 0, lastPhase: -1, palY: 48 * 4 },
+    left:  { stepCount: 0, lastPhase: -1, palY: 48 * 1 },
+    right: { stepCount: 0, lastPhase: -1, palY: 48 * 2 },
   };
 
   player.newRoomPos = (dir) => {
