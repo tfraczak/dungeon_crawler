@@ -28,6 +28,12 @@ export const roomChange = (exitDir, currRoom, gameState) => {
     addValidNeighbors(currRoom, gameState);
     addValidNeighbors(session.game.room, gameState);
   }
+  // Win-condition ladder gets a fresh roll every time the player ENTERS a
+  // room (newly-created or cached). Each room internally tracks whether it
+  // has already rolled, so revisiting a room that already failed its roll
+  // is a cheap no-op. Coin threshold + per-room dice are checked inside
+  // tryRollLadder.
+  session.game.room.tryRollLadder(session.coinCount);
 };
 
 export const randNumPaths = max => {

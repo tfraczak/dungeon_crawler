@@ -71,7 +71,11 @@ function createGameStart(gameState) {
         gameState.keys["Enter"] = true;
         canvas.removeEventListener("touchstart", onTap);
       };
-      canvas.addEventListener("touchstart", onTap);
+      // `passive: false` so the preventDefault() above is honored on mobile
+      // browsers (which default touchstart to passive). Without it, the
+      // start-tap fires `[Intervention] Ignored attempt to cancel a
+      // touchstart event` warnings on every prompt tap.
+      canvas.addEventListener("touchstart", onTap, { passive: false });
     }
     gs.step();
   };

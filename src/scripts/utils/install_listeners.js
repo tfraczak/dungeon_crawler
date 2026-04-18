@@ -136,6 +136,13 @@ export default (gameState) => {
       }
     };
 
+    // `passive: false` on every touchstart/touchmove handler that calls
+    // preventDefault(): modern mobile browsers default these to passive,
+    // which silently drops preventDefault() and emits a noisy
+    // `[Intervention] Ignored attempt to cancel a touchstart event with
+    // cancelable=false` console warning. Marking them non-passive restores
+    // the cancellation we actually want (no scroll, no text-select, no
+    // synthetic click-after-300ms) and quiets the warnings.
     joystick.addEventListener("touchstart", e => {
       e.preventDefault();
       if (joystickTouchId !== null) return;
@@ -144,7 +151,7 @@ export default (gameState) => {
       const rect = joystick.getBoundingClientRect();
       joystickCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
       updateJoystick(touch);
-    });
+    }, { passive: false });
 
     joystick.addEventListener("touchmove", e => {
       e.preventDefault();
@@ -154,7 +161,7 @@ export default (gameState) => {
           break;
         }
       }
-    });
+    }, { passive: false });
 
     const releaseJoystick = (e) => {
       e.preventDefault();
@@ -176,7 +183,7 @@ export default (gameState) => {
     sprintBtn.addEventListener("touchstart", e => {
       e.preventDefault();
       keys["Shift"] = true;
-    });
+    }, { passive: false });
     sprintBtn.addEventListener("touchend", e => {
       e.preventDefault();
       keys["Shift"] = false;
@@ -190,7 +197,7 @@ export default (gameState) => {
     attackBtn.addEventListener("touchstart", e => {
       e.preventDefault();
       keys[" "] = true;
-    });
+    }, { passive: false });
     attackBtn.addEventListener("touchend", e => {
       e.preventDefault();
       keys[" "] = false;
@@ -200,10 +207,21 @@ export default (gameState) => {
       keys[" "] = false;
     });
 
+    // Canvas tap: swallow the gesture (no scroll, no text-select, no
+    // synthetic click) AND, when the game is already in its post-stop
+    // state, treat the tap as "restart". The win/lose screens both render
+    // a "Tap to restart" prompt, so this listener is what makes that
+    // prompt actually do anything. We delegate via the live game handle on
+    // gameState.session so we don't need to import the game module here
+    // (which would create a cycle game.js <-> game_lifecycle.js).
     const canvas = document.getElementById("display");
     canvas.addEventListener("touchstart", e => {
       e.preventDefault();
-    });
+      const liveGame = gameState.session && gameState.session.game;
+      if (liveGame && liveGame.requestStop) {
+        newGame(gameState);
+      }
+    }, { passive: false });
 
     restart.addEventListener("touchend", e => {
       e.preventDefault();

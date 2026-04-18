@@ -9,6 +9,7 @@ import DEV_FLAGS, {
   DEV_FLAG_KEYS,
   CONFIG_DEFAULTS,
   isNumericFlag,
+  isStringFlag,
   setDevFlag,
   resetDevFlags,
 } from "../core/dev_flags";
@@ -39,6 +40,9 @@ export default function installDevOptionsDrawer() {
       if (input.type === "checkbox") {
         input.checked = Boolean(DEV_FLAGS[key]);
       } else {
+        // Both <input type="number"> and <select> use .value; for selects an
+        // empty value matches the "default / random" <option> we render with
+        // value="" in markup.
         const v = DEV_FLAGS[key];
         input.value = v === undefined || v === null ? "" : String(v);
       }
@@ -71,6 +75,10 @@ export default function installDevOptionsDrawer() {
           const n = Number(raw);
           setDevFlag(key, Number.isFinite(n) ? n : undefined);
         }
+      } else if (isStringFlag(key)) {
+        // Strings are stored as-is (empty string = "default behavior", which
+        // call sites pattern-match with `DEV_FLAGS.foo || fallback`).
+        setDevFlag(key, input.value);
       }
     }
     // Refresh from the store so any rejected / coerced inputs reflect truth.

@@ -76,12 +76,13 @@
         <div class="how-to-content">
           <section class="how-to-section">
             <h2>Objective</h2>
-            <p>You find yourself deep in a smelly, dank dungeon. The good news: you chose to be here. Legend tells of great riches buried deeper still, and <strong>10 gold coins</strong> is enough to retire on.</p>
+            <p>You find yourself deep in a smelly, dank dungeon. The good news: you chose to be here. Legend tells of great riches buried deeper still, and <strong>10 gold coins</strong> is enough to retire on &mdash; but you still have to make it back to the surface.</p>
             <p>Venture forth, collect coins, and stay alive. Each room is generated procedurally, so no two runs play out the same.</p>
             <ul class="bullets">
-              <li><strong>Win:</strong> Collect 10 coins.</li>
+              <li><strong>Win:</strong> Collect at least 10 coins, then find a ladder and climb out.</li>
               <li><strong>Lose:</strong> HP reaches 0.</li>
             </ul>
+            <p class="note">Once you've stockpiled 10 coins, every new room you enter has a low chance of containing a ladder leading up out of the cave. Each room only rolls once &mdash; if it doesn't have a ladder when you walk in, it never will.</p>
           </section>
 
           <section class="how-to-section">
@@ -223,6 +224,26 @@
             <label class="dev-check"><input type="checkbox" name="showCollisionBoxes" /> <span>Collision boxes</span></label>
             <label class="dev-check"><input type="checkbox" name="showEnemyDetectRadius" /> <span>Enemy detect radius</span></label>
             <label class="dev-check"><input type="checkbox" name="showEnemyHp" /> <span>Enemy HP bars</span></label>
+          </section>
+
+          <section class="dev-options-section">
+            <h2>Win Condition</h2>
+            <p class="dev-options-hint">Force ladder skips both the coin threshold and the per-room roll, so the ladder appears in every newly-entered room (and in the next room you enter if you toggle it on mid-run). Ladder chance overrides the per-room spawn probability (0&ndash;1); leave blank for the configured default. Win scene pins the post-climb backdrop to a specific image; leave on Random for the production behavior.</p>
+            <label class="dev-check"><input type="checkbox" name="forceLadder" /> <span>Force ladder spawn</span></label>
+            <label class="dev-field">
+              <span>Ladder chance</span>
+              <input type="number" name="ladderChance" step="0.05" min="0" max="1" inputmode="decimal" />
+            </label>
+            <label class="dev-field">
+              <span>Win scene</span>
+              <select name="winScene">
+                <option value="">Random</option>
+                <option value="aurora_cliff">Aurora cliff</option>
+                <option value="autumn_forest">Autumn forest</option>
+                <option value="jungle_waterfall">Jungle waterfall</option>
+                <option value="lakeside_dawn">Lakeside dawn</option>
+              </select>
+            </label>
           </section>
 
           <div class="dev-options-actions">

@@ -185,6 +185,28 @@ body.dev-mode .dev-only {
         background-color: rgba(0, 0, 0, 0.5);
       }
     }
+
+    select {
+      width: 160px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 6px 10px;
+      background-color: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+      color: $off-white;
+
+      &:focus {
+        outline: none;
+        border-color: $banana;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+
+      option {
+        background-color: #1a1a1a;
+        color: $off-white;
+      }
+    }
   }
 
   .dev-options-actions {

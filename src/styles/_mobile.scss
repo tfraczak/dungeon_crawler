@@ -18,14 +18,26 @@ body.mobile {
   #display-wrapper {
     margin: 0;
     padding: 0;
-    height: auto;
+    width: 100vw;
+    height: 100vh;
+    // Center the canvas in both axes — index.js caps the canvas to the room
+    // size on extreme aspect ratios, so any leftover viewport space becomes
+    // a clean letterbox around the play area instead of dead space on one
+    // side.
+    justify-content: center;
+    align-items: center;
 
     #display {
-      width: 100vw;
-      height: 100vh;
+      // Width/height are set inline in JS so each world pixel maps to
+      // integer CSS pixels; intentionally NOT overriding them here.
       margin: 0;
       border: none;
       image-rendering: pixelated;
+      // Override the desktop `$off-white` canvas background — on mobile we
+      // let the body's 8-bit wallpaper show through any momentary blank
+      // frames (initial paint, sub-pixel letterboxing) instead of flashing
+      // white.
+      background-color: transparent;
     }
   }
 

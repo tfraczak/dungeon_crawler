@@ -117,6 +117,42 @@ const GAME_CONFIG = Object.freeze({
     color: [200, 200, 200],
   },
 
+  // Win-condition ladder. Once the player has hit `game.winCoinCount`, every
+  // newly-entered room rolls (exactly once) for a ladder spawn at `chance`.
+  // Climbing the ladder triggers a multi-stage win cinematic, in order:
+  //   1. climbDuration  — player ascends the ladder, sprite walking up
+  //   2. fadeDuration   — canvas alpha-fades to white
+  //   3. sceneHoldDuration   — full white "blink" before the reveal starts
+  //   4. sceneFadeDuration   — the "out of the cave" scene image fades in
+  //                            over the white (cover-fit to the canvas)
+  //   5. textFadeDuration    — the win text + restart prompt fade in over
+  //                            a translucent dark panel for legibility
+  // After (5) completes the game halts and the final frame is held until
+  // the player restarts.
+  ladder: {
+    chance: 0.08,
+    climbDuration: 1400,
+    fadeDuration: 700,
+    sceneHoldDuration: 250,
+    sceneFadeDuration: 700,
+    textFadeDuration: 600,
+    width: 48,
+    height: 64,
+  },
+
+  // Available "you escaped the cave" backdrops. Asset files for each ID live
+  // at `src/assets/images/end_of_game/<id>_<desktop|mobile>.png` and are
+  // preloaded at startup. The orientation variant is picked at climb time
+  // based on `gameState.isMobile` (mobile uses the wide 16:9 art; desktop
+  // uses the square art that matches the 720x720 canvas). The DEV_FLAGS
+  // `winScene` override can pin the picker to a specific ID for testing.
+  endScenes: [
+    "aurora_cliff",
+    "autumn_forest",
+    "jungle_waterfall",
+    "lakeside_dawn",
+  ],
+
   game: {
     fps: 60,
     winCoinCount: 10,

@@ -7,7 +7,7 @@
 // `undefined` in prod — both harmless falsy values that fall through to the
 // game_config defaults.
 //
-// Two categories:
+// Three categories:
 //
 //   Booleans  — dev-only cheats and visualizations. Defaults are inherent
 //               (`false`); they are not player-facing so they deliberately
@@ -17,6 +17,10 @@
 //               The config itself owns the canonical default; we just let the
 //               developer poke at the live value. `undefined` means "use the
 //               config default" (call sites use `DEV_FLAGS.foo ?? cfg.foo`).
+//
+//   Strings   — small enumerated picks (e.g. force a specific win-screen
+//               scene). Empty string = "use the default behavior" (random,
+//               whatever, etc); call sites read `DEV_FLAGS.foo || fallback`.
 //
 // UI is wired up in `src/scripts/utils/dev_options_drawer.js` and the
 // `#dev-options-page` panel in `index.html`.
@@ -33,15 +37,25 @@ const BOOLEAN_KEYS = Object.freeze([
   "godMode",
   "infiniteStamina",
   "oneShot",
+  "forceLadder",
 ]);
 
 const NUMERIC_KEYS = Object.freeze([
   "enemyHp",
   "enemyItemDropRate",
   "enemyForcedDropCount",
+  "ladderChance",
 ]);
 
-export const DEV_FLAG_KEYS = Object.freeze([...BOOLEAN_KEYS, ...NUMERIC_KEYS]);
+const STRING_KEYS = Object.freeze([
+  "winScene",
+]);
+
+export const DEV_FLAG_KEYS = Object.freeze([
+  ...BOOLEAN_KEYS,
+  ...NUMERIC_KEYS,
+  ...STRING_KEYS,
+]);
 
 // Canonical defaults for numeric overrides, pulled from `game_config.js` so
 // the drawer's placeholder always reflects what the game will actually fall
@@ -54,14 +68,17 @@ export const DEV_FLAG_KEYS = Object.freeze([...BOOLEAN_KEYS, ...NUMERIC_KEYS]);
 export const CONFIG_DEFAULTS = Object.freeze({
   enemyHp:           GAME_CONFIG.enemy.hp,
   enemyItemDropRate: GAME_CONFIG.enemy.drops[0]?.chance ?? 0,
+  ladderChance:      GAME_CONFIG.ladder.chance,
 });
 
 export const isBooleanFlag = (key) => BOOLEAN_KEYS.includes(key);
 export const isNumericFlag = (key) => NUMERIC_KEYS.includes(key);
+export const isStringFlag = (key) => STRING_KEYS.includes(key);
 
 const DEV_FLAGS = {};
 for (const k of BOOLEAN_KEYS) DEV_FLAGS[k] = false;
 for (const k of NUMERIC_KEYS) DEV_FLAGS[k] = undefined;
+for (const k of STRING_KEYS) DEV_FLAGS[k] = "";
 
 if (!isProd && typeof window !== "undefined") {
   try {
@@ -75,6 +92,9 @@ if (!isProd && typeof window !== "undefined") {
         if (typeof saved[k] === "number" && Number.isFinite(saved[k])) {
           DEV_FLAGS[k] = saved[k];
         }
+      }
+      for (const k of STRING_KEYS) {
+        if (typeof saved[k] === "string") DEV_FLAGS[k] = saved[k];
       }
     }
   } catch { /* corrupted or unavailable — fall back to defaults */ }
@@ -97,6 +117,7 @@ export function resetDevFlags() {
   if (isProd) return;
   for (const k of BOOLEAN_KEYS) DEV_FLAGS[k] = false;
   for (const k of NUMERIC_KEYS) DEV_FLAGS[k] = undefined;
+  for (const k of STRING_KEYS) DEV_FLAGS[k] = "";
   persist();
 }
 

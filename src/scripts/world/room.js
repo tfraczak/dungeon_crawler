@@ -1,9 +1,11 @@
 import createWall from "./wall";
 import createCoin from "../entities/coin/coin";
 import createEnemy from "../entities/enemy/enemy";
+import createLadder from "../entities/ladder/ladder";
 import createPoof from "../effects/poof";
 import { playPoofSound, playSlashHit, playSlashWhiff } from "../sounds";
 import GAME_CONFIG from "../core/game_config";
+import DEV_FLAGS from "../core/dev_flags";
 
 import { shuffle } from "../utils/helpers";
 import {
@@ -41,6 +43,13 @@ function createRoom(neighbor, gameState) {
 
   // HP potions only enter a room as enemy drops; no procedural spawning.
   room.hpPotions = {};
+
+  // Win-condition ladder. Each room rolls AT MOST ONCE for a ladder spawn,
+  // and only after the player has reached the coin threshold (see
+  // tryRollLadder below). Once `ladderRolled` flips true the room is done
+  // -- a ladder either exists or that room will never spawn one.
+  room.ladder = null;
+  room.ladderRolled = false;
 
   let randIdx;
   let entryDir;
@@ -259,6 +268,28 @@ function createRoom(neighbor, gameState) {
     }
   };
 
+  // Once-per-room ladder roll. Called by the room-change pipeline every time
+  // the player enters this room (including re-entries). The spawn gate is:
+  //   1. Hasn't rolled yet AND no ladder already placed.
+  //   2. Either the player has reached the win-coin threshold OR the dev
+  //      `forceLadder` flag is on.
+  // Once a roll happens the result is sticky -- a failed roll permanently
+  // sets `ladderRolled` so the room won't roll again on a future re-entry.
+  // `forceLadder` short-circuits both the threshold and the chance roll.
+  room.tryRollLadder = (coinCount) => {
+    if (room.ladder || room.ladderRolled) return;
+    const force = DEV_FLAGS.forceLadder;
+    if (!force && coinCount < GAME_CONFIG.game.winCoinCount) return;
+
+    room.ladderRolled = true;
+    const chance = (typeof DEV_FLAGS.ladderChance === "number")
+      ? DEV_FLAGS.ladderChance
+      : GAME_CONFIG.ladder.chance;
+    if (!force && Math.random() >= chance) return;
+
+    room.ladder = createLadder(pickLadderPos(room), gameState);
+  };
+
   room.animate = () => {
     room.collect();
     Object.values(room.coins).forEach(coin => coin.animate(room));
@@ -269,7 +300,10 @@ function createRoom(neighbor, gameState) {
 
   // Only one item per frame is collected so each pickup reads cleanly (own
   // sound, own HUD bump). Coins are checked first simply to match the order
-  // they were historically the only pickup.
+  // they were historically the only pickup. The ladder is checked LAST and
+  // does NOT consume itself -- it stays in the room and signals the game
+  // loop (via session.climbing) that the win cinematic should start. The
+  // ladder also no-ops once the cinematic has begun so it can't re-trigger.
   room.collect = () => {
     for (let coin of Object.values(room.coins)) {
       if (coin.collect()) {
@@ -287,6 +321,12 @@ function createRoom(neighbor, gameState) {
         return;
       }
     }
+    if (room.ladder && !gameState.session.climbing && !gameState.session.climbed) {
+      const player = gameState.session.player;
+      if (room.ladder.checkPlayerOverlap(player)) {
+        gameState.session.startClimb(room.ladder);
+      }
+    }
   };
 
   room.allEntities = (player) => {
@@ -295,6 +335,7 @@ function createRoom(neighbor, gameState) {
       ...Object.values(room.enemies),
       ...Object.values(room.coins),
       ...Object.values(room.hpPotions),
+      ...(room.ladder ? [room.ladder] : []),
     ];
   };
 
@@ -413,6 +454,35 @@ function createRoom(neighbor, gameState) {
   };
 
   return room;
+}
+
+// Picks a top-left position for the win-condition ladder. The ladder is
+// mounted ON the top wall: y = 0 puts the rails flush with the top of the
+// canvas so they overlay the wall texture (the bottom of the rails plus the
+// drop shadow spill onto the floor tile just below the wall, grounding the
+// prop). The horizontal slot is chosen at random from any tile-aligned
+// column where the ladder won't overlap a top-wall doorway (3 tiles wide,
+// centered at cols 6..8 when the room has a "U" exit).
+function pickLadderPos(room) {
+  const T = GAME_CONFIG.world.tileSize;
+  const w = GAME_CONFIG.ladder.width;
+  const y = 0;
+  const hasTopDoor = room.neighbors.up !== "X";
+  const candidates = [];
+  // Tile columns 1..13 keep the ladder fully inside the room (col 0 and 14
+  // are the side walls). For each candidate, drop it if its [x, x+w] span
+  // overlaps the top-door gap [T*6, T*9].
+  for (let col = 1; col <= 13; col++) {
+    const x = col * T;
+    if (hasTopDoor && x < T * 9 && x + w > T * 6) continue;
+    candidates.push([x, y]);
+  }
+  // Pathological fallback: if every candidate happened to clip the door
+  // (shouldn't be possible with the current geometry, but the room factory
+  // shouldn't crash if we ever tighten the door dimensions), default to the
+  // far-left tile so the ladder still spawns.
+  if (candidates.length === 0) candidates.push([T, y]);
+  return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
 // Picks a 1-D coin spawn coordinate that avoids the central exclusion band.
