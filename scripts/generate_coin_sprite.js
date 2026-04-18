@@ -316,12 +316,17 @@ function encodePNG(width, height, rgba) {
 function main() {
   const sheet = buildSheet();
   const png = encodePNG(SHEET_W, SHEET_H, sheet);
-  const outDir = path.join(__dirname, "..", "src", "assets", "images", "coin");
-  const outPath = path.join(outDir, "coin.png");
-  fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(outPath, png);
-  // eslint-disable-next-line no-console
-  console.log(`wrote ${outPath}  (${SHEET_W}x${SHEET_H}, ${FRAME_COUNT} frames of ${FRAME_W}x${FRAME_H})`);
+  // Write to both src/ (source of truth) and dist/ (what the dev server and
+  // built bundle actually load from -- index.js references ./dist/... URLs
+  // directly so webpack does not copy this asset for us).
+  const subPath = path.join("assets", "images", "coin", "coin.png");
+  for (const root of ["src", "dist"]) {
+    const outPath = path.join(__dirname, "..", root, subPath);
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
+    fs.writeFileSync(outPath, png);
+    // eslint-disable-next-line no-console
+    console.log(`wrote ${outPath}  (${SHEET_W}x${SHEET_H}, ${FRAME_COUNT} frames of ${FRAME_W}x${FRAME_H})`);
+  }
 }
 
 main();

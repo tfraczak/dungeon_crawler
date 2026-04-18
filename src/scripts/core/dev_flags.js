@@ -38,6 +38,7 @@ const BOOLEAN_KEYS = Object.freeze([
 const NUMERIC_KEYS = Object.freeze([
   "enemyHp",
   "enemyItemDropRate",
+  "enemyForcedDropCount",
 ]);
 
 export const DEV_FLAG_KEYS = Object.freeze([...BOOLEAN_KEYS, ...NUMERIC_KEYS]);
@@ -46,6 +47,10 @@ export const DEV_FLAG_KEYS = Object.freeze([...BOOLEAN_KEYS, ...NUMERIC_KEYS]);
 // the drawer's placeholder always reflects what the game will actually fall
 // back to when the field is left blank. If a config shape changes, update
 // here only — the rest of the flag plumbing is key-agnostic.
+// `enemyForcedDropCount` is intentionally absent here: blank doesn't mean
+// "0", it means "fall back to chance-gated rolls", which has no single numeric
+// representation. Leaving it out of CONFIG_DEFAULTS just means the drawer
+// won't auto-fill a placeholder for that field.
 export const CONFIG_DEFAULTS = Object.freeze({
   enemyHp:           GAME_CONFIG.enemy.hp,
   enemyItemDropRate: GAME_CONFIG.enemy.drops[0]?.chance ?? 0,

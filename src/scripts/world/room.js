@@ -332,63 +332,82 @@ function createRoom(neighbor, gameState) {
 
     // HP bar reads left-to-right: red fill = remaining HP on top of a solid
     // black track (missing HP). Stamina stays yellow, invulnerability cyan.
+    // "HP" / "ST" labels sit at the anchor (left edge of the old bar origin)
+    // and the bars themselves are pushed right by LABEL_OFFSET to make room.
     const HP_FILL = "#d42c2c";
     const HP_EMPTY = "#111";
     const STAMINA = "#ffbb00";
     const INVULN = "#00dddd";
+    const LABEL_OFFSET = 28;
+    const BAR_LEN = 100;
+
+    const drawLabel = (text, x, y) => {
+      ctx.fillStyle = "#fffaf4";
+      ctx.font = "bold 14px arial";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, x, y);
+      ctx.textBaseline = "alphabetic";
+    };
 
     if (isMobile) {
-      const barX = 15;
+      const labelX = 15;
+      const barX = labelX + LABEL_OFFSET;
       const barY = 48;
+      drawLabel("HP", labelX, barY);
+      drawLabel("ST", labelX, barY + 19);
       ctx.beginPath();
       ctx.strokeStyle = HP_EMPTY;
       ctx.lineWidth = 10;
       ctx.moveTo(barX, barY);
-      ctx.lineTo(barX + 100, barY);
+      ctx.lineTo(barX + BAR_LEN, barY);
       ctx.stroke();
       ctx.beginPath();
       ctx.strokeStyle = HP_FILL;
       ctx.lineWidth = 10;
       ctx.moveTo(barX, barY);
-      ctx.lineTo(barX + (player.hp / maxHp) * 100, barY);
+      ctx.lineTo(barX + (player.hp / maxHp) * BAR_LEN, barY);
       ctx.stroke();
       ctx.beginPath();
       ctx.strokeStyle = INVULN;
       ctx.lineWidth = 5;
       ctx.moveTo(barX, barY + 11);
-      ctx.lineTo(barX + (player.invulnerable / 75) * 100, barY + 11);
+      ctx.lineTo(barX + (player.invulnerable / 75) * BAR_LEN, barY + 11);
       ctx.stroke();
       ctx.beginPath();
       ctx.strokeStyle = STAMINA;
       ctx.lineWidth = 5;
       ctx.moveTo(barX, barY + 19);
-      ctx.lineTo(barX + (player.stamina / maxStamina) * 100, barY + 19);
+      ctx.lineTo(barX + (player.stamina / maxStamina) * BAR_LEN, barY + 19);
       ctx.stroke();
     } else {
+      const labelX = 15;
+      const barX = labelX + LABEL_OFFSET;
       const barY = ctx.canvas.height - 15;
+      drawLabel("HP", labelX, barY - 15);
+      drawLabel("ST", labelX, barY);
       ctx.beginPath();
       ctx.strokeStyle = STAMINA;
       ctx.lineWidth = 5;
-      ctx.moveTo(15, barY);
-      ctx.lineTo(15 + (player.stamina / maxStamina) * 100, barY);
+      ctx.moveTo(barX, barY);
+      ctx.lineTo(barX + (player.stamina / maxStamina) * BAR_LEN, barY);
       ctx.stroke();
       ctx.beginPath();
       ctx.strokeStyle = HP_EMPTY;
       ctx.lineWidth = 10;
-      ctx.moveTo(15, barY - 15);
-      ctx.lineTo(115, barY - 15);
+      ctx.moveTo(barX, barY - 15);
+      ctx.lineTo(barX + BAR_LEN, barY - 15);
       ctx.stroke();
       ctx.beginPath();
       ctx.strokeStyle = HP_FILL;
       ctx.lineWidth = 10;
-      ctx.moveTo(15, barY - 15);
-      ctx.lineTo(15 + (player.hp / maxHp) * 100, barY - 15);
+      ctx.moveTo(barX, barY - 15);
+      ctx.lineTo(barX + (player.hp / maxHp) * BAR_LEN, barY - 15);
       ctx.stroke();
       ctx.beginPath();
       ctx.strokeStyle = INVULN;
       ctx.lineWidth = 5;
-      ctx.moveTo(15, barY - 6);
-      ctx.lineTo(15 + (player.invulnerable / 75) * 100, barY - 6);
+      ctx.moveTo(barX, barY - 6);
+      ctx.lineTo(barX + (player.invulnerable / 75) * BAR_LEN, barY - 6);
       ctx.stroke();
     }
   };

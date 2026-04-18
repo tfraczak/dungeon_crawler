@@ -5,20 +5,113 @@ import applyDropBehavior from "../../effects/drop";
 
 let hpPotionIdCounter = 0;
 
-// Health potion: mirrors the coin animation system (256x32 sheet of 8 frames
-// x 32x32). The bottle chrome is static across all frames; only the bubbling
-// liquid and outer sparkle/heal-cross VFX animate. Picking one up heals the
-// player and never over-heals past GAME_CONFIG.player.hp.
+// Health potion: a static 32x32 bottle sprite with two procedural particle
+// pools layered on top -- bubbles rising inside the liquid and red heal
+// crosses drifting up either side. Each particle picks its own random column,
+// lifetime, and respawn delay so two potions on screen never animate in sync.
+// Picking one up heals the player up to GAME_CONFIG.player.hp.
 function createHpPotion(pos, width, height, spritePalette, gameState) {
   const potion = createEntity(pos, width, height, spritePalette, { width, height });
 
   potion.id = `hp_potion_${hpPotionIdCounter++}`;
   potion.gameState = gameState;
-  potion.frameInterval = GAME_CONFIG.hpPotion.frameInterval;
-  potion.frameCount = 0;
+  potion.drawOptions.palX = 0;
   potion.drawOptions.palY = 0;
 
   applyDropBehavior(potion, playHpPotionDrop);
+
+  // -------------------------------------------------------------------------
+  // Procedural bubbles + heal crosses. Particles share a common shape: each
+  // has a `life` counter that ticks up every animate frame; values below 0
+  // are a "dormant" delay so the pool doesn't always show its full count;
+  // values in 0..maxLife are the active rise. On reaching maxLife the slot
+  // is replaced with a freshly randomized particle.
+  // -------------------------------------------------------------------------
+  const bubbleCfg = GAME_CONFIG.hpPotion.bubble;
+  const crossCfg = GAME_CONFIG.hpPotion.cross;
+
+  const makeBubble = (stagger) => {
+    const x = bubbleCfg.colMin + Math.floor(Math.random() * bubbleCfg.colRange);
+    const maxLife = bubbleCfg.lifeMin + Math.random() * bubbleCfg.lifeRand;
+    const delay = Math.random() * bubbleCfg.delayRand;
+    return {
+      x,
+      maxLife,
+      life: stagger ? Math.random() * (maxLife + delay) - delay : -delay,
+    };
+  };
+  const makeCross = (stagger) => {
+    const side = Math.random() < 0.5 ? "left" : "right";
+    const baseX = side === "left" ? crossCfg.leftXMin : crossCfg.rightXMin;
+    const x = baseX + Math.floor(Math.random() * crossCfg.xJitter);
+    const maxLife = crossCfg.lifeMin + Math.random() * crossCfg.lifeRand;
+    const delay = Math.random() * crossCfg.delayRand;
+    return {
+      x,
+      maxLife,
+      life: stagger ? Math.random() * (maxLife + delay) - delay : -delay,
+    };
+  };
+
+  potion.bubbles = Array.from({ length: bubbleCfg.count }, () => makeBubble(true));
+  potion.crosses = Array.from({ length: crossCfg.count }, () => makeCross(true));
+
+  potion.updateParticles = () => {
+    for (let i = 0; i < potion.bubbles.length; i++) {
+      const b = potion.bubbles[i];
+      b.life++;
+      if (b.life >= b.maxLife) potion.bubbles[i] = makeBubble(false);
+    }
+    for (let i = 0; i < potion.crosses.length; i++) {
+      const c = potion.crosses[i];
+      c.life++;
+      if (c.life >= c.maxLife) potion.crosses[i] = makeCross(false);
+    }
+  };
+
+  // Bubble palette mirrors the original baked-in pixels: pinkish white body
+  // for most of the rise, near-white as it nears the surface (read as
+  // "catching the light just before popping").
+  const BUBBLE_BODY = "#fcd6d6";
+  const BUBBLE_BRIGHT = "#fcf4f4";
+  // Heal cross: dim brick on entry/exit, bright pink-red mid-rise.
+  const CROSS_DIM = "#aa3c50";
+  const CROSS_BRIGHT = "#fc6078";
+
+  const drawBubble = (ctx, ox, oy, b) => {
+    if (b.life <= 0) return;
+    const t = b.life / b.maxLife;
+    const y = Math.round(bubbleCfg.yBottom + (bubbleCfg.yTop - bubbleCfg.yBottom) * t);
+    ctx.fillStyle = t > 0.65 ? BUBBLE_BRIGHT : BUBBLE_BODY;
+    ctx.fillRect(ox + b.x, oy + y, 1, 1);
+    ctx.fillRect(ox + b.x + 1, oy + y, 1, 1);
+  };
+
+  const drawCross = (ctx, ox, oy, c) => {
+    if (c.life <= 0) return;
+    const t = c.life / c.maxLife;
+    const cy = Math.round(crossCfg.yBottom + (crossCfg.yTop - crossCfg.yBottom) * t);
+    const bright = t > 0.2 && t < 0.8;
+    ctx.fillStyle = bright ? CROSS_BRIGHT : CROSS_DIM;
+    const cx = c.x;
+    ctx.fillRect(ox + cx, oy + cy - 1, 1, 1);
+    ctx.fillRect(ox + cx - 1, oy + cy, 1, 1);
+    ctx.fillRect(ox + cx, oy + cy, 1, 1);
+    ctx.fillRect(ox + cx + 1, oy + cy, 1, 1);
+    ctx.fillRect(ox + cx, oy + cy + 1, 1, 1);
+  };
+
+  potion.draw = (ctx) => {
+    ctx.drawImage(...Object.values(potion.drawOptions));
+    if (!potion.dropping) {
+      const ox = potion.drawOptions.x;
+      const oy = potion.drawOptions.y;
+      for (const b of potion.bubbles) drawBubble(ctx, ox, oy, b);
+      for (const c of potion.crosses) drawCross(ctx, ox, oy, c);
+    }
+    potion.colBox.centerOnEntity();
+    potion.colBox.draw(ctx);
+  };
 
   potion.collect = () => {
     if (potion.dropping) return false;
@@ -40,32 +133,7 @@ function createHpPotion(pos, width, height, spritePalette, gameState) {
       potion.updateDrop(room);
       return;
     }
-
-    const i = potion.frameInterval;
-    const c = potion.frameCount;
-    const w = potion.width;
-    if (c < i) {
-      potion.drawOptions.palX = w * 0;
-    } else if (c < i * 2) {
-      potion.drawOptions.palX = w * 1;
-    } else if (c < i * 3) {
-      potion.drawOptions.palX = w * 2;
-    } else if (c < i * 4) {
-      potion.drawOptions.palX = w * 3;
-    } else if (c < i * 5) {
-      potion.drawOptions.palX = w * 4;
-    } else if (c < i * 6) {
-      potion.drawOptions.palX = w * 5;
-    } else if (c < i * 7) {
-      potion.drawOptions.palX = w * 6;
-    } else if (c < i * 8) {
-      potion.drawOptions.palX = w * 7;
-    } else {
-      potion.drawOptions.palX = w * 0;
-      potion.frameCount = 0;
-      return;
-    }
-    potion.frameCount++;
+    potion.updateParticles();
   };
 
   return potion;

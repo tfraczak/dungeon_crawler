@@ -39,8 +39,8 @@ const GAME_CONFIG = Object.freeze({
     idlePauseChance: 0.5,
     idlePauseMin: 30,
     idlePauseMax: 120,
-    baseDetectDistance: 200,
-    detectDistancePerEnemy: 50,
+    baseDetectDistance: 150,
+    detectDistancePerEnemy: 20,
     damageMin: 1,
     damageMax: 4,
     drops: [
@@ -54,11 +54,57 @@ const GAME_CONFIG = Object.freeze({
 
   coin: {
     frameInterval: 12,
+    // Sprite frames are 16x16 on the sheet; rendered slightly larger so the
+    // coin reads better against floor tiles. Collision/drop physics still use
+    // the 16x16 entity size.
+    renderSize: 20,
+    // Procedural sparkle pool per coin. Each sparkle picks a random angle
+    // around the coin and a random lifetime, then respawns on death so the
+    // twinkle positions never repeat. Radii are measured from the coin's
+    // logical center (frameSize/2) in source pixels; the rendered coin's
+    // visual edge sits around radius 9 (silhouette radius 7 * 1.25 render
+    // scale), so the radii here hug that edge with only a small outward halo.
+    sparkle: {
+      count: 3,
+      radiusMin: 7,
+      radiusRand: 3,
+      lifeMin: 24,
+      lifeRand: 36,
+    },
   },
 
   hpPotion: {
-    frameInterval: 14,
     healAmount: 5,
+    // Procedural bubbles inside the liquid. Each picks a random column and
+    // rises from yBottom to yTop over a randomized lifetime, then respawns.
+    // Coordinates are in source-pixel space within the 32x32 sprite.
+    bubble: {
+      count: 2,
+      colMin: 10,
+      colRange: 12,
+      yBottom: 26,
+      yTop: 17,
+      lifeMin: 30,
+      lifeRand: 30,
+      delayRand: 30,
+    },
+    // Procedural red heal crosses drifting up either side. Each spawn picks a
+    // random side, slight column jitter, and an independent lifetime so the
+    // two never sync up. Column/row ranges are tuned to hug the widest-body
+    // edges of the bottle (x=8..23 at y=16..24) -- the plus shape is ±1 px
+    // around the center, so these values leave just a 1-2 px gap from the
+    // glass outline for the bulk of the rise.
+    cross: {
+      count: 2,
+      leftXMin: 5,
+      rightXMin: 25,
+      xJitter: 2,
+      yBottom: 25,
+      yTop: 8,
+      lifeMin: 36,
+      lifeRand: 30,
+      delayRand: 40,
+    },
   },
 
   poof: {

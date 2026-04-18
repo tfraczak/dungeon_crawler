@@ -132,27 +132,56 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
   enemy.alive = () => enemy.hp > 0;
 
   // Roll each entry in the drop table and return spawned items by type.
-  // The `enemy_item_drop_rate` dev flag (when set) replaces every entry's
-  // configured chance for easier testing of drop-dependent mechanics.
+  // Two dev flags compose here for easier playtesting:
+  //   * `enemyItemDropRate`     -- when set, REPLACES each entry's chance
+  //                                with this single value. Only consulted
+  //                                when the forced-count flag is unset.
+  //   * `enemyForcedDropCount`  -- when set, BYPASSES the chance roll
+  //                                entirely and spawns exactly that many
+  //                                copies of each drop entry per kill.
+  //                                Setting it to 25 makes every kill drop
+  //                                25 coins AND 25 potions. Fractional
+  //                                values honor the leftover as a
+  //                                probabilistic +1 (e.g. 2.5 -> 2 always +
+  //                                1 with 50% chance). Setting it to 0
+  //                                disables drops entirely. When the field
+  //                                is left blank the original chance-gated
+  //                                behavior runs.
   enemy.drop = () => {
     const items = { coins: [], hpPotions: [] };
+    const forced = DEV_FLAGS.enemyForcedDropCount;
+    const useForced = typeof forced === "number" && Number.isFinite(forced);
+    let baseCount = 0;
+    let bonusChance = 0;
+    if (useForced) {
+      const f = Math.max(0, forced);
+      baseCount = Math.floor(f);
+      bonusChance = f - baseCount;
+    }
     for (const drop of cfg.drops) {
-      const chance = DEV_FLAGS.enemyItemDropRate ?? drop.chance;
-      if (Math.random() >= chance) continue;
-      if (drop.type === "coin") {
-        const coin = createCoin(
-          [enemy.center[0] - 8, enemy.center[1] - 8],
-          16, 16, gameState.sprites.coin, gameState,
-        );
-        coin.startDrop(enemy.center[0], enemy.center[1]);
-        items.coins.push(coin);
-      } else if (drop.type === "hp_potion") {
-        const potion = createHpPotion(
-          [enemy.center[0] - 16, enemy.center[1] - 16],
-          32, 32, gameState.sprites.hpPotion, gameState,
-        );
-        potion.startDrop(enemy.center[0], enemy.center[1]);
-        items.hpPotions.push(potion);
+      let count;
+      if (useForced) {
+        count = baseCount + (Math.random() < bonusChance ? 1 : 0);
+      } else {
+        const chance = DEV_FLAGS.enemyItemDropRate ?? drop.chance;
+        count = Math.random() < chance ? 1 : 0;
+      }
+      for (let r = 0; r < count; r++) {
+        if (drop.type === "coin") {
+          const coin = createCoin(
+            [enemy.center[0] - 8, enemy.center[1] - 8],
+            16, 16, gameState.sprites.coin, gameState,
+          );
+          coin.startDrop(enemy.center[0], enemy.center[1]);
+          items.coins.push(coin);
+        } else if (drop.type === "hp_potion") {
+          const potion = createHpPotion(
+            [enemy.center[0] - 16, enemy.center[1] - 16],
+            32, 32, gameState.sprites.hpPotion, gameState,
+          );
+          potion.startDrop(enemy.center[0], enemy.center[1]);
+          items.hpPotions.push(potion);
+        }
       }
     }
     return items;
