@@ -166,6 +166,24 @@ const GAME_CONFIG = Object.freeze({
     enemyMin: 64,
     enemyMax: 614,
   },
+
+  // Weighted distributions used during room generation. `pathWeights[max][n]`
+  // is the relative weight of producing `n` exits when at most `max` are
+  // available. `coinCountWeights[n]` is the relative weight of spawning `n`
+  // coins in a freshly-generated room.
+  roomGen: {
+    pathWeights: {
+      4: { 4: 55, 3: 45, 2: 9, 1: 1 },
+      3: { 3: 80, 2: 20, 1: 3 },
+      2: { 2: 90, 1: 10 },
+    },
+    coinCountWeights: {
+      3: 2,
+      2: 8,
+      1: 30,
+      0: 50,
+    },
+  },
 });
 
 export default GAME_CONFIG;

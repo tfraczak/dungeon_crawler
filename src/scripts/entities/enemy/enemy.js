@@ -2,6 +2,7 @@ import createEntity from "../entity";
 import createCoin from "../coin/coin";
 import createHpPotion from "../hp_potion/hp_potion";
 import { BASE_SPEED } from "../../utils/global_vars";
+import Random from "../../utils/random";
 import GAME_CONFIG from "../../core/game_config";
 import DEV_FLAGS from "../../core/dev_flags";
 
@@ -90,7 +91,7 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
       return [0, 0];
     } else {
       if (!enemy.idleCount) {
-        const randAngle = Math.random() * 2 * Math.PI;
+        const randAngle = Random.range(0, 2 * Math.PI);
         enemy.dirX = Math.cos(randAngle);
         enemy.dirY = Math.sin(randAngle);
         enemy.idleCount = 1;
@@ -98,10 +99,9 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
       enemy.idleCount++;
       if (enemy.idleCount >= enemy.idleMax) {
         enemy.idleCount = 0;
-        if (Math.random() < cfg.idlePauseChance) {
+        if (Random.chance(cfg.idlePauseChance)) {
           enemy.idlePaused = true;
-          enemy.idlePauseTimer = cfg.idlePauseMin +
-            Math.floor(Math.random() * (cfg.idlePauseMax - cfg.idlePauseMin));
+          enemy.idlePauseTimer = Random.int(cfg.idlePauseMin, cfg.idlePauseMax - 1);
           enemy.movement = { up: false, down: false, left: false, right: false };
           return [0, 0];
         }
@@ -127,7 +127,7 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
     return [nx, ny];
   };
 
-  enemy.damage = () => Math.floor(Math.random() * (cfg.damageMax - cfg.damageMin + 1)) + cfg.damageMin;
+  enemy.damage = () => Random.int(cfg.damageMin, cfg.damageMax);
 
   enemy.alive = () => enemy.hp > 0;
 
@@ -161,10 +161,10 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
     for (const drop of cfg.drops) {
       let count;
       if (useForced) {
-        count = baseCount + (Math.random() < bonusChance ? 1 : 0);
+        count = baseCount + (Random.chance(bonusChance) ? 1 : 0);
       } else {
-        const chance = DEV_FLAGS.enemyItemDropRate ?? drop.chance;
-        count = Math.random() < chance ? 1 : 0;
+        const dropChance = DEV_FLAGS.enemyItemDropRate ?? drop.chance;
+        count = Random.chance(dropChance) ? 1 : 0;
       }
       for (let r = 0; r < count; r++) {
         if (drop.type === "coin") {

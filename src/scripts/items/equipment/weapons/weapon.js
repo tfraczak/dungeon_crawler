@@ -1,4 +1,5 @@
 import createEquipment from "../equipment";
+import Random from "../../../utils/random";
 import DEV_FLAGS from "../../../core/dev_flags";
 
 function createWeapon({ name, description, damageMin, damageMax, damageType, range, knockback }) {
@@ -14,7 +15,7 @@ function createWeapon({ name, description, damageMin, damageMax, damageType, ran
   // regardless of any enemy_hp override).
   weapon.rollDamage = () => {
     if (DEV_FLAGS.oneShot) return 9999;
-    return Math.floor(Math.random() * (weapon.damageMax - weapon.damageMin + 1)) + weapon.damageMin;
+    return Random.int(weapon.damageMin, weapon.damageMax);
   };
 
   weapon.hitsTarget = (hitbox, colBox) => false;

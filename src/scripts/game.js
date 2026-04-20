@@ -2,6 +2,7 @@ import createPlayer from "./entities/player/player";
 import createRoom from "./world/room";
 import createCamera from "./core/camera";
 import { SPRITE_DIMS } from "./utils/global_vars";
+import Random from "./utils/random";
 import GAME_CONFIG from "./core/game_config";
 import DEV_FLAGS from "./core/dev_flags";
 
@@ -14,7 +15,7 @@ function pickWinSceneId() {
   const scenes = GAME_CONFIG.endScenes;
   const override = DEV_FLAGS.winScene;
   if (override && scenes.includes(override)) return override;
-  return scenes[Math.floor(Math.random() * scenes.length)];
+  return Random.pick(scenes);
 }
 
 // Cover-fits `img` into the destination rect (dx, dy, dw, dh). Picks the

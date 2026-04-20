@@ -1,5 +1,5 @@
-import { WEIGHTS, COIN_WEIGHTS } from "./global_vars";
-import { shuffle } from "./helpers";
+import GAME_CONFIG from "../core/game_config";
+import Random from "./random";
 import createRoom from "../world/room";
 
 export const roomChange = (exitDir, currRoom, gameState) => {
@@ -37,26 +37,9 @@ export const roomChange = (exitDir, currRoom, gameState) => {
 };
 
 export const randNumPaths = max => {
-  let paths = [];
-  if (max > 3) {
-    for (let i = 0; i < WEIGHTS[max][4]; i++) { paths.push(4) }
-    for (let i = 0; i < WEIGHTS[max][3]; i++) { paths.push(3) }
-    for (let i = 0; i < WEIGHTS[max][2]; i++) { paths.push(2) }
-    for (let i = 0; i < WEIGHTS[max][1]; i++) { paths.push(1) }
-  } else if (max > 2) {
-    for (let i = 0; i < WEIGHTS[max][3]; i++) { paths.push(3) }
-    for (let i = 0; i < WEIGHTS[max][2]; i++) { paths.push(2) }
-    for (let i = 0; i < WEIGHTS[max][1]; i++) { paths.push(1) }
-  } else if (max > 1) {
-    for (let i = 0; i < WEIGHTS[max][2]; i++) { paths.push(2) }
-    for (let i = 0; i < WEIGHTS[max][1]; i++) { paths.push(1) }
-  } else {
-    paths.push(1);
-  }
-
-  shuffle(paths);
-
-  return paths[Math.floor(Math.random()*paths.length)];
+  const weights = GAME_CONFIG.roomGen.pathWeights[max];
+  if (!weights) return 1;
+  return Number(Random.weightedPick(weights));
 };
 
 export const addValidNeighbors = (room, gameState) => {
@@ -152,13 +135,5 @@ export const assignBlockedPaths = (room, paths) => {
   }
 };
 
-export const randNumCoins = () => {
-  let weightedNumCoins = [];
-  for (let i = 0; i < COIN_WEIGHTS[3]; i++) { weightedNumCoins.push(3) }
-  for (let i = 0; i < COIN_WEIGHTS[2]; i++) { weightedNumCoins.push(2) }
-  for (let i = 0; i < COIN_WEIGHTS[1]; i++) { weightedNumCoins.push(1) }
-  for (let i = 0; i < COIN_WEIGHTS[0]; i++) { weightedNumCoins.push(0) }
-  const randIdx = Math.floor(Math.random() * weightedNumCoins.length);
-  shuffle(weightedNumCoins);
-  return weightedNumCoins[randIdx];
-};
+export const randNumCoins = () =>
+  Number(Random.weightedPick(GAME_CONFIG.roomGen.coinCountWeights));

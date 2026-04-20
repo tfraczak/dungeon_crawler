@@ -8,6 +8,7 @@ import GAME_CONFIG from "../core/game_config";
 import DEV_FLAGS from "../core/dev_flags";
 
 import { shuffle } from "../utils/helpers";
+import Random from "../utils/random";
 import {
   randNumPaths,
   addValidNeighbors,
@@ -140,10 +141,10 @@ function createRoom(neighbor, gameState) {
   // Generate enemies
   const numEnemies = Math.floor(Object.keys(session.rooms).length / 2);
   room.enemies = {};
-  const enemyRange = spawnCfg.enemyMax - spawnCfg.enemyMin;
+  const enemySpawnMax = spawnCfg.enemyMax - 1;
   for (let i = 0; i < numEnemies; i++) {
-    let x = Math.floor(Math.random() * enemyRange) + spawnCfg.enemyMin;
-    let y = Math.floor(Math.random() * enemyRange) + spawnCfg.enemyMin;
+    let x = Random.int(spawnCfg.enemyMin, enemySpawnMax);
+    let y = Random.int(spawnCfg.enemyMin, enemySpawnMax);
     let pos = [x, y];
     const detectDist = enemyCfg.baseDetectDistance + (numEnemies * enemyCfg.detectDistancePerEnemy);
     // NOTE: Only "blob" is spawned today. Per-type stats/behaviors and
@@ -156,8 +157,8 @@ function createRoom(neighbor, gameState) {
 
   room.scatterEnemies = () => {
     for (const enemy of Object.values(room.enemies)) {
-      enemy.pos[0] = Math.floor(Math.random() * enemyRange) + spawnCfg.enemyMin;
-      enemy.pos[1] = Math.floor(Math.random() * enemyRange) + spawnCfg.enemyMin;
+      enemy.pos[0] = Random.int(spawnCfg.enemyMin, enemySpawnMax);
+      enemy.pos[1] = Random.int(spawnCfg.enemyMin, enemySpawnMax);
       enemy.chasingPlayer = false;
       enemy.idleCount = 0;
       enemy.updateSides();
@@ -285,7 +286,7 @@ function createRoom(neighbor, gameState) {
     const chance = (typeof DEV_FLAGS.ladderChance === "number")
       ? DEV_FLAGS.ladderChance
       : GAME_CONFIG.ladder.chance;
-    if (!force && Math.random() >= chance) return;
+    if (!force && !Random.chance(chance)) return;
 
     room.ladder = createLadder(pickLadderPos(room), gameState);
   };
@@ -482,27 +483,27 @@ function pickLadderPos(room) {
   // shouldn't crash if we ever tighten the door dimensions), default to the
   // far-left tile so the ladder still spawns.
   if (candidates.length === 0) candidates.push([T, y]);
-  return candidates[Math.floor(Math.random() * candidates.length)];
+  return Random.pick(candidates);
 }
 
 // Picks a 1-D coin spawn coordinate that avoids the central exclusion band.
 // Falls back to a clamped sample if the configured spawn range overlaps the
 // exclusion entirely (which would otherwise be an infinite loop).
 function randSpawnAxis(spawnCfg) {
-  const range = spawnCfg.coinMax - spawnCfg.coinMin;
+  const coinSpawnMax = spawnCfg.coinMax - 1;
   const MAX_TRIES = 16;
   for (let i = 0; i < MAX_TRIES; i++) {
-    const v = Math.floor(Math.random() * range) + spawnCfg.coinMin;
+    const v = Random.int(spawnCfg.coinMin, coinSpawnMax);
     if (v <= spawnCfg.coinExcludeMin || v >= spawnCfg.coinExcludeMax) return v;
   }
   // Fallback: pick the closer non-excluded edge of the exclusion band.
   const lowerSpan = Math.max(0, spawnCfg.coinExcludeMin - spawnCfg.coinMin);
   const upperSpan = Math.max(0, spawnCfg.coinMax - spawnCfg.coinExcludeMax);
   if (lowerSpan === 0 && upperSpan === 0) return spawnCfg.coinMin;
-  if (Math.random() * (lowerSpan + upperSpan) < lowerSpan) {
-    return spawnCfg.coinMin + Math.floor(Math.random() * lowerSpan);
+  if (Random.chance(lowerSpan / (lowerSpan + upperSpan))) {
+    return Random.int(spawnCfg.coinMin, spawnCfg.coinMin + lowerSpan - 1);
   }
-  return spawnCfg.coinExcludeMax + Math.floor(Math.random() * upperSpan);
+  return Random.int(spawnCfg.coinExcludeMax, spawnCfg.coinExcludeMax + upperSpan - 1);
 }
 
 function buildRoomWalls(paths) {
