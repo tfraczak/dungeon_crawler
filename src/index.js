@@ -1,6 +1,7 @@
 import "./styles/index.scss";
 import installListeners from "./scripts/utils/install_listeners";
 import { WIDTH, HEIGHT, ALL_PATHS } from "./scripts/utils/global_vars";
+import { getVariantCount } from "./scripts/utils/map_variants";
 import createGameState from "./scripts/core/game_state";
 import createGameStart from "./scripts/main";
 import GAME_CONFIG from "./scripts/core/game_config";
@@ -156,10 +157,11 @@ document.addEventListener("DOMContentLoaded", () => {
   
   for (let path of ALL_PATHS) {
     path = path.split("").sort().join("");
-    for (let i = 0; i < 3; i++) {
+    const variantCount = getVariantCount(path.length, path);
+    for (let i = 0; i < variantCount; i++) {
       const background = new Image();
       background.src = `./dist/assets/images/map_imgs/${path.length}/${path}/map${i}.png`;
-      
+
       background.onload = () => {
         gameState.bgImgs[`${path.length}${path}${i}`] = background;
       };

@@ -9,6 +9,7 @@ import DEV_FLAGS from "../core/dev_flags";
 
 import { shuffle } from "../utils/helpers";
 import Random from "../utils/random";
+import { pickVariantIndex, getForcedConfig } from "../utils/map_variants";
 import {
   randNumPaths,
   addValidNeighbors,
@@ -94,12 +95,34 @@ function createRoom(neighbor, gameState) {
   let paths = buildPaths(room, gameState);
   let pathsArr = paths.split("");
 
-  if (neighbor) {
+  // Dev short-circuit: when `forceNextMapConfig` is set, bypass the entire
+  // procedural exit picker and stamp the room with the requested config.
+  // This intentionally ignores `entryDir` and the valid-neighbor set, so it
+  // can produce orphan rooms / doors that lead into walls -- documented and
+  // accepted in dev_flags.js. Falls through to the normal picker if the
+  // requested config has no matching background image loaded.
+  const forcedPaths = getForcedConfig();
+  let forcedBg = null;
+  if (forcedPaths) {
+    randIdx = pickVariantIndex(forcedPaths.length, forcedPaths);
+    forcedBg = bgImgs[`${forcedPaths.length}${forcedPaths}${randIdx}`];
+  }
+
+  if (forcedBg) {
+    numPaths = forcedPaths.length;
+    room.background = forcedBg;
+    room.bgConfig = { numPaths, paths: forcedPaths, variantIdx: randIdx };
+    assignBlockedPaths(room, forcedPaths);
+    walls = buildRoomWalls(forcedPaths);
+    room.walls.push(...walls);
+    session.rooms[`${room.nodePos}`] = room;
+  } else if (neighbor) {
     pathsArr = pathsArr.filter(path => path !== entryDir);
     numPaths = randNumPaths(paths.length);
     if (numPaths === paths.length) {
-      randIdx = Math.floor(Math.random() * 3);
+      randIdx = pickVariantIndex(numPaths, paths);
       room.background = bgImgs[`${numPaths}${paths}${randIdx}`];
+      room.bgConfig = { numPaths, paths, variantIdx: randIdx };
       assignBlockedPaths(room, paths);
       walls = buildRoomWalls(paths);
       room.walls.push(...walls);
@@ -110,8 +133,9 @@ function createRoom(neighbor, gameState) {
       numPaths--;
       for (let i = 0; i < numPaths; i++) { newPaths.push(pathsArr.pop()); }
       newPaths = newPaths.sort().join("");
-      randIdx = Math.floor(Math.random() * 3);
+      randIdx = pickVariantIndex(numPaths + 1, newPaths);
       room.background = bgImgs[`${numPaths + 1}${newPaths}${randIdx}`];
+      room.bgConfig = { numPaths: numPaths + 1, paths: newPaths, variantIdx: randIdx };
       assignBlockedPaths(room, newPaths);
       walls = buildRoomWalls(newPaths);
       room.walls.push(...walls);
@@ -120,8 +144,9 @@ function createRoom(neighbor, gameState) {
   } else {
     numPaths = randNumPaths(paths.length);
     if (numPaths === paths.length) {
-      randIdx = Math.floor(Math.random() * 3);
+      randIdx = pickVariantIndex(numPaths, paths);
       room.background = bgImgs[`${numPaths}${paths}${randIdx}`];
+      room.bgConfig = { numPaths, paths, variantIdx: randIdx };
       walls = buildRoomWalls(paths);
       room.walls.push(...walls);
       session.rooms[`${room.nodePos}`] = room;
@@ -129,8 +154,9 @@ function createRoom(neighbor, gameState) {
       shuffle(pathsArr);
       for (let i = 0; i < numPaths; i++) { newPaths.push(pathsArr.pop()); }
       newPaths = newPaths.sort().join("");
-      randIdx = Math.floor(Math.random() * 3);
+      randIdx = pickVariantIndex(numPaths, newPaths);
       room.background = bgImgs[`${numPaths}${newPaths}${randIdx}`];
+      room.bgConfig = { numPaths, paths: newPaths, variantIdx: randIdx };
       assignBlockedPaths(room, newPaths);
       walls = buildRoomWalls(newPaths);
       room.walls.push(...walls);

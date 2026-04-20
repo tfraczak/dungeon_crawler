@@ -228,6 +228,20 @@
           </section>
 
           <section class="dev-options-section">
+            <h2>Map Variants</h2>
+            <p class="dev-options-hint">Cycle the painted background of the room you&rsquo;re currently standing in &mdash; it loops through every variant available for that exit configuration. The room&rsquo;s walls and exits don&rsquo;t change. Force-next pins every newly-generated room to a specific exit configuration (any subset of <code>D L R U</code>, case-insensitive &mdash; e.g. <code>dlu</code> &rarr; <code>DLU</code>); leave blank for the procedural picker. This bypasses entry-direction and neighbor checks, so it can produce orphan rooms or doors into walls &mdash; dev-only.</p>
+            <div class="dev-options-info" id="dev-current-map-info">No active room.</div>
+            <div class="dev-options-button-row">
+              <button type="button" id="dev-map-prev" class="button secondary">&larr; Prev variant</button>
+              <button type="button" id="dev-map-next" class="button secondary">Next variant &rarr;</button>
+            </div>
+            <label class="dev-field">
+              <span>Force next map config</span>
+              <input type="text" name="forceNextMapConfig" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. DLU" />
+            </label>
+          </section>
+
+          <section class="dev-options-section">
             <h2>Win Condition</h2>
             <p class="dev-options-hint">Force ladder skips both the coin threshold and the per-room roll, so the ladder appears in every newly-entered room (and in the next room you enter if you toggle it on mid-run). Ladder chance overrides the per-room spawn probability (0&ndash;1); leave blank for the configured default. Win scene pins the post-climb backdrop to a specific image; leave on Random for the production behavior.</p>
             <label class="dev-check"><input type="checkbox" name="forceLadder" /> <span>Force ladder spawn</span></label>

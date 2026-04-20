@@ -145,6 +145,61 @@ body:not(.dev-mode) .dev-only {
     color: color.adjust(white, $lightness: -20%);
     font-style: italic;
     margin-bottom: 4px;
+
+    code {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background-color: rgba(0, 0, 0, 0.35);
+      color: $off-white;
+      font-style: normal;
+    }
+  }
+
+  // Inline status readout for live state (e.g. current room's variant).
+  // Monospace + dim background so it reads as data, not prose.
+  .dev-options-info {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    color: $off-white;
+  }
+
+  // Side-by-side action buttons inside a section (cycle prev/next, etc.).
+  // Distinct from `.dev-options-actions` which is the panel-level footer.
+  .dev-options-button-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .button {
+      flex: 1;
+      min-width: 0;
+      font-family: $rubik;
+      font-size: 14px;
+      padding: 8px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      background-color: rgba(0, 0, 0, 0.25);
+      color: inherit;
+      transition: all 0.15s ease-in-out;
+
+      &:hover:not(:disabled) {
+        background-color: rgba(0, 0, 0, 0.45);
+        border-color: $banana;
+        color: $banana;
+      }
+
+      &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+    }
   }
 
   // Checkbox + label row. The whole label is clickable.
@@ -183,13 +238,14 @@ body:not(.dev-mode) .dev-only {
       flex: 1;
     }
 
-    input[type="number"] {
+    input[type="number"],
+    input[type="text"] {
       width: 120px;
       font-family: 'Courier New', monospace;
       font-size: 14px;
       padding: 6px 10px;
-      background-color: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      background-color: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.45);
       border-radius: 3px;
       color: $off-white;
       text-align: right;
@@ -202,8 +258,18 @@ body:not(.dev-mode) .dev-only {
       &:focus {
         outline: none;
         border-color: $banana;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.6);
       }
+    }
+
+    // Free-form text inputs (e.g. forceNextMapConfig) are wider and
+    // left-aligned so a typed-in config string like "DLU" reads naturally
+    // instead of pushed into the right gutter the way a numeric value would.
+    input[type="text"] {
+      width: 160px;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
     }
 
     select {

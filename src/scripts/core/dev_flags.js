@@ -49,6 +49,13 @@ const NUMERIC_KEYS = Object.freeze([
 
 const STRING_KEYS = Object.freeze([
   "winScene",
+  // Pins every newly-generated room to a specific exit configuration --
+  // a sorted, deduped string of `D L R U` letters (e.g. "DLR", "U", "DLRU").
+  // Empty string means "use the procedural picker." Bypasses the entry-
+  // direction guarantee and the valid-neighbor checks, so it CAN produce
+  // disconnected rooms or doors that lead into walls -- intentional, since
+  // this is purely a dev visualization aid and never ships to production.
+  "forceNextMapConfig",
 ]);
 
 export const DEV_FLAG_KEYS = Object.freeze([
