@@ -76,13 +76,8 @@
         <div class="how-to-content">
           <section class="how-to-section">
             <h2>Objective</h2>
-            <p>You find yourself deep in a smelly, dank dungeon. The good news: you chose to be here. Legend tells of great riches buried deeper still, and <strong>10 gold coins</strong> is enough to retire on &mdash; but you still have to make it back to the surface.</p>
-            <p>Venture forth, collect coins, and stay alive. Each room is generated procedurally, so no two runs play out the same.</p>
-            <ul class="bullets">
-              <li><strong>Win:</strong> Collect at least 10 coins, then find a ladder and climb out.</li>
-              <li><strong>Lose:</strong> HP reaches 0.</li>
-            </ul>
-            <p class="note">Once you've stockpiled 10 coins, every new room you enter has a low chance of containing a ladder leading up out of the cave. Each room only rolls once &mdash; if it doesn't have a ladder when you walk in, it never will.</p>
+            <p>You find yourself deep in a smelly, dank dungeon. The good news: you chose to be here. Legend tells of great riches buried below &mdash; enough gold to retire on &mdash; but you still have to make it back to the surface.</p>
+            <p>Gather what you can, survive what you can't, and find your way out. The rest is yours to discover.</p>
           </section>
 
           <section class="how-to-section">
@@ -91,9 +86,9 @@
               <div>
                 <h3>Desktop</h3>
                 <ul class="controls">
-                  <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> &mdash; move</li>
+                  <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or arrow keys &mdash; move</li>
                   <li><kbd>Shift</kbd> &mdash; sprint</li>
-                  <li><kbd>Space</kbd> &mdash; attack (sword)</li>
+                  <li><kbd>Space</kbd> &mdash; attack</li>
                   <li><kbd>Enter</kbd> &mdash; start game from title screen</li>
                 </ul>
               </div>
@@ -110,66 +105,8 @@
           </section>
 
           <section class="how-to-section">
-            <h2>Combat</h2>
-            <p>Press <strong>Space</strong> (desktop) or the <strong>Attack button</strong> (mobile) to swing your sword in the direction you're facing.</p>
-          </section>
-
-          <section class="how-to-section">
-            <h2>Stamina</h2>
-            <p>Stamina gates sprinting and attacking. It regenerates automatically when you're walking or standing still.</p>
-            <div class="stat-row">
-              <span class="color-chip yellow"></span>
-              <span>Stamina bar (yellow)</span>
-            </div>
-            <ul class="bullets">
-              <li><strong>Sprinting:</strong> drains stamina each frame.</li>
-              <li><strong>Attacking:</strong> costs a fixed chunk per swing.</li>
-              <li><strong>Regen (idle):</strong> faster than while moving.</li>
-              <li><strong>Depleted:</strong> sprint and attack both lock out until stamina returns.</li>
-            </ul>
-          </section>
-
-          <section class="how-to-section">
-            <h2>HP &amp; Invulnerability</h2>
-            <p>When you get struck, you lose HP and enter a brief window of invulnerability &mdash; your sprite flickers and the cyan bar ticks down.</p>
-            <div class="stat-row">
-              <span class="color-chip hp"><span class="fill"></span><span class="empty"></span></span>
-              <span>HP (red/black)</span>
-            </div>
-            <div class="stat-row">
-              <span class="color-chip cyan"></span>
-              <span>Invulnerability window (cyan)</span>
-            </div>
-            <p class="quote">&ldquo;Your GP or your HP!&rdquo; &mdash; Black Mage</p>
-          </section>
-
-          <section class="how-to-section">
-            <h2>Enemies</h2>
-            <p><strong>Blobs</strong> wander each room until they detect you &mdash; then they'll give chase.</p>
-          </section>
-
-          <section class="how-to-section">
-            <h2>Rooms &amp; Navigation</h2>
-            <p>The dungeon is an infinite graph. Each room has 1&ndash;4 exits and is generated the moment you step through a doorway.</p>
-            <ul class="bullets">
-              <li><strong>Exit counts</strong> are weighted &mdash; 2-exit rooms are the most common, 4-exit rooms the rarest.</li>
-              <li>Rooms you've visited are <strong>preserved</strong>. Walking back retains the map topology, but enemies scatter to new positions.</li>
-              <li>Coins spawn around the edges of a room &mdash; none directly in the middle, so you always have room to maneuver.</li>
-            </ul>
-          </section>
-
-          <section class="how-to-section">
-            <h2>HUD</h2>
-            <ul class="bullets">
-              <li><strong>Top-right:</strong> coin counter (progress toward the goal of 10).</li>
-              <li><strong>Status bars</strong> (bottom-left on desktop, top-left on mobile):
-                <ul>
-                  <li>Green/red &mdash; HP</li>
-                  <li>Cyan &mdash; invulnerability window</li>
-                  <li>Yellow &mdash; stamina</li>
-                </ul>
-              </li>
-            </ul>
+            <h2>Status bars</h2>
+            <p>Three bars hover near your character. The <strong class="bar-red">red</strong> one is what keeps you breathing. The <strong class="bar-yellow">yellow</strong> one fuels the more strenuous things you'll find yourself doing &mdash; spend it, and you'll have to wait for it to recover. The <strong class="bar-cyan">cyan</strong> one only matters in the moments right after you've been hit &mdash; for a brief window, you can't be struck again, and the bar ticks down as that grace runs out.</p>
           </section>
 
           <section class="how-to-section">

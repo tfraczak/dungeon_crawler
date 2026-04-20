@@ -2,28 +2,37 @@ import { newGame } from "./game_lifecycle";
 import installDevOptionsDrawer from "./dev_options_drawer";
 
 export default (gameState) => {
-  installDevOptionsDrawer();
+  installDevOptionsDrawer(gameState);
 
   const keys = gameState.keys;
 
+  // Map a raw KeyboardEvent.key to the canonical slot the rest of the game
+  // reads. Movement is aliased so WASD and the arrow keys both flip the same
+  // w/a/s/d slots in `keys`, which is what player.move() consults.
+  const slotFor = (rawKey) => {
+    if (rawKey === "Shift" || rawKey === "Enter" || rawKey === " ") return rawKey;
+    const k = rawKey.toLowerCase();
+    switch (k) {
+      case "w": case "arrowup":    return "w";
+      case "a": case "arrowleft":  return "a";
+      case "s": case "arrowdown":  return "s";
+      case "d": case "arrowright": return "d";
+      default: return null;
+    }
+  };
+
   document.addEventListener("keydown", e => {
-    if (e.key.toLowerCase() === "w" && !keys["w"]) keys[e.key.toLowerCase()] = true;
-    if (e.key.toLowerCase() === "a" && !keys["a"]) keys[e.key.toLowerCase()] = true;
-    if (e.key.toLowerCase() === "s" && !keys["s"]) keys[e.key.toLowerCase()] = true;
-    if (e.key.toLowerCase() === "d" && !keys["d"]) keys[e.key.toLowerCase()] = true;
-    if (e.key === "Shift" && !keys["Shift"]) keys[e.key] = true;
-    if (e.key === "Enter" && !keys["Enter"]) keys[e.key] = true;
-    if (e.key === " " && !keys[" "]) { keys[" "] = true; e.preventDefault(); }
+    const slot = slotFor(e.key);
+    if (slot === null || keys[slot]) return;
+    keys[slot] = true;
+    // Space scrolls the page and arrow keys scroll/move focus by default.
+    if (slot === " " || e.key.startsWith("Arrow")) e.preventDefault();
   });
 
   document.addEventListener("keyup", e => {
-    if (e.key.toLowerCase() === "w" && keys["w"]) keys[e.key.toLowerCase()] = false;
-    if (e.key.toLowerCase() === "a" && keys["a"]) keys[e.key.toLowerCase()] = false;
-    if (e.key.toLowerCase() === "s" && keys["s"]) keys[e.key.toLowerCase()] = false;
-    if (e.key.toLowerCase() === "d" && keys["d"]) keys[e.key.toLowerCase()] = false;
-    if (e.key === "Shift" && keys["Shift"]) keys[e.key] = false;
-    if (e.key === "Enter" && keys["Enter"]) keys[e.key] = false;
-    if (e.key === " " && keys[" "]) keys[" "] = false;
+    const slot = slotFor(e.key);
+    if (slot === null || !keys[slot]) return;
+    keys[slot] = false;
   });
 
   // "How to play?" is a hash-route link (#how-to-play) that opens a slide-in

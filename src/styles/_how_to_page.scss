@@ -107,6 +107,13 @@
       strong {
         color: $banana;
         font-weight: 600;
+
+        // Bar-color overrides for the Status bars section. Hex values mirror
+        // the in-game HUD (see drawHUD in src/scripts/world/room.js) so the
+        // text color matches the bar the player sees in their HUD.
+        &.bar-red    { color: #d42c2c; }
+        &.bar-yellow { color: #ffbb00; }
+        &.bar-cyan   { color: #00dddd; }
       }
 
       em {
@@ -120,55 +127,6 @@
 
         &:hover {
           color: $banana;
-        }
-      }
-    }
-
-    .quote {
-      font-style: italic;
-      color: color.adjust(white, $lightness: -15%);
-      font-size: 14px;
-      border-left: 3px solid $banana;
-      padding-left: 12px;
-      margin-top: 12px;
-    }
-
-    .note {
-      font-size: 14px;
-      color: color.adjust(white, $lightness: -20%);
-      font-style: italic;
-    }
-
-    ul.bullets {
-      padding-left: 22px;
-      margin-bottom: 8px;
-
-      li {
-        list-style: disc;
-        font-size: 16px;
-        line-height: 1.55;
-        margin-bottom: 6px;
-
-        strong {
-          color: $banana;
-          font-weight: 600;
-        }
-
-        em {
-          color: $banana;
-          font-style: italic;
-        }
-
-        // Nested list inside bullet
-        ul {
-          margin-top: 6px;
-          padding-left: 22px;
-
-          li {
-            list-style: circle;
-            font-size: 15px;
-            margin-bottom: 4px;
-          }
         }
       }
     }
@@ -203,50 +161,6 @@
       display: grid;
       grid-template-columns: 1fr;
       gap: 20px;
-    }
-
-    .stat-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 8px 0;
-      font-size: 15px;
-    }
-
-    .color-chip {
-      display: inline-block;
-      width: 80px;
-      height: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-
-      &.yellow {
-        background-color: #ffbb00;
-        height: 6px;
-      }
-
-      &.cyan {
-        background-color: #00dddd;
-        height: 6px;
-      }
-
-      &.hp {
-        display: inline-flex;
-        width: 80px;
-        height: 10px;
-        padding: 0;
-
-        // Mirrors the in-game HP bar (see drawHUD in src/scripts/world/room.js):
-        // red fill for remaining HP on top of a near-black missing-HP track.
-        .fill {
-          width: 70%;
-          background-color: #d42c2c;
-        }
-
-        .empty {
-          width: 30%;
-          background-color: #111;
-        }
-      }
     }
 
     pre.example {
