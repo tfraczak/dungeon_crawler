@@ -1,5 +1,5 @@
 /*
- * Dev-only: upscales src/assets/images/coin/coin.png by 8x with
+ * Dev-only: upscales src/assets/entities/coin/sprite.png by 8x with
  * nearest-neighbor so the generated sprite sheet can be reviewed visually.
  * Writes the preview to tmp/coin_preview.png.
  *
@@ -13,7 +13,7 @@ const path = require("path");
 const zlib = require("zlib");
 
 const SCALE = 8;
-const SRC = path.join(__dirname, "..", "src", "assets", "images", "coin", "coin.png");
+const SRC = path.join(__dirname, "..", "src", "assets", "entities", "coin", "sprite.png");
 const OUT_DIR = path.join(__dirname, "..", "tmp");
 const OUT = path.join(OUT_DIR, "coin_preview.png");
 

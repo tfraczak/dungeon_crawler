@@ -1,7 +1,7 @@
-import createEntity from "../entity";
-import GAME_CONFIG from "../../core/game_config";
-import { playHpPotionSound, playHpPotionDrop } from "../../sounds";
-import applyDropBehavior from "../../effects/drop";
+import createEntity from "@entities/entity";
+import * as GAME_CONFIG from "@core/game_config";
+import playHpPotionSound, { playHpPotionDrop } from "./sound";
+import applyDropBehavior from "@effects/drop";
 
 let hpPotionIdCounter = 0;
 
@@ -9,7 +9,7 @@ let hpPotionIdCounter = 0;
 // pools layered on top -- bubbles rising inside the liquid and red heal
 // crosses drifting up either side. Each particle picks its own random column,
 // lifetime, and respawn delay so two potions on screen never animate in sync.
-// Picking one up heals the player up to GAME_CONFIG.player.hp.
+// Picking one up heals the player up to GAME_CONFIG.entities.player.hp.
 function createHpPotion(pos, width, height, spritePalette, gameState) {
   const potion = createEntity(pos, width, height, spritePalette, { width, height });
 
@@ -27,8 +27,8 @@ function createHpPotion(pos, width, height, spritePalette, gameState) {
   // values in 0..maxLife are the active rise. On reaching maxLife the slot
   // is replaced with a freshly randomized particle.
   // -------------------------------------------------------------------------
-  const bubbleCfg = GAME_CONFIG.hpPotion.bubble;
-  const crossCfg = GAME_CONFIG.hpPotion.cross;
+  const bubbleCfg = GAME_CONFIG.entities.hpPotion.bubble;
+  const crossCfg = GAME_CONFIG.entities.hpPotion.cross;
 
   const makeBubble = (stagger) => {
     const x = bubbleCfg.colMin + Math.floor(Math.random() * bubbleCfg.colRange);

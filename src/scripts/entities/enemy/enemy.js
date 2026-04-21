@@ -1,14 +1,15 @@
-import createEntity from "../entity";
-import createCoin from "../coin/coin";
-import createHpPotion from "../hp_potion/hp_potion";
-import { BASE_SPEED } from "../../utils/global_vars";
-import Random from "../../utils/random";
-import GAME_CONFIG from "../../core/game_config";
-import DEV_FLAGS from "../../core/dev_flags";
+import createEntity from "@entities/entity";
+import createCoin from "@entities/coin/coin";
+import createHpPotion from "@entities/hp_potion/hp_potion";
+import Random from "@utils/random";
+import * as GAME_CONFIG from "@core/game_config";
+import DEV_FLAGS from "@core/dev_flags";
+
+const { baseSpeed: BASE_SPEED } = GAME_CONFIG.world;
 
 function createEnemy(pos, width, height, spritePalette, type, detectDist, gameState) {
   const enemy = createEntity(pos, width, height, spritePalette);
-  const cfg = GAME_CONFIG.enemy;
+  const cfg = GAME_CONFIG.entities.enemy;
 
   enemy.gameState = gameState;
   enemy.hp = DEV_FLAGS.enemyHp ?? cfg.hp;
@@ -248,7 +249,7 @@ function createEnemy(pos, width, height, spritePalette, type, detectDist, gameSt
       const dx = player.center[0] - enemy.center[0];
       const dy = player.center[1] - enemy.center[1];
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const knockback = GAME_CONFIG.player.hitKnockback;
+      const knockback = GAME_CONFIG.entities.player.hitKnockback;
       player.knockbackVx = (dx / dist) * knockback;
       player.knockbackVy = (dy / dist) * knockback;
       // god_mode: knockback + i-frames still fire so the player sees a

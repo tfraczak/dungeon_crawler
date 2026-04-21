@@ -1,10 +1,11 @@
-import createPlayer from "./entities/player/player";
-import createRoom from "./world/room";
-import createCamera from "./core/camera";
-import { SPRITE_DIMS } from "./utils/global_vars";
-import Random from "./utils/random";
-import GAME_CONFIG from "./core/game_config";
-import DEV_FLAGS from "./core/dev_flags";
+import createPlayer from "@entities/player/player";
+import createRoom from "@world/room/room";
+import createCamera from "@core/camera";
+import Random from "@utils/random";
+import * as GAME_CONFIG from "@core/game_config";
+import DEV_FLAGS from "@core/dev_flags";
+
+const SPRITE_DIMS = GAME_CONFIG.entities.player.spriteDims;
 
 // Picks the win-screen scene id for this run. The DEV_FLAGS dropdown can
 // pin a specific scene for testing; otherwise we draw uniformly at random
@@ -129,8 +130,8 @@ function createGame(gameState) {
   //      session.startClimb(ladder), which freezes the world, snaps the
   //      player's sprite onto the ladder, and picks the win-screen scene.
   //   2. session.climbing tick lerps the player up the ladder over
-  //      GAME_CONFIG.ladder.climbDuration, then alpha-fades the canvas to
-  //      white over GAME_CONFIG.ladder.fadeDuration.
+  //      GAME_CONFIG.entities.ladder.climbDuration, then alpha-fades the canvas
+  //      to white over GAME_CONFIG.entities.ladder.fadeDuration.
   //   3. session.winRevealing tick holds the white-out briefly, fades the
   //      chosen scene image in, then fades the win text panel in.
   //   4. When the reveal completes, `climbed` flips true. game.win() reads
@@ -221,8 +222,8 @@ function createGame(gameState) {
         // the canvas to white. When both stages complete we mark `climbed`
         // and fall through to game.stop() which renders the win screen.
         const ladder = session.climbAnchor;
-        const climbDur = GAME_CONFIG.ladder.climbDuration;
-        const fadeDur = GAME_CONFIG.ladder.fadeDuration;
+        const climbDur = GAME_CONFIG.entities.ladder.climbDuration;
+        const fadeDur = GAME_CONFIG.entities.ladder.fadeDuration;
         const totalDur = climbDur + fadeDur;
         const elapsedClimb = now - session.climbStart;
 
@@ -295,9 +296,9 @@ function createGame(gameState) {
         // win text panel in over both. Once the text is fully in, flip
         // `climbed` so game.stop() takes over and the static post-stop
         // render holds the final frame.
-        const holdDur = GAME_CONFIG.ladder.sceneHoldDuration;
-        const sceneDur = GAME_CONFIG.ladder.sceneFadeDuration;
-        const textDur = GAME_CONFIG.ladder.textFadeDuration;
+        const holdDur = GAME_CONFIG.entities.ladder.sceneHoldDuration;
+        const sceneDur = GAME_CONFIG.entities.ladder.sceneFadeDuration;
+        const textDur = GAME_CONFIG.entities.ladder.textFadeDuration;
         const elapsedReveal = now - session.winRevealStart;
 
         const sceneAlpha = Math.max(0, Math.min(1,

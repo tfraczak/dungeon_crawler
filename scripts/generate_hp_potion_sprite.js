@@ -1,7 +1,7 @@
 /*
  * Procedurally generates the HP-potion sprite.
  *
- * Output: src/assets/images/hp_potion/hp_potion.png  (32 x 32, single frame)
+ * Output: src/assets/entities/hp_potion/sprite.png  (32 x 32, single frame)
  *
  * The sprite is just the static bottle chrome (cork, neck, glass body, red
  * liquid) with painted highlights/shadows. All animated VFX -- rising
@@ -251,7 +251,7 @@ function main() {
   // Write to both src/ (source of truth) and dist/ (what the dev server and
   // built bundle actually load from -- index.js references ./dist/... URLs
   // directly so webpack does not copy this asset for us).
-  const subPath = path.join("assets", "images", "hp_potion", "hp_potion.png");
+  const subPath = path.join("assets", "entities", "hp_potion", "sprite.png");
   for (const root of ["src", "dist"]) {
     const outPath = path.join(__dirname, "..", root, subPath);
     fs.mkdirSync(path.dirname(outPath), { recursive: true });

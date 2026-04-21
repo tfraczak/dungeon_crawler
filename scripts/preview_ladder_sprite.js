@@ -1,5 +1,5 @@
 /*
- * Dev-only: upscales src/assets/images/ladder/ladder.png by 8x with
+ * Dev-only: upscales src/assets/entities/ladder/sprite.png by 8x with
  * nearest-neighbor so the generated ladder sprite can be reviewed visually.
  * Writes the preview to tmp/ladder_preview.png.
  *
@@ -13,7 +13,7 @@ const path = require("path");
 const zlib = require("zlib");
 
 const SCALE = 8;
-const SRC = path.join(__dirname, "..", "src", "assets", "images", "ladder", "ladder.png");
+const SRC = path.join(__dirname, "..", "src", "assets", "entities", "ladder", "sprite.png");
 const OUT_DIR = path.join(__dirname, "..", "tmp");
 const OUT = path.join(OUT_DIR, "ladder_preview.png");
 

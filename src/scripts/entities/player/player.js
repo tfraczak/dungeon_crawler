@@ -1,14 +1,15 @@
-import createEntity from "../entity";
-import createSword from "../../items/equipment/weapons/swords/sword";
-import { BASE_SPEED } from "../../utils/global_vars";
-import GAME_CONFIG from "../../core/game_config";
-import DEV_FLAGS from "../../core/dev_flags";
-import { roomChange } from "../../utils/room_generation";
-import { playFootstep } from "../../sounds";
+import createEntity from "@entities/entity";
+import createSword from "@items/equipment/weapons/sword/sword";
+import * as GAME_CONFIG from "@core/game_config";
+import DEV_FLAGS from "@core/dev_flags";
+import { roomChange } from "@world/room/generation";
+import playFootstep from "./sound";
+
+const { baseSpeed: BASE_SPEED } = GAME_CONFIG.world;
 
 function createPlayer(pos, width, height, spritePalette, gameState) {
   const player = createEntity(pos, width, height, spritePalette);
-  const cfg = GAME_CONFIG.player;
+  const cfg = GAME_CONFIG.entities.player;
 
   player.gameState = gameState;
   player.speed = BASE_SPEED * cfg.speedMultiplier;

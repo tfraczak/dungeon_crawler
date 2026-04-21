@@ -1,5 +1,5 @@
-import createEntity from "../entity";
-import GAME_CONFIG from "../../core/game_config";
+import createEntity from "@entities/entity";
+import * as GAME_CONFIG from "@core/game_config";
 
 let ladderIdCounter = 0;
 
@@ -10,8 +10,8 @@ let ladderIdCounter = 0;
 // is touching me" via `triggerClimb()` and lets the room/game owner kick off
 // the win sequence.
 function createLadder(pos, gameState) {
-  const w = GAME_CONFIG.ladder.width;
-  const h = GAME_CONFIG.ladder.height;
+  const w = GAME_CONFIG.entities.ladder.width;
+  const h = GAME_CONFIG.entities.ladder.height;
   // Collision box covers the entire ladder body (full width + height). The
   // ladder always spawns flush against the top wall, which means the player
   // collides into that wall and only the BOTTOM of his collision box can

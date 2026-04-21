@@ -1,7 +1,7 @@
-import GAME_CONFIG from "../core/game_config";
+import * as GAME_CONFIG from "@core/game_config";
 
 function createPoof(x, y) {
-  const cfg = GAME_CONFIG.poof;
+  const cfg = GAME_CONFIG.effects.poof;
   const particles = [];
 
   for (let i = 0; i < cfg.particleCount; i++) {

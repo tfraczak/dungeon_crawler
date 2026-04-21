@@ -1,5 +1,7 @@
-import { newGame } from "./utils/game_lifecycle";
-import { WIDTH, HEIGHT } from "./utils/global_vars";
+import { newGame } from "@core/lifecycle";
+import * as GAME_CONFIG from "@core/game_config";
+
+const { width: WIDTH, height: HEIGHT } = GAME_CONFIG.world;
 
 function createGameStart(gameState) {
   const ctx = gameState.gameOptions.ctx;

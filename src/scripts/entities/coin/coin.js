@@ -1,7 +1,7 @@
-import createEntity from "../entity";
-import GAME_CONFIG from "../../core/game_config";
-import { playCoinSound, playCoinDrop } from "../../sounds";
-import applyDropBehavior from "../../effects/drop";
+import createEntity from "@entities/entity";
+import * as GAME_CONFIG from "@core/game_config";
+import playCoinSound, { playCoinDrop } from "./sound";
+import applyDropBehavior from "@effects/drop";
 
 let coinIdCounter = 0;
 
@@ -10,7 +10,7 @@ function createCoin(pos, width, height, spritePalette, gameState) {
 
   coin.id = `coin_${coinIdCounter++}`;
   coin.gameState = gameState;
-  coin.frameInterval = GAME_CONFIG.coin.frameInterval;
+  coin.frameInterval = GAME_CONFIG.entities.coin.frameInterval;
   coin.frameCount = 0;
   coin.drawOptions.palY = 0;
 
@@ -20,7 +20,7 @@ function createCoin(pos, width, height, spritePalette, gameState) {
   // and collision box intact. The larger render is centered on the entity's
   // logical position so pickup behavior is unchanged.
   const frameSize = width;
-  const renderSize = GAME_CONFIG.coin.renderSize;
+  const renderSize = GAME_CONFIG.entities.coin.renderSize;
   const renderOffset = (renderSize - frameSize) / 2;
 
   // Procedural sparkle particles. Each coin maintains a small pool of
@@ -29,7 +29,7 @@ function createCoin(pos, width, height, spritePalette, gameState) {
   // Randomizing initial age avoids the "all blink in unison" look when many
   // coins are on screen — each coin (and each sparkle within it) shimmers
   // independently. Suppressed while dropping so the bounce trail stays clean.
-  const cfg = GAME_CONFIG.coin.sparkle;
+  const cfg = GAME_CONFIG.entities.coin.sparkle;
   const coinCenter = frameSize / 2;
   const makeSparkle = (stagger) => {
     const angle = Math.random() * Math.PI * 2;

@@ -1,4 +1,4 @@
-import createItem from "../item";
+import createItem from "@items/item";
 
 function createEquipment({ name, description, slot }) {
   const equipment = createItem({ name, description });

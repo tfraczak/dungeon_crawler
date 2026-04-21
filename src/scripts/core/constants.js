@@ -1,0 +1,17 @@
+export const ALL_PATHS = [
+  "DLRU",
+  "DLR",
+  "DLU",
+  "LRU",
+  "DRU",
+  "DL",
+  "DR",
+  "DU",
+  "LR",
+  "LU",
+  "RU",
+  "D",
+  "L",
+  "R",
+  "U",
+];

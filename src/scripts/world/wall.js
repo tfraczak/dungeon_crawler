@@ -1,4 +1,4 @@
-import DEV_FLAGS from "../core/dev_flags";
+import DEV_FLAGS from "@core/dev_flags";
 
 function createWall(pos, width, height) {
   const [x, y] = pos;

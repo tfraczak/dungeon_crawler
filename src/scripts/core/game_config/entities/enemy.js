@@ -1,0 +1,26 @@
+export default Object.freeze({
+  baseDetectDistance: 150,
+  chaseSpeedModifier: 1,
+  damageMax: 4,
+  damageMin: 1,
+  detectDistancePerEnemy: 20,
+  drops: [
+    { chance: 0.1, type: "coin" },
+    { chance: 0.05, type: "hp_potion" },
+  ],
+  hitDistance: 32,
+  hp: 50,
+  idleMaxFrames: 60,
+  idlePauseChance: 0.5,
+  idlePauseMax: 120,
+  idlePauseMin: 30,
+  idleSpeedModifier: 0.5,
+  knockbackFactor: 0.4,
+  spawn: {
+    max: 614,
+    min: 64,
+  },
+  speedMultiplier: 0.8,
+  speedTransitionRate: 0.08,
+  strength: 6,
+});

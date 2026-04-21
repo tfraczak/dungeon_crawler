@@ -1,10 +1,12 @@
 import "./styles/index.scss";
-import installListeners from "./scripts/utils/install_listeners";
-import { WIDTH, HEIGHT, ALL_PATHS } from "./scripts/utils/global_vars";
-import { getVariantCount } from "./scripts/utils/map_variants";
-import createGameState from "./scripts/core/game_state";
-import createGameStart from "./scripts/main";
-import GAME_CONFIG from "./scripts/core/game_config";
+import installListeners from "@ui/install_listeners";
+import { ALL_PATHS } from "@core/constants";
+import { getVariantCount } from "@world/room/map_variants";
+import createGameState from "@core/game_state";
+import createGameStart from "@scripts/main";
+import * as GAME_CONFIG from "@core/game_config";
+
+const { width: WIDTH, height: HEIGHT } = GAME_CONFIG.world;
 
 document.addEventListener("DOMContentLoaded", () => {
   const gameState = createGameState();
@@ -114,25 +116,25 @@ document.addEventListener("DOMContentLoaded", () => {
   installListeners(gameState);
 
   let coinSprite = new Image();
-  coinSprite.src = "./dist/assets/images/coin/coin.png";
+  coinSprite.src = "./src/assets/entities/coin/sprite.png";
   coinSprite.onload = () => {
     gameState.sprites.coin = coinSprite;
   };
 
   let hpPotionSprite = new Image();
-  hpPotionSprite.src = "./dist/assets/images/hp_potion/hp_potion.png";
+  hpPotionSprite.src = "./src/assets/entities/hp_potion/sprite.png";
   hpPotionSprite.onload = () => {
     gameState.sprites.hpPotion = hpPotionSprite;
   };
 
   let ladderSprite = new Image();
-  ladderSprite.src = "./dist/assets/images/ladder/ladder.png";
+  ladderSprite.src = "./src/assets/entities/ladder/sprite.png";
   ladderSprite.onload = () => {
     gameState.sprites.ladder = ladderSprite;
   };
 
   let monstersSprites = new Image();
-  monstersSprites.src = "./dist/assets/images/enemies/monsters.png";
+  monstersSprites.src = "./src/assets/entities/enemy/sprite.png";
   monstersSprites.onload = () => {
     gameState.sprites.monsters = monstersSprites;
   };
@@ -147,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
     gameState.sprites.endOfGame[sceneId] = { desktop: null, mobile: null };
     for (const orientation of ["desktop", "mobile"]) {
       const img = new Image();
-      img.src = `./dist/assets/images/end_of_game/${sceneId}_${orientation}.png`;
+      img.src = `./src/assets/entities/ladder/end_of_game/${sceneId}/${orientation}.png`;
       img.onload = () => {
         gameState.sprites.endOfGame[sceneId][orientation] = img;
       };
@@ -160,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const variantCount = getVariantCount(path.length, path);
     for (let i = 0; i < variantCount; i++) {
       const background = new Image();
-      background.src = `./dist/assets/images/map_imgs/${path.length}/${path}/map${i}.png`;
+      background.src = `./src/assets/world/room/backgrounds/${path.length}/${path}/${i}.png`;
 
       background.onload = () => {
         gameState.bgImgs[`${path.length}${path}${i}`] = background;
@@ -169,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let playerSprite = new Image();
-  playerSprite.src = "./dist/assets/images/rogue/rogue_walk.png";
+  playerSprite.src = "./src/assets/entities/player/classes/rogue/walk.png";
   
   playerSprite.onload = () => {
     gameState.gameOptions.ctx = ctx;

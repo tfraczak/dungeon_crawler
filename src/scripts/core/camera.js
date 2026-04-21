@@ -1,4 +1,6 @@
-import { WIDTH, HEIGHT } from "../utils/global_vars";
+import * as GAME_CONFIG from "./game_config";
+
+const { width: WIDTH, height: HEIGHT } = GAME_CONFIG.world;
 
 function createCamera() {
   const canvas = document.getElementById("display");

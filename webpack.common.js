@@ -11,6 +11,16 @@ module.exports = {
   },
   resolve: {
     extensions: [".js"],
+    alias: {
+      "@core": path.resolve(__dirname, "src/scripts/core"),
+      "@effects": path.resolve(__dirname, "src/scripts/effects"),
+      "@entities": path.resolve(__dirname, "src/scripts/entities"),
+      "@items": path.resolve(__dirname, "src/scripts/items"),
+      "@scripts": path.resolve(__dirname, "src/scripts"),
+      "@ui": path.resolve(__dirname, "src/scripts/ui"),
+      "@utils": path.resolve(__dirname, "src/scripts/utils"),
+      "@world": path.resolve(__dirname, "src/scripts/world"),
+    },
   },
   module: {
     rules: [

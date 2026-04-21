@@ -1,7 +1,7 @@
 /*
  * Procedurally generates the gold-coin sprite sheet.
  *
- * Output: src/assets/images/coin/coin.png  (128 x 16, 8 frames of 16x16)
+ * Output: src/assets/entities/coin/sprite.png  (128 x 16, 8 frames of 16x16)
  *
  * Eight-frame spin around the vertical axis. Width per frame follows
  * |cos(theta)| for theta in {0, 45, 90, 135, 180, 225, 270, 315} so the coin
@@ -319,7 +319,7 @@ function main() {
   // Write to both src/ (source of truth) and dist/ (what the dev server and
   // built bundle actually load from -- index.js references ./dist/... URLs
   // directly so webpack does not copy this asset for us).
-  const subPath = path.join("assets", "images", "coin", "coin.png");
+  const subPath = path.join("assets", "entities", "coin", "sprite.png");
   for (const root of ["src", "dist"]) {
     const outPath = path.join(__dirname, "..", root, subPath);
     fs.mkdirSync(path.dirname(outPath), { recursive: true });

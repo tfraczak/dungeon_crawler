@@ -1,7 +1,7 @@
 @use 'vars' as *;
 
 body {
-  background-image: url("../assets/images/8bit-bg.jpg");
+  background-image: url("../assets/8bit-bg.jpg");
 
   // The how-to drawer slides in over the game but the game keeps rendering
   // and receiving keyboard input. We only lock document-level scrolling so

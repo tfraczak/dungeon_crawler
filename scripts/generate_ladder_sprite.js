@@ -1,7 +1,7 @@
 /*
  * Procedurally generates the ladder sprite used by the win condition.
  *
- * Output: src/assets/images/ladder/ladder.png  (48 x 64, single frame)
+ * Output: src/assets/entities/ladder/sprite.png  (48 x 64, single frame)
  *
  * The ladder always spawns flush against the top wall of a room, so the
  * sprite is just the wooden ladder itself -- no painted "exit hole" -- and
@@ -207,7 +207,7 @@ function main() {
   // Write to both src/ (source of truth) and dist/ (what the dev server and
   // built bundle actually load from -- index.js references ./dist/... URLs
   // directly so webpack does not copy this asset for us).
-  const subPath = path.join("assets", "images", "ladder", "ladder.png");
+  const subPath = path.join("assets", "entities", "ladder", "sprite.png");
   for (const root of ["src", "dist"]) {
     const outPath = path.join(__dirname, "..", root, subPath);
     fs.mkdirSync(path.dirname(outPath), { recursive: true });

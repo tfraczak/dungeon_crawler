@@ -43,7 +43,6 @@ jobs:
           cp index.html _site/
           cp -r dist/* _site/dist/
           cp -r src/assets _site/src/assets
-          cp -r src/assets _site/dist/assets
           cp -r design_docs _site/design_docs
 
       - name: Upload artifact

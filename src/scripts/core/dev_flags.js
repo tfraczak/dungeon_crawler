@@ -25,7 +25,7 @@
 // UI is wired up in `src/scripts/utils/dev_options_drawer.js` and the
 // `#dev-options-page` panel in `index.html`.
 
-import GAME_CONFIG from "./game_config";
+import * as GAME_CONFIG from "./game_config";
 
 const isProd = process.env.NODE_ENV === "production";
 const STORAGE_KEY = "devFlags";
@@ -73,9 +73,9 @@ export const DEV_FLAG_KEYS = Object.freeze([
 // representation. Leaving it out of CONFIG_DEFAULTS just means the drawer
 // won't auto-fill a placeholder for that field.
 export const CONFIG_DEFAULTS = Object.freeze({
-  enemyHp:           GAME_CONFIG.enemy.hp,
-  enemyItemDropRate: GAME_CONFIG.enemy.drops[0]?.chance ?? 0,
-  ladderChance:      GAME_CONFIG.ladder.chance,
+  enemyHp: GAME_CONFIG.entities.enemy.hp,
+  enemyItemDropRate: GAME_CONFIG.entities.enemy.drops[0]?.chance ?? 0,
+  ladderChance: GAME_CONFIG.entities.ladder.chance,
 });
 
 export const isBooleanFlag = (key) => BOOLEAN_KEYS.includes(key);
