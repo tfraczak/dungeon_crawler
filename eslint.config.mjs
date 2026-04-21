@@ -13,6 +13,7 @@ export default [
         matchMedia: "readonly",
         console: "readonly",
         setTimeout: "readonly",
+        clearTimeout: "readonly",
         requestAnimationFrame: "readonly",
         cancelAnimationFrame: "readonly",
         Image: "readonly",

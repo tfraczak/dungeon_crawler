@@ -1,0 +1,542 @@
+@use 'sass:color';
+@use 'vars' as *;
+
+// Music-note icon trigger lives in the social-icons nav alongside the
+// wrench (#dev-options-link). Same dim-by-default tint so it reads as
+// "tool" rather than "social link", and brightens to banana on hover.
+#dev-sound-sandbox-link {
+  color: color.adjust($off-white, $lightness: -20%);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus {
+    color: $banana;
+  }
+}
+
+// Drawer chrome mirrors `.dev-options-page` — same width, slide-in,
+// gradient band, border-left, typography — so it reads as a sibling
+// of the existing dev drawers.
+.dev-sound-sandbox-page {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(520px, 100%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  font-family: $rubik;
+  transform: translateX(100%);
+  transition: transform 0.25s ease-in-out;
+  pointer-events: none;
+  will-change: transform;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.5);
+
+  &.active {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .dev-sound-sandbox-panel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: $menu-color;
+    background-image: repeating-linear-gradient(
+      -30deg,
+      color.adjust($menu-color, $lightness: -14%) 0,
+      color.adjust($menu-color, $lightness: -14%) 360px,
+      $menu-color 500px,
+      color.adjust($menu-color, $lightness: -14%) 640px
+    );
+    border-left: 4px solid color.adjust(white, $lightness: -15%);
+  }
+
+  .dev-sound-sandbox-header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 24px 28px 16px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+
+    h1 {
+      font-family: $start-2p;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .back-button {
+      font-family: $rubik;
+      font-size: 14px;
+      padding: 8px 14px;
+      background-color: rgba(0, 0, 0, 0.25);
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      transition: all 0.15s ease-in-out;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.45);
+        border-color: $banana;
+        color: $banana;
+      }
+    }
+  }
+
+  .dev-sound-sandbox-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 20px 24px 24px;
+  }
+
+  .dev-sound-sandbox-actions {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 28px 24px;
+    border-top: 2px solid rgba(255, 255, 255, 0.25);
+
+    .button {
+      font-family: $rubik;
+      font-size: 14px;
+      padding: 10px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      background-color: rgba(0, 0, 0, 0.25);
+      transition: all 0.15s ease-in-out;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.45);
+        border-color: $banana;
+        color: $banana;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sound picker (top of the body): dropdown + control buttons.
+  // ---------------------------------------------------------------------------
+  .dev-sound-sandbox-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    label {
+      font-size: 13px;
+      color: color.adjust(white, $lightness: -25%);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    select {
+      width: 100%;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 8px 10px;
+      background-color: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 3px;
+      color: $off-white;
+
+      &:focus {
+        outline: none;
+        border-color: $banana;
+        background-color: rgba(0, 0, 0, 0.55);
+      }
+
+      option {
+        background-color: #1a1a1a;
+        color: $off-white;
+      }
+
+      optgroup {
+        font-family: $start-2p;
+        font-size: 11px;
+        color: $banana;
+        background-color: #111;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Per-sound header block — Name / Description / live preview of derived
+  // filename + functionName.
+  // ---------------------------------------------------------------------------
+  .dev-sound-header-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.18);
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      color: color.adjust(white, $lightness: -25%);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    input[type="text"],
+    textarea {
+      font-family: $rubik;
+      font-size: 14px;
+      padding: 6px 10px;
+      background-color: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 3px;
+      color: $off-white;
+      text-transform: none;
+      letter-spacing: normal;
+      resize: vertical;
+
+      &:focus {
+        outline: none;
+        border-color: $banana;
+        background-color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    textarea {
+      min-height: 44px;
+      line-height: 1.4;
+    }
+
+    .dev-sound-derived {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 6px 10px;
+      background-color: rgba(0, 0, 0, 0.35);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+      color: $off-white;
+
+      span.label {
+        color: color.adjust(white, $lightness: -35%);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 10px;
+        margin-right: 6px;
+      }
+
+      &.invalid {
+        border-color: #d97070;
+        color: #f0a8a8;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Knob fields shared between tunable_recipe and profile_synth bodies.
+  // Same shape as `.dev-field` in dev_options.scss but namespaced here so
+  // the two drawers can evolve independently.
+  // ---------------------------------------------------------------------------
+  .dev-sound-knob-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .dev-sound-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+
+    > span {
+      flex: 0 0 130px;
+      color: color.adjust(white, $lightness: -10%);
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: $banana;
+      cursor: pointer;
+    }
+
+    output {
+      flex: 0 0 70px;
+      text-align: right;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: $off-white;
+    }
+
+    input[type="text"],
+    input.dev-sound-text-number {
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      padding: 6px 10px;
+      background-color: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 3px;
+      color: $off-white;
+      text-align: right;
+
+      &:focus {
+        outline: none;
+        border-color: $banana;
+        background-color: rgba(0, 0, 0, 0.6);
+      }
+
+      &.invalid {
+        border-color: #d97070;
+        color: #f0a8a8;
+      }
+    }
+
+    select {
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      padding: 6px 10px;
+      background-color: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+      color: $off-white;
+
+      &:focus {
+        outline: none;
+        border-color: $banana;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+
+      option {
+        background-color: #1a1a1a;
+        color: $off-white;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Per-sound action row (Play / Sample / Reset / Copy) lives at the top of
+  // the knob panel for quick access. Inherits .dev-options-button-row layout
+  // pattern but namespaced.
+  // ---------------------------------------------------------------------------
+  .dev-sound-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .button {
+      flex: 1;
+      min-width: 100px;
+      font-family: $rubik;
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      background-color: rgba(0, 0, 0, 0.25);
+      color: inherit;
+      transition: all 0.15s ease-in-out;
+
+      &:hover:not(:disabled) {
+        background-color: rgba(0, 0, 0, 0.45);
+        border-color: $banana;
+        color: $banana;
+      }
+
+      &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      &.danger {
+        border-color: rgba(217, 112, 112, 0.7);
+
+        &:hover {
+          border-color: #d97070;
+          color: #f0a8a8;
+        }
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Profile cards (one per Sound Profile in a profile_synth sound) and the
+  // nested effect cards inside each profile.
+  // ---------------------------------------------------------------------------
+  .dev-sound-profile-list,
+  .dev-sound-effect-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .dev-sound-profile-card,
+  .dev-sound-effect-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.18);
+
+    .dev-sound-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+
+      h3 {
+        font-family: $start-2p;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+        color: color.adjust($banana, $lightness: -10%);
+        margin: 0;
+      }
+
+      .dev-sound-card-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      select {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        padding: 4px 8px;
+        background-color: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 3px;
+        color: $off-white;
+      }
+
+      button {
+        font-family: $rubik;
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        background-color: rgba(0, 0, 0, 0.3);
+        color: inherit;
+
+        &:hover {
+          border-color: #d97070;
+          color: #f0a8a8;
+        }
+      }
+    }
+  }
+
+  .dev-sound-effect-card {
+    margin-left: 18px;
+    background-color: rgba(0, 0, 0, 0.28);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .dev-sound-effects-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: color.adjust(white, $lightness: -30%);
+    margin-top: 4px;
+  }
+
+  .dev-sound-add-button {
+    align-self: flex-start;
+    font-family: $rubik;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px dashed rgba(255, 255, 255, 0.4);
+    background-color: rgba(0, 0, 0, 0.25);
+    color: inherit;
+    margin-left: 18px;
+
+    &:hover {
+      border-style: solid;
+      border-color: $banana;
+      color: $banana;
+    }
+
+    &.dev-sound-add-profile-button {
+      align-self: stretch;
+      margin-left: 0;
+      padding: 8px 12px;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Section divider + heading + hint — used to separate the bespoke
+  // tunable_recipe knob list from the optional extra Sound Profiles you
+  // can layer on top.
+  // ---------------------------------------------------------------------------
+  .dev-sound-section-divider {
+    margin-top: 18px;
+    margin-bottom: 12px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.18);
+  }
+
+  .dev-sound-section-heading {
+    font-family: $rubik;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: color.adjust(white, $lightness: -10%);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .dev-sound-section-hint {
+    font-size: 12px;
+    color: color.adjust(white, $lightness: -35%);
+    margin: 0 0 10px;
+    line-height: 1.4;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Inline status bubble — used after Copy values to flash success/failure.
+  // ---------------------------------------------------------------------------
+  .dev-sound-status {
+    font-size: 12px;
+    color: color.adjust(white, $lightness: -25%);
+    min-height: 16px;
+
+    &.ok { color: #7bd06b; }
+    &.err { color: #f0a8a8; }
+  }
+
+  @media (max-width: 720px) {
+    .dev-sound-sandbox-header {
+      padding: 20px 20px 14px;
+
+      h1 { font-size: 16px; }
+    }
+
+    .dev-sound-sandbox-body {
+      padding: 16px 18px 20px;
+    }
+
+    .dev-sound-sandbox-actions {
+      padding: 14px 20px 20px;
+    }
+  }
+}

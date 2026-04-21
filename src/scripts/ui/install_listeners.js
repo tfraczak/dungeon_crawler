@@ -1,8 +1,13 @@
 import { newGame } from "@core/lifecycle";
 import installDevOptionsDrawer from "./dev_options_drawer";
+import installSoundSandbox from "./sound_sandbox/install";
 
 export default (gameState) => {
+  // Both dev drawers gate themselves internally via NODE_ENV. The header
+  // trigger icons and drawer markup carry `.dev-only`, hidden by CSS in
+  // production via `body:not(.dev-mode) .dev-only`.
   installDevOptionsDrawer(gameState);
+  installSoundSandbox(gameState);
 
   const keys = gameState.keys;
 

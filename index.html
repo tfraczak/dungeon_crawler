@@ -42,6 +42,7 @@
         <nav id="links-nav">
           <ul>
             <li class="dev-only"><a id="dev-options-link" href="#" title="Dev Options" aria-label="Dev Options"><i class="fas fa-wrench"></i></a></li>
+            <li class="dev-only"><a id="dev-sound-sandbox-link" href="#" title="Dev Sound Sandbox" aria-label="Dev Sound Sandbox"><i class="fas fa-music"></i></a></li>
             <li><a href="https://www.github.com/tfraczak" target="_blank"><i class="fab fa-github"></i></a></li>
             <li><a href="https://www.linkedin.com/in/tfraczak/" target="_blank"><i class="fab fa-linkedin-in"></i></a></li>
           </ul>
@@ -204,6 +205,28 @@
             <button type="submit" id="dev-options-apply" class="button apply">Apply</button>
           </div>
         </form>
+      </div>
+    </aside>
+
+    <aside id="dev-sound-sandbox-page" class="dev-sound-sandbox-page dev-only" aria-hidden="true">
+      <div class="dev-sound-sandbox-panel">
+        <header class="dev-sound-sandbox-header">
+          <h1>Dev Sound Sandbox</h1>
+          <button id="dev-sound-sandbox-close" type="button" class="button back-button" aria-label="Close">&larr; Close</button>
+        </header>
+
+        <div class="dev-sound-sandbox-body">
+          <div class="dev-sound-sandbox-picker">
+            <label for="dev-sound-sandbox-select">Sound</label>
+            <select id="dev-sound-sandbox-select" aria-label="Pick a sound to tune"></select>
+            <div class="dev-sound-actions" id="dev-sound-sandbox-top-actions">
+              <button type="button" id="dev-sound-sandbox-add-custom" class="button">+ Add experimental sound</button>
+            </div>
+          </div>
+
+          <div id="dev-sound-sandbox-knob-slot"></div>
+          <div id="dev-sound-sandbox-status" class="dev-sound-status" role="status"></div>
+        </div>
       </div>
     </aside>
 

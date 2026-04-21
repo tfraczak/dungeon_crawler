@@ -1,18 +1,37 @@
 import getAudioContext from "@core/audio_context";
 
-// Quick whoosh — high-passed noise sweep for a miss
-export function playSlashWhiff() {
+// Slash whiff -- highpass noise sweep for a swing that misses.
+export const SLASH_WHIFF_PARAMS = Object.freeze({
+  duration: 0.12,
+  gain: 0.2,
+  filterStartFreq: 800,
+  filterEndFreq: 3000,
+});
+
+// Slash hit -- jagged stuttered bandpass-filtered noise simulating tearing
+// when the sword connects.
+export const SLASH_HIT_PARAMS = Object.freeze({
+  duration: 0.22,
+  rippleFreq: 300,
+  decayPow: 1.2,
+  gain: 0.4,
+  filterStartFreq: 900,
+  filterEndFreq: 300,
+  q: 0.8,
+});
+
+export function playSlashWhiff(overrides = {}) {
+  const params = { ...SLASH_WHIFF_PARAMS, ...overrides };
   const ctx = getAudioContext();
   const now = ctx.currentTime;
-  const duration = 0.12;
   const sampleRate = ctx.sampleRate;
-  const length = Math.floor(sampleRate * duration);
+  const length = Math.floor(sampleRate * params.duration);
   const buffer = ctx.createBuffer(1, length, sampleRate);
   const data = buffer.getChannelData(0);
 
   for (let i = 0; i < length; i++) {
     const t = i / length;
-    const envelope = Math.sin(t * Math.PI) * 0.2;
+    const envelope = Math.sin(t * Math.PI) * params.gain;
     data[i] = (Math.random() * 2 - 1) * envelope;
   }
 
@@ -21,32 +40,30 @@ export function playSlashWhiff() {
 
   const filter = ctx.createBiquadFilter();
   filter.type = "highpass";
-  filter.frequency.setValueAtTime(800, now);
-  filter.frequency.linearRampToValueAtTime(3000, now + duration);
+  filter.frequency.setValueAtTime(params.filterStartFreq, now);
+  filter.frequency.linearRampToValueAtTime(params.filterEndFreq, now + params.duration);
 
   source.connect(filter);
   filter.connect(ctx.destination);
   source.start();
 }
 
-// Ripping slash — jagged stuttered noise simulating tearing
-export function playSlashHit() {
+export function playSlashHit(overrides = {}) {
+  const params = { ...SLASH_HIT_PARAMS, ...overrides };
   const ctx = getAudioContext();
   const now = ctx.currentTime;
-  const duration = 0.22;
   const sampleRate = ctx.sampleRate;
-  const length = Math.floor(sampleRate * duration);
+  const length = Math.floor(sampleRate * params.duration);
   const buffer = ctx.createBuffer(1, length, sampleRate);
   const data = buffer.getChannelData(0);
 
-  const rippleFreq = 300;
   for (let i = 0; i < length; i++) {
     const t = i / length;
-    const decay = Math.pow(1 - t, 1.2);
-    const stutter = 0.4 + 0.6 * Math.abs(Math.sin(2 * Math.PI * rippleFreq * t));
+    const decay = Math.pow(1 - t, params.decayPow);
+    const stutter = 0.4 + 0.6 * Math.abs(Math.sin(2 * Math.PI * params.rippleFreq * t));
     const raw = Math.random() * 2 - 1;
     const clipped = Math.max(-0.5, Math.min(0.5, raw * 2));
-    data[i] = clipped * decay * stutter * 0.4;
+    data[i] = clipped * decay * stutter * params.gain;
   }
 
   const source = ctx.createBufferSource();
@@ -54,9 +71,9 @@ export function playSlashHit() {
 
   const filter = ctx.createBiquadFilter();
   filter.type = "bandpass";
-  filter.frequency.setValueAtTime(900, now);
-  filter.frequency.exponentialRampToValueAtTime(300, now + duration);
-  filter.Q.value = 0.8;
+  filter.frequency.setValueAtTime(params.filterStartFreq, now);
+  filter.frequency.exponentialRampToValueAtTime(params.filterEndFreq, now + params.duration);
+  filter.Q.value = params.q;
 
   source.connect(filter);
   filter.connect(ctx.destination);
