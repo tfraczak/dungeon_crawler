@@ -9,7 +9,8 @@ import Random from "@utils/random";
 import setupRoomCombat from "./combat";
 import { pickVariantIndex, getForcedConfig } from "./map_variants";
 import {
-  difficultyPoints,
+  enemyCountPoints,
+  enemyDifficultyPoints,
   pickEnemyType,
   targetEnemyCount,
 } from "./difficulty";
@@ -377,7 +378,8 @@ function createRoom(neighbor, gameState) {
 
   room.scaleToDifficulty = () => {
     if (devEnemySpawnCounts()) return;
-    room.lastScaledDifficultyPoints = difficultyPoints(session);
+    room.lastScaledEnemyCountPoints = enemyCountPoints(session);
+    room.lastScaledEnemyDifficultyPoints = enemyDifficultyPoints(session);
     room.lastScaledTargetCount = targetEnemyCount(session, room);
     room.spawnScaledEnemies(room.lastScaledTargetCount);
   };
