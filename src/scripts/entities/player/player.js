@@ -28,6 +28,62 @@ const makeColdShard = (width, height, index, count) => {
   };
 };
 
+const makeColdImpactShard = (player, index, count) => {
+  const ring = count <= 1 ? 0 : index / count;
+  const burstAngle = (ring * Math.PI * 2) + Random.range(-0.28, 0.28);
+  const speed = Random.range(0.55, 1.1);
+  const length = Random.range(5, 10);
+  const halfWidth = Random.range(1.1, 2.4);
+  const life = Random.int(28, 44);
+  const ellipseX = Math.cos(burstAngle);
+  const ellipseY = Math.sin(burstAngle) * 0.72;
+  const velocityScale = Math.hypot(ellipseX, ellipseY) || 1;
+
+  return {
+    x: player.center[0] + (ellipseX * Random.range(1, 4.5)),
+    y: player.center[1] + (ellipseY * Random.range(4, 9)),
+    vx: (ellipseX / velocityScale) * speed,
+    vy: (ellipseY / velocityScale) * speed,
+    dropZ: 0,
+    dropVz: Random.range(3.8, 6.4),
+    gravity: Random.range(0.28, 0.38),
+    angle: burstAngle + Random.range(-0.3, 0.3),
+    spin: Random.range(-0.16, 0.16),
+    life,
+    maxLife: life,
+    scale: Random.range(0.75, 1.15),
+    points: [
+      [length, 0],
+      [Random.range(2, 4), -halfWidth],
+      [Random.range(-1, 1), -halfWidth * 0.4],
+      [Random.range(-1, 1), halfWidth * 0.4],
+      [Random.range(2, 4), halfWidth],
+    ],
+  };
+};
+
+const updateColdImpactShards = (player) => {
+  if (player.coldImpactShards.length === 0) return;
+  for (const shard of player.coldImpactShards) {
+    if (shard.life <= 0) continue;
+    shard.life--;
+    shard.dropVz -= shard.gravity;
+    shard.dropZ += shard.dropVz;
+    shard.x += shard.vx;
+    shard.y += shard.vy;
+    shard.angle += shard.spin;
+
+    if (shard.dropZ <= 0) {
+      shard.dropZ = 0;
+      shard.dropVz = 0;
+      shard.vx *= 0.82;
+      shard.vy *= 0.82;
+      shard.spin *= 0.82;
+    }
+  }
+  player.coldImpactShards = player.coldImpactShards.filter(shard => shard.life > 0);
+};
+
 function createPlayer(pos, width, height, spritePalette, gameState) {
   const player = createEntity(pos, width, height, spritePalette);
   const cfg = GAME_CONFIG.entities.player;
@@ -48,6 +104,7 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
   player.coldTimer = 0;
   player.coldDuration = 0;
   player.coldShards = [];
+  player.coldImpactShards = [];
   player.hp = cfg.hp;
   player.strength = cfg.strength;
   player.stride = {
@@ -168,6 +225,14 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
       { length: count },
       (_, index) => makeColdShard(player.width, player.height, index, count),
     );
+    const impactCount = Random.int(8, 12);
+    player.coldImpactShards.push(
+      ...Array.from(
+        { length: impactCount },
+        (_, index) => makeColdImpactShard(player, index, impactCount),
+      ),
+    );
+    player.coldImpactShards = player.coldImpactShards.slice(-36);
   };
 
   const coldMask = typeof document === "undefined" ? null : document.createElement("canvas");
@@ -273,6 +338,26 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
       }
       ctx.restore();
     }
+    for (const shard of player.coldImpactShards) {
+      const alpha = Math.max(0, shard.life / shard.maxLife);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(shard.x, shard.y - shard.dropZ);
+      ctx.rotate(shard.angle);
+      ctx.scale(shard.scale, shard.scale);
+      ctx.fillStyle = "rgba(155, 230, 255, 0.82)";
+      ctx.strokeStyle = "rgba(240, 252, 255, 0.95)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      shard.points.forEach(([x, y], idx) => {
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
     player.flyingHitBox.draw(ctx);
   };
 
@@ -287,6 +372,7 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
 
     if (player.coldTimer > 0) player.coldTimer--;
     if (player.coldTimer < 0) player.coldTimer = 0;
+    updateColdImpactShards(player);
 
     player.sprinting = shift && player.stamina > 0 && moving;
     if (player.sprinting) {
