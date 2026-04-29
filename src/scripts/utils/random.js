@@ -26,7 +26,16 @@ const Random = {
   // semantics); callers that need a number should wrap with Number(...).
   weightedPick: (weights) => {
     let total = 0;
-    for (const w of Object.values(weights)) total += w;
+    for (const w of Object.values(weights)) {
+      if (!Number.isFinite(w) || w < 0) {
+        throw new Error(`weightedPick received invalid weight: ${w}`);
+      }
+      total += w;
+    }
+    if (total <= 0) {
+      throw new Error("weightedPick requires at least one positive weight");
+    }
+
     let r = Math.random() * total;
     let lastKey;
     for (const [value, w] of Object.entries(weights)) {

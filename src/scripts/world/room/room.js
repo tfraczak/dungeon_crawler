@@ -2,13 +2,11 @@ import createWall from "@world/wall";
 import createCoin from "@entities/coin/coin";
 import createEnemy from "@entities/enemy/enemy";
 import createLadder from "@entities/ladder/ladder";
-import createPoof from "@effects/poof";
-import playPoofSound from "@entities/enemy/sound";
-import { playSlashHit, playSlashWhiff } from "@items/equipment/weapons/swords/sound";
 import * as GAME_CONFIG from "@core/game_config";
 import DEV_FLAGS from "@core/dev_flags";
 import { shuffle } from "@utils/helpers";
 import Random from "@utils/random";
+import setupRoomCombat from "./combat";
 import { pickVariantIndex, getForcedConfig } from "./map_variants";
 import {
   difficultyPoints,
@@ -192,7 +190,6 @@ function createRoom(neighbor, gameState) {
 
   room.enemies = {};
   room.enemyProjectiles = [];
-  room.enemyRespawns = [];
   const enemySpawnMax = enemySpawnCfg.max - 1;
 
   const devEnemySpawnCounts = () => {
@@ -208,6 +205,7 @@ function createRoom(neighbor, gameState) {
 
   const addEnemy = (enemy) => {
     enemy.room = room;
+    enemy.id ??= uniqueEnemyId();
     let key = `${enemy.pos}`;
     let suffix = 1;
     while (room.enemies[key]) {
@@ -218,6 +216,26 @@ function createRoom(neighbor, gameState) {
   };
 
   room.addEnemy = addEnemy;
+
+  const roomKey = () => `${room.nodePos}`;
+
+  const roomRespawns = () => session.enemyRespawns[roomKey()] ?? [];
+
+  const setRoomRespawns = (respawns) => {
+    if (respawns.length === 0) {
+      delete session.enemyRespawns[roomKey()];
+    } else {
+      session.enemyRespawns[roomKey()] = respawns;
+    }
+  };
+
+  const uniqueEnemyId = () => {
+    let id;
+    do {
+      id = Math.random().toString(16).slice(2, 9);
+    } while (Object.values(room.enemies).some(enemy => enemy.id === id));
+    return id;
+  };
 
   room.addEnemyProjectile = (projectile) => {
     room.enemyProjectiles.push(projectile);
@@ -282,7 +300,7 @@ function createRoom(neighbor, gameState) {
     return true;
   };
 
-  room.spawnEnemy = (type, totalEnemies, spawnPos = null) => {
+  room.spawnEnemy = (type, totalEnemies, spawnPos = null, id = null) => {
     const pos = spawnPos ?? [
       Random.int(enemySpawnCfg.min, enemySpawnMax),
       Random.int(enemySpawnCfg.min, enemySpawnMax),
@@ -297,22 +315,26 @@ function createRoom(neighbor, gameState) {
       detectDist,
       gameState,
     });
+    if (!enemy) return;
+    if (id) enemy.id = id;
     addEnemy(enemy);
   };
 
   room.scheduleEnemyRespawn = (enemy, now = Date.now()) => {
-    room.enemyRespawns.push({
+    setRoomRespawns([...roomRespawns(), {
+      id: enemy.id ?? uniqueEnemyId(),
       type: enemy.type,
       respawnAt: now + enemyCfg.respawnDelayMs,
-    });
+    }]);
   };
 
   room.tickEnemyRespawns = (now = Date.now()) => {
-    if (room.enemyRespawns.length === 0) return;
+    const respawns = roomRespawns();
+    if (respawns.length === 0) return;
 
     const pending = [];
     const due = [];
-    for (const respawn of room.enemyRespawns) {
+    for (const respawn of respawns) {
       if (respawn.respawnAt <= now) {
         due.push(respawn);
       } else {
@@ -320,15 +342,17 @@ function createRoom(neighbor, gameState) {
       }
     }
 
-    room.enemyRespawns = pending;
+    setRoomRespawns(pending);
     if (due.length === 0) return;
 
     const totalEnemies = Math.max(1, Object.keys(room.enemies).length + due.length);
     for (const respawn of due) {
       const type = devEnemySpawnCounts() ? respawn.type : pickEnemyType(session);
-      room.spawnEnemy(type, totalEnemies);
+      room.spawnEnemy(type, totalEnemies, null, respawn.id);
     }
   };
+
+  setupRoomCombat(room, gameState);
 
   room.spawnEnemies = (counts) => {
     const totalToSpawn = Object.values(counts).reduce((total, count) => total + count, 0);
@@ -343,7 +367,7 @@ function createRoom(neighbor, gameState) {
   room.spawnScaledEnemies = (targetCount = targetEnemyCount(session, room)) => {
     if (devEnemySpawnCounts()) return;
     const liveEnemies = Object.keys(room.enemies).length;
-    const pendingRespawns = room.enemyRespawns.length;
+    const pendingRespawns = roomRespawns().length;
     const countToSpawn = Math.max(0, targetCount - liveEnemies - pendingRespawns);
     const totalEnemies = Math.max(1, liveEnemies + countToSpawn);
     for (let i = 0; i < countToSpawn; i++) {
@@ -368,8 +392,6 @@ function createRoom(neighbor, gameState) {
   const configuredSpawnCounts = devEnemySpawnCounts();
   if (configuredSpawnCounts) {
     room.spawnEnemies(configuredSpawnCounts);
-  } else {
-    room.scaleToDifficulty();
   }
 
   room.scatterEnemies = () => {
@@ -450,49 +472,6 @@ function createRoom(neighbor, gameState) {
       player.wallCheckKnockback(room.walls);
       player.updateSides();
       enemy.updateSides();
-    }
-  };
-
-  // Runs every frame while the player is attacking. The weapon's full
-  // arc hitbox is tested against each enemy's collision box. Each enemy
-  // can only be hit once per swing (tracked by player.attackHitIds).
-  // On contact: roll damage, apply knockback, and kill if HP depleted.
-  // Whiff sound plays only if the entire swing completes with zero hits.
-  room.resolvePlayerAttack = (player) => {
-    if (!player.isAttacking()) return;
-
-    const weapon = player.weapon;
-    const hitbox = player.attackHitbox();
-    let hitAny = false;
-
-    for (const [key, enemy] of Object.entries(room.enemies)) {
-      if (player.attackHitIds.has(key)) continue;
-      if (weapon.hitsTarget(hitbox, enemy.colBox)) {
-        hitAny = true;
-        player.attackHitIds.add(key);
-        enemy.takeDamage(weapon.rollDamage(), weapon.knockback);
-        if (!enemy.alive()) {
-          const [poofX, poofY] = enemy.colBox.center;
-          room.poofs.push(createPoof(poofX, poofY));
-          playPoofSound();
-          const drops = enemy.drop();
-          for (const coin of drops.coins) {
-            room.coins[coin.id] = coin;
-          }
-          for (const potion of drops.hpPotions) {
-            room.hpPotions[potion.id] = potion;
-          }
-          session.enemiesKilled = (session.enemiesKilled ?? 0) + 1;
-          room.scheduleEnemyRespawn(enemy);
-          delete room.enemies[key];
-        }
-      }
-    }
-
-    if (hitAny) {
-      playSlashHit();
-    } else if (player.attackTimer === 1 && player.attackHitIds.size === 0) {
-      playSlashWhiff();
     }
   };
 

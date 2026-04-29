@@ -28,6 +28,7 @@ export const roomChange = (exitDir, currRoom, gameState) => {
     addValidNeighbors(currRoom, gameState);
     addValidNeighbors(session.game.room, gameState);
   }
+  session.game.room.tickEnemyRespawns();
   session.game.room.scaleToDifficulty();
   // Win-condition ladder gets a fresh roll every time the player ENTERS a
   // room (newly-created or cached). Each room internally tracks whether it

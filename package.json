@@ -1,13 +1,15 @@
 {
   "name": "dungeon_crawler",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "*Dungeon Crawler 3000 is a JavaScript browser game where a player can explore a procedurally generated dungeon.*",
   "scripts": {
     "serve": "NODE_ENV=development webpack serve --config webpack.dev.js",
     "watch": "NODE_ENV=development webpack --watch --config webpack.dev.js",
     "build": "NODE_ENV=production webpack --config webpack.prod.js",
     "build:dev": "NODE_ENV=development webpack --config webpack.dev.js",
-    "lint": "eslint src/"
+    "lint": "yarn lint:scripts && yarn lint:styles",
+    "lint:scripts": "eslint src/",
+    "lint:styles": "stylelint \"src/styles/**/*.scss\""
   },
   "repository": {
     "type": "git",
@@ -37,6 +39,8 @@
     "postcss-loader": "^8.1.1",
     "sass": "^1.86.0",
     "sass-loader": "^16.0.4",
+    "stylelint": "^17.9.1",
+    "stylelint-config-standard-scss": "^17.0.0",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.0",

@@ -121,6 +121,7 @@ function createGame(gameState) {
 
   gameState.session.player = game.player;
   gameState.session.rooms = {};
+  gameState.session.enemyRespawns = {};
   gameState.session.game = game;
   gameState.session.stop = false;
   gameState.session.coinCount = 0;
@@ -327,7 +328,7 @@ function createGame(gameState) {
 
         game.stop();
       } else {
-        Object.values(session.rooms).forEach(room => room.tickEnemyRespawns(now));
+        game.room.tickEnemyRespawns(now);
         game.player.move(game.room.walls);
         Object.values(game.room.enemies).forEach(enemy => enemy.move(game.room.walls));
         game.room.updateEnemyProjectiles(game.player);

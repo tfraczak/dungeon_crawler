@@ -8,7 +8,7 @@ function createGameStart(gameState) {
   const playerSprite = gameState.gameOptions.playerSprite;
 
   const gs = {
-    fpsInterval: 1000 / 60,
+    fpsInterval: 1000 / GAME_CONFIG.game.fps,
     theta: Math.random() * Math.PI * 20,
   };
 

@@ -21,7 +21,7 @@ Each room is generated the moment you step through a doorway, so no two runs pla
 
 - Procedurally generated, infinite room graph (1–4 exits per room, weighted toward 2-exit rooms).
 - Sword combat with directional swings, knockback, stamina costs, and post-hit invulnerability windows.
-- Wandering blob enemies with line-of-sight detection and chase logic.
+- Wandering monsters with line-of-sight detection, chase logic, and varied behaviors.
 - Pickups: gold coins (the win currency) and HP potions (dropped by enemies).
 - Custom collision-box system tuned to character feet, so hits feel fair.
 - Hand-rolled web-audio engine for SFX — no audio assets streamed at runtime.

@@ -11,7 +11,12 @@ const ENEMY_FACTORIES = Object.freeze({
 });
 
 function createEnemy({ pos, width, height, spritePalette, type, detectDist, gameState }) {
-  const createTypedEnemy = ENEMY_FACTORIES[type] ?? createBlobEnemy;
+  const createTypedEnemy = ENEMY_FACTORIES[type];
+  if (!createTypedEnemy) {
+    console.error(`Unknown enemy type: ${type}`);
+    return null;
+  }
+
   return createTypedEnemy({ pos, width, height, spritePalette, detectDist, gameState });
 }
 
