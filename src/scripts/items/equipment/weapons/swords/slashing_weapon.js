@@ -14,6 +14,11 @@ function bladeGeometry(range) {
   };
 }
 
+function attackProgress(attackTimer, duration) {
+  if (!Number.isFinite(attackTimer)) return 1;
+  return Math.max(0, Math.min(1, 1 - (attackTimer / duration)));
+}
+
 function createSlashingWeapon({
   defaults,
   overrides = {},
@@ -39,7 +44,7 @@ function createSlashingWeapon({
   weapon.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
   weapon.sprite = overrides.sprite ?? null;
 
-  weapon.computeHitbox = (center, facing) => {
+  weapon.computeHitbox = (center, facing, attackTimer) => {
     const [cx, cy] = center;
     const halfArc = weapon.arc / 2;
     let baseAngle;
@@ -49,22 +54,23 @@ function createSlashingWeapon({
       case "left":  baseAngle = Math.PI; break;
       case "right": baseAngle = 0; break;
     }
+    const startAngle = baseAngle - halfArc;
+    const progress = attackProgress(attackTimer, weapon.duration);
     return {
       x: cx,
       y: cy,
       range: weapon.range,
-      startAngle: baseAngle - halfArc,
-      endAngle: baseAngle + halfArc,
+      startAngle,
+      endAngle: startAngle + (weapon.arc * progress),
       baseAngle,
     };
   };
 
   weapon.drawSlash = (ctx, center, facing, attackTimer) => {
-    const hitbox = weapon.computeHitbox(center, facing);
-    const progress = 1 - (attackTimer / weapon.duration);
-    const arcSpan = hitbox.endAngle - hitbox.startAngle;
+    const hitbox = weapon.computeHitbox(center, facing, attackTimer);
+    const progress = attackProgress(attackTimer, weapon.duration);
     const sweepStart = hitbox.startAngle;
-    const sweepEnd = hitbox.startAngle + arcSpan * progress;
+    const sweepEnd = hitbox.endAngle;
     const { slashOuterR: outerR, slashInnerR: innerR } = bladeGeometry(hitbox.range);
     const alpha = Math.max(0, 0.85 * (1 - progress * 0.5));
 

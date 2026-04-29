@@ -225,7 +225,7 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
   player.isAttacking = () => player.attackTimer > 0;
 
   player.attackHitbox = () =>
-    player.weapon.computeHitbox(player.center, player.facing);
+    player.weapon.computeHitbox(player.center, player.facing, player.attackTimer);
 
   const baseDraw = player.draw;
   player.draw = (ctx) => {
