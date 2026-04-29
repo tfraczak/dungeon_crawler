@@ -1,34 +1,52 @@
 // UI click — Mechanical button click used by restart and how-to buttons.
 //
-// Built atop the generic Sound Profile runtime so the Dev Sound Sandbox
-// drawer can tune it (and any custom variant) using the same plumbing as
-// every other profile_synth entry. Runtime production code paths still use
-// the bundled `restart-sound` <audio> element; `playClick` is consumed
-// exclusively by the sandbox today, but lives here as the canonical click
-// sound module so a future swap-in is a one-line change at the call site.
+// Built atop the generic Sound Profile runtime so the Dev Sound Sandbox drawer
+// can tune it using the same plumbing as every other profile_synth entry.
 
 import { playProfileSynth } from "@core/profile_synth";
 
-// Two layers played together: a short bandpass-filtered noise transient
-// for the "tick", plus a low sine body for the audible "thunk". Each layer
-// is an independent Sound Profile fired at the same `startOffset`.
+// Mechanical three-layer button click: bright distorted transient, lower sine
+// body, and a short high-frequency tail.
 export const DEFAULT_CLICK_PROFILES = Object.freeze([
   Object.freeze({
-    type: "noise_filter",
+    type: "oscillator",
+    oscillatorType: "sine",
+    frequency: 2443,
     startOffset: 0,
-    duration: 0.03,
-    gain: 0.25,
-    filterType: "bandpass",
-    frequency: 2400,
-    q: 6,
+    duration: 0.02,
+    gain: 0.27,
+    effects: Object.freeze([
+      Object.freeze({
+        type: "distortion",
+        amount: 8,
+        oversample: "4x",
+      }),
+      Object.freeze({
+        type: "filter",
+        filterType: "lowpass",
+        frequency: 3099,
+        q: 3.4,
+        gain: 0,
+      }),
+    ]),
   }),
   Object.freeze({
     type: "oscillator",
-    startOffset: 0,
-    duration: 0.04,
-    gain: 0.15,
+    startOffset: 0.01,
+    duration: 0.05,
+    gain: 0.16,
     oscillatorType: "sine",
-    frequency: 600,
+    frequency: 828,
+    effects: Object.freeze([]),
+  }),
+  Object.freeze({
+    type: "oscillator",
+    startOffset: 0.05,
+    duration: 0.04,
+    gain: 0.11,
+    oscillatorType: "sine",
+    frequency: 2420,
+    effects: Object.freeze([]),
   }),
 ]);
 

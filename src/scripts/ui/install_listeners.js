@@ -1,4 +1,5 @@
 import { newGame } from "@core/lifecycle";
+import { playClick } from "./sound";
 import installDevOptionsDrawer from "./dev_options_drawer";
 import installSoundSandbox from "./sound_sandbox/install";
 
@@ -62,7 +63,7 @@ export default (gameState) => {
   howTo.addEventListener("mouseenter", () => {
     howToPointer.classList.add("active");
     howTo.classList.add("active");
-    document.getElementById("how-to-sound").play().catch(() => {});
+    playClick();
   });
   howTo.addEventListener("mouseleave", () => {
     howToPointer.classList.remove("active");
@@ -95,7 +96,7 @@ export default (gameState) => {
 
   const restart = document.getElementById("restart");
   restart.addEventListener("mouseenter", () => {
-    document.getElementById("restart-sound").play().catch(() => {});
+    playClick();
     document.getElementById("restart").classList.add("active");
     document.getElementById("restart-pointer").classList.add("active");
   });

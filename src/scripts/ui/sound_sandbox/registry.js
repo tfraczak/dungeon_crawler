@@ -235,7 +235,6 @@ const BUILT_IN_ENTRIES = [
     constName: "DEFAULT_CLICK_PROFILES",
     defaults: { profiles: DEFAULT_CLICK_PROFILES },
     play: (overrides) => playClick(overrides?.profiles ?? overrides),
-    sample: { audioElementId: "restart-sound" },
   },
 ];
 
