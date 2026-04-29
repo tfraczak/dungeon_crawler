@@ -124,6 +124,7 @@ function createGame(gameState) {
   gameState.session.game = game;
   gameState.session.stop = false;
   gameState.session.coinCount = 0;
+  gameState.session.enemiesKilled = 0;
 
   // Win-condition climb cinematic state. The lifecycle is:
   //   1. Player walks onto a spawned ladder -> room.collect() calls
@@ -326,8 +327,10 @@ function createGame(gameState) {
 
         game.stop();
       } else {
+        Object.values(session.rooms).forEach(room => room.tickEnemyRespawns(now));
         game.player.move(game.room.walls);
         Object.values(game.room.enemies).forEach(enemy => enemy.move(game.room.walls));
+        game.room.updateEnemyProjectiles(game.player);
         game.room.resolveEnemyCollisions();
         game.room.resolvePlayerEnemyCollisions(game.player);
         game.room.resolvePlayerAttack(game.player);
@@ -350,12 +353,24 @@ function createGame(gameState) {
           if (ay !== by) return ay - by;
           return (a.pos[0] + a.width) - (b.pos[0] + b.width);
         });
-        entities.forEach(entity => entity.draw(ctx));
 
-        if (game.player.isAttacking()) {
+        const shouldDrawWeaponBehindPlayer = (
+          game.player.isAttacking()
+          && game.player.facing === "up"
+          && game.player.weapon.drawBehindPlayerWhenFacingUp !== false
+        );
+        for (const entity of entities) {
+          if (shouldDrawWeaponBehindPlayer && entity === game.player) {
+            game.player.weapon.drawSlash(ctx, game.player.center, game.player.facing, game.player.attackTimer);
+          }
+          entity.draw(ctx);
+        }
+
+        if (game.player.isAttacking() && !shouldDrawWeaponBehindPlayer) {
           game.player.weapon.drawSlash(ctx, game.player.center, game.player.facing, game.player.attackTimer);
         }
 
+        game.room.drawEnemyProjectiles(ctx);
         game.room.poofs.forEach(p => p.draw(ctx));
 
         if (game.camera) {

@@ -139,14 +139,34 @@
             <label class="dev-check"><input type="checkbox" name="godMode" /> <span>God mode</span></label>
             <label class="dev-check"><input type="checkbox" name="infiniteStamina" /> <span>Infinite stamina</span></label>
             <label class="dev-check"><input type="checkbox" name="oneShot" /> <span>One-shot kills</span></label>
+            <label class="dev-field">
+              <span>Weapon</span>
+              <select name="playerWeapon"></select>
+            </label>
           </section>
 
           <section class="dev-options-section">
             <h2>Enemy Overrides</h2>
-            <p class="dev-options-hint">Leave blank to use the game default shown in each field. Enemy HP only affects newly-spawned enemies. Drop rate REPLACES each item's configured chance with the same value (only used when forced drops is blank). Forced drops BYPASSES the chance roll entirely and spawns exactly that many copies of every drop entry per kill — set 25 to make every kill drop 25 coins and 25 potions; set 0 to disable drops; leave blank to use the configured chance behavior.</p>
+            <p class="dev-options-hint">Leave blank to use the game default shown in each field. Enemy HP only affects newly-spawned enemies. Monster spawn counts add that many monsters to the current room when applied, and override procedural spawns in newly-generated rooms while any count is set. Drop rate REPLACES each item's configured chance with the same value (only used when forced drops is blank). Forced drops BYPASSES the chance roll entirely and spawns exactly that many copies of every drop entry per kill — set 25 to make every kill drop 25 coins and 25 potions; set 0 to disable drops; leave blank to use the configured chance behavior.</p>
             <label class="dev-field">
               <span>Enemy HP</span>
               <input type="number" name="enemyHp" step="1" min="1" inputmode="numeric" />
+            </label>
+            <label class="dev-field">
+              <span>Spawn bats</span>
+              <input type="number" name="enemyBatSpawnCount" step="1" min="0" inputmode="numeric" />
+            </label>
+            <label class="dev-field">
+              <span>Spawn blobs</span>
+              <input type="number" name="enemyBlobSpawnCount" step="1" min="0" inputmode="numeric" />
+            </label>
+            <label class="dev-field">
+              <span>Spawn goblins</span>
+              <input type="number" name="enemyGoblinSpawnCount" step="1" min="0" inputmode="numeric" />
+            </label>
+            <label class="dev-field">
+              <span>Spawn skeletons</span>
+              <input type="number" name="enemySkeletonSpawnCount" step="1" min="0" inputmode="numeric" />
             </label>
             <label class="dev-field">
               <span>Enemy drop rate</span>

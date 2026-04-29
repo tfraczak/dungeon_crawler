@@ -15,7 +15,7 @@ import playCoinSound, { playCoinDrop, COIN_PICKUP_PARAMS, COIN_DROP_PARAMS } fro
 import playHpPotionSound, { playHpPotionDrop, HP_POTION_PICKUP_PARAMS, HP_POTION_DROP_PARAMS } from "@entities/hp_potion/sound";
 import playFootstep, { FOOTSTEP_PARAMS } from "@entities/player/sound";
 import playPoofSound, { POOF_PARAMS } from "@entities/enemy/sound";
-import { playSlashHit, playSlashWhiff, SLASH_HIT_PARAMS, SLASH_WHIFF_PARAMS } from "@items/equipment/weapons/sword/sound";
+import { playSlashHit, playSlashWhiff, SLASH_HIT_PARAMS, SLASH_WHIFF_PARAMS } from "@items/equipment/weapons/swords/sound";
 import { playClick, DEFAULT_CLICK_PROFILES } from "@ui/sound";
 
 // ---------------------------------------------------------------------------
@@ -194,7 +194,7 @@ const BUILT_IN_ENTRIES = [
     defaultDescription: "Stuttered bandpass noise burst when the sword connects",
     category: "Game sounds",
     kind: "tunable_recipe",
-    sourceFile: "src/scripts/items/equipment/weapons/sword/sound.js",
+    sourceFile: "src/scripts/items/equipment/weapons/swords/sound.js",
     constName: "SLASH_HIT_PARAMS",
     defaults: SLASH_HIT_PARAMS,
     play: (overrides) => playSlashHit(overrides),
@@ -214,7 +214,7 @@ const BUILT_IN_ENTRIES = [
     defaultDescription: "Highpass noise sweep for a sword swing that misses",
     category: "Game sounds",
     kind: "tunable_recipe",
-    sourceFile: "src/scripts/items/equipment/weapons/sword/sound.js",
+    sourceFile: "src/scripts/items/equipment/weapons/swords/sound.js",
     constName: "SLASH_WHIFF_PARAMS",
     defaults: SLASH_WHIFF_PARAMS,
     play: (overrides) => playSlashWhiff(overrides),

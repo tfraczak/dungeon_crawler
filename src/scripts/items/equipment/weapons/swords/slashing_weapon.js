@@ -1,32 +1,47 @@
 import createWeapon from "@items/equipment/weapons/weapon";
-import * as GAME_CONFIG from "@core/game_config";
 
-// Sword: an arc-shaped melee weapon.
-// Inherits from createWeapon (equipment > item). Instance stats default
-// from GAME_CONFIG.items.equipment.weapons.sword but can be overridden per
-// sword variant.
-function createSword(overrides = {}) {
-  const defaults = GAME_CONFIG.items.equipment.weapons.sword;
-  const sword = createWeapon({
-    name: overrides.name ?? "Sword",
-    description: overrides.description ?? "A trusty blade",
+const SWORD_SPRITE_SIZE = 48;
+const SWORD_NATURAL_BLADE_ANGLE = -Math.PI / 4;
+const SWORD_SPRITE_CENTER_RANGE_RATIO = 0.74;
+const SLASH_OUTER_RANGE_RATIO = 0.92;
+const SLASH_INNER_RANGE_RATIO = 0.56;
+
+function bladeGeometry(range) {
+  return {
+    spriteCenterR: range * SWORD_SPRITE_CENTER_RANGE_RATIO,
+    slashOuterR: range * SLASH_OUTER_RANGE_RATIO,
+    slashInnerR: range * SLASH_INNER_RANGE_RATIO,
+  };
+}
+
+function createSlashingWeapon({
+  defaults,
+  overrides = {},
+  type,
+  name,
+  description,
+}) {
+  const weapon = createWeapon({
+    name: overrides.name ?? name,
+    description: overrides.description ?? description,
     damageMin: overrides.damageMin ?? defaults.damageMin,
     damageMax: overrides.damageMax ?? defaults.damageMax,
     damageType: overrides.damageType ?? "slash",
     range: overrides.range ?? defaults.range,
     knockback: overrides.knockback ?? defaults.knockback,
+    type,
+    criticalChance: overrides.criticalChance ?? defaults.criticalChance,
+    criticalMultiplier: overrides.criticalMultiplier ?? defaults.criticalMultiplier,
   });
-  sword.arc = overrides.arc ?? defaults.arc;
-  sword.cooldown = overrides.cooldown ?? defaults.cooldown;
-  sword.duration = overrides.duration ?? defaults.duration;
-  sword.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
+  weapon.arc = overrides.arc ?? defaults.arc;
+  weapon.cooldown = overrides.cooldown ?? defaults.cooldown;
+  weapon.duration = overrides.duration ?? defaults.duration;
+  weapon.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
+  weapon.sprite = overrides.sprite ?? null;
 
-  // Returns the full arc wedge used for hit detection.
-  // The wedge is centered on baseAngle (the player's facing direction)
-  // and spans sword.arc radians, extending sword.range pixels from center.
-  sword.computeHitbox = (center, facing) => {
+  weapon.computeHitbox = (center, facing) => {
     const [cx, cy] = center;
-    const halfArc = sword.arc / 2;
+    const halfArc = weapon.arc / 2;
     let baseAngle;
     switch (facing) {
       case "up":    baseAngle = -Math.PI / 2; break;
@@ -37,24 +52,20 @@ function createSword(overrides = {}) {
     return {
       x: cx,
       y: cy,
-      range: sword.range,
+      range: weapon.range,
       startAngle: baseAngle - halfArc,
       endAngle: baseAngle + halfArc,
       baseAngle,
     };
   };
 
-  // Draws the animated slash crescent. The visual sweep grows from
-  // startAngle toward endAngle over the attack duration, with a tapered
-  // crescent shape, leading-edge glow, hilt, and crossguard.
-  sword.drawSlash = (ctx, center, facing, attackTimer) => {
-    const hitbox = sword.computeHitbox(center, facing);
-    const progress = 1 - (attackTimer / sword.duration);
+  weapon.drawSlash = (ctx, center, facing, attackTimer) => {
+    const hitbox = weapon.computeHitbox(center, facing);
+    const progress = 1 - (attackTimer / weapon.duration);
     const arcSpan = hitbox.endAngle - hitbox.startAngle;
     const sweepStart = hitbox.startAngle;
     const sweepEnd = hitbox.startAngle + arcSpan * progress;
-    const outerR = hitbox.range;
-    const innerR = hitbox.range * 0.4;
+    const { slashOuterR: outerR, slashInnerR: innerR } = bladeGeometry(hitbox.range);
     const alpha = Math.max(0, 0.85 * (1 - progress * 0.5));
 
     ctx.save();
@@ -88,58 +99,49 @@ function createSword(overrides = {}) {
     ctx.lineWidth = (outerR - innerR) * 0.3;
     ctx.stroke();
 
-    const hiltAngle = sweepEnd;
-    const hiltInner = innerR * 0.45;
-    const hiltOuter = innerR * 0.95;
-    ctx.beginPath();
-    ctx.moveTo(hitbox.x + Math.cos(hiltAngle) * hiltInner, hitbox.y + Math.sin(hiltAngle) * hiltInner);
-    ctx.lineTo(hitbox.x + Math.cos(hiltAngle) * hiltOuter, hitbox.y + Math.sin(hiltAngle) * hiltOuter);
-    ctx.strokeStyle = `rgba(60, 50, 70, ${alpha})`;
-    ctx.lineWidth = 3.5;
-    ctx.lineCap = "round";
-    ctx.stroke();
-
-    const crossLen = 5;
-    const perpAngle = hiltAngle + Math.PI / 2;
-    const guardX = hitbox.x + Math.cos(hiltAngle) * hiltOuter;
-    const guardY = hitbox.y + Math.sin(hiltAngle) * hiltOuter;
-    ctx.beginPath();
-    ctx.moveTo(guardX + Math.cos(perpAngle) * crossLen, guardY + Math.sin(perpAngle) * crossLen);
-    ctx.lineTo(guardX - Math.cos(perpAngle) * crossLen, guardY - Math.sin(perpAngle) * crossLen);
-    ctx.strokeStyle = `rgba(50, 40, 60, ${alpha})`;
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
+    weapon.drawSprite(ctx, hitbox, sweepEnd, alpha);
 
     ctx.restore();
   };
 
-  // Arc-wedge vs AABB collision. Returns true if any part of the arc
-  // wedge overlaps the target's collision box. Checks performed in
-  // order of increasing cost:
-  //   1. Nearest-point range reject (cheap bounding check)
-  //   2. Arc origin inside the box
-  //   3. Any box corner inside the wedge
-  //   4. Wedge straight edges (the two radii) intersect box edges
-  //   5. Circular arc boundary intersects box edges
-  sword.hitsTarget = (hitbox, colBox) => {
+  weapon.drawSprite = (ctx, hitbox, angle, alpha) => {
+    if (!weapon.sprite?.complete) return;
+
+    const { spriteCenterR } = bladeGeometry(weapon.range);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(
+      hitbox.x + Math.cos(angle) * spriteCenterR,
+      hitbox.y + Math.sin(angle) * spriteCenterR,
+    );
+    ctx.rotate(angle - SWORD_NATURAL_BLADE_ANGLE);
+    ctx.drawImage(
+      weapon.sprite,
+      -SWORD_SPRITE_SIZE / 2,
+      -SWORD_SPRITE_SIZE / 2,
+      SWORD_SPRITE_SIZE,
+      SWORD_SPRITE_SIZE,
+    );
+    ctx.restore();
+  };
+
+  weapon.hitsTarget = (hitbox, colBox) => {
     const bx = colBox.pos[0];
     const by = colBox.pos[1];
     const bw = colBox.width;
     const bh = colBox.height;
 
-    // 1. Quick range reject: closest point on AABB to arc origin
     const closestX = Math.max(bx, Math.min(hitbox.x, bx + bw));
     const closestY = Math.max(by, Math.min(hitbox.y, by + bh));
     const dx = closestX - hitbox.x;
     const dy = closestY - hitbox.y;
     if (dx * dx + dy * dy > hitbox.range * hitbox.range) return false;
 
-    // 2. Arc origin inside the box
     if (hitbox.x >= bx && hitbox.x <= bx + bw && hitbox.y >= by && hitbox.y <= by + bh) {
       return true;
     }
 
-    // 3. Any box corner inside the wedge (within range and angular bounds)
     const corners = [
       [bx, by], [bx + bw, by],
       [bx, by + bh], [bx + bw, by + bh],
@@ -148,27 +150,20 @@ function createSword(overrides = {}) {
       if (pointInWedge(cx, cy, hitbox)) return true;
     }
 
-    // 4. Wedge straight edges (radii at startAngle and endAngle) vs box
     if (segmentIntersectsBox(hitbox, hitbox.startAngle, bx, by, bw, bh)) return true;
     if (segmentIntersectsBox(hitbox, hitbox.endAngle, bx, by, bw, bh)) return true;
-
-    // 5. Circular arc boundary vs box edges
-    if (arcIntersectsBox(hitbox, bx, by, bw, bh)) return true;
-
-    return false;
+    return arcIntersectsBox(hitbox, bx, by, bw, bh);
   };
 
-  return sword;
+  return weapon;
 }
 
-// Shifts angle into the range [ref, ref + 2π] for comparison
 function normalizeAngle(angle, ref) {
   while (angle < ref) angle += Math.PI * 2;
   while (angle > ref + Math.PI * 2) angle -= Math.PI * 2;
   return angle;
 }
 
-// True if point (px, py) is within both the range and angular bounds of the wedge
 function pointInWedge(px, py, hitbox) {
   const dx = px - hitbox.x;
   const dy = py - hitbox.y;
@@ -177,14 +172,12 @@ function pointInWedge(px, py, hitbox) {
   return angle >= hitbox.startAngle && angle <= hitbox.endAngle;
 }
 
-// Tests if a wedge radius (line from arc origin at given angle) crosses the AABB
 function segmentIntersectsBox(hitbox, angle, bx, by, bw, bh) {
   const ex = hitbox.x + Math.cos(angle) * hitbox.range;
   const ey = hitbox.y + Math.sin(angle) * hitbox.range;
   return lineSegmentIntersectsAABB(hitbox.x, hitbox.y, ex, ey, bx, by, bw, bh);
 }
 
-// Tests a line segment against all four edges of an AABB
 function lineSegmentIntersectsAABB(x1, y1, x2, y2, bx, by, bw, bh) {
   const edges = [
     [bx, by, bx + bw, by],
@@ -198,7 +191,6 @@ function lineSegmentIntersectsAABB(x1, y1, x2, y2, bx, by, bw, bh) {
   return false;
 }
 
-// Standard two-segment intersection test using parametric t/u values
 function segmentsIntersect(ax, ay, bx, by, cx, cy, dx, dy) {
   const denom = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx);
   if (Math.abs(denom) < 1e-10) return false;
@@ -207,7 +199,6 @@ function segmentsIntersect(ax, ay, bx, by, cx, cy, dx, dy) {
   return t >= 0 && t <= 1 && u >= 0 && u <= 1;
 }
 
-// Tests the circular arc boundary against all four AABB edges
 function arcIntersectsBox(hitbox, bx, by, bw, bh) {
   const edges = [
     [bx, by, bx + bw, by],
@@ -221,7 +212,6 @@ function arcIntersectsBox(hitbox, bx, by, bw, bh) {
   return false;
 }
 
-// Circle-line intersection (quadratic), filtered to points within the arc's angular bounds
 function arcIntersectsSegment(hitbox, x1, y1, x2, y2) {
   const sdx = x2 - x1;
   const sdy = y2 - y1;
@@ -248,4 +238,4 @@ function arcIntersectsSegment(hitbox, x1, y1, x2, y2) {
   return false;
 }
 
-export default createSword;
+export default createSlashingWeapon;

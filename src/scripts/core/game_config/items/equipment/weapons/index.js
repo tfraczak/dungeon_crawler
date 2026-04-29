@@ -1,1 +1,2 @@
-export { default as sword } from "./sword";
+export * as daggers from "./daggers";
+export * as swords from "./swords";

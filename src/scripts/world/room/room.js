@@ -4,12 +4,17 @@ import createEnemy from "@entities/enemy/enemy";
 import createLadder from "@entities/ladder/ladder";
 import createPoof from "@effects/poof";
 import playPoofSound from "@entities/enemy/sound";
-import { playSlashHit, playSlashWhiff } from "@items/equipment/weapons/sword/sound";
+import { playSlashHit, playSlashWhiff } from "@items/equipment/weapons/swords/sound";
 import * as GAME_CONFIG from "@core/game_config";
 import DEV_FLAGS from "@core/dev_flags";
 import { shuffle } from "@utils/helpers";
 import Random from "@utils/random";
 import { pickVariantIndex, getForcedConfig } from "./map_variants";
+import {
+  difficultyPoints,
+  pickEnemyType,
+  targetEnemyCount,
+} from "./difficulty";
 import {
   randNumPaths,
   addValidNeighbors,
@@ -18,6 +23,26 @@ import {
   randNumCoins,
 } from "./generation";
 
+const ENEMY_SPAWN_FLAG_BY_TYPE = Object.freeze({
+  bat: "enemyBatSpawnCount",
+  blob: "enemyBlobSpawnCount",
+  goblin: "enemyGoblinSpawnCount",
+  skeleton: "enemySkeletonSpawnCount",
+});
+
+const EXIT_NODE_DELTA = Object.freeze({
+  up: Object.freeze([0, 1]),
+  down: Object.freeze([0, -1]),
+  left: Object.freeze([-1, 0]),
+  right: Object.freeze([1, 0]),
+});
+
+const ENTRY_POS_BY_EXIT = Object.freeze({
+  up: Object.freeze({ x: [324, 348], y: [600, 624] }),
+  down: Object.freeze({ x: [324, 348], y: [96, 120] }),
+  left: Object.freeze({ x: [600, 624], y: [324, 348] }),
+  right: Object.freeze({ x: [96, 120], y: [324, 348] }),
+});
 
 function createRoom(neighbor, gameState) {
   const coinSpawnCfg = GAME_CONFIG.entities.coin.spawn;
@@ -165,21 +190,186 @@ function createRoom(neighbor, gameState) {
     }
   }
 
-  // Generate enemies
-  const numEnemies = Math.floor(Object.keys(session.rooms).length / 2);
   room.enemies = {};
+  room.enemyProjectiles = [];
+  room.enemyRespawns = [];
   const enemySpawnMax = enemySpawnCfg.max - 1;
-  for (let i = 0; i < numEnemies; i++) {
-    let x = Random.int(enemySpawnCfg.min, enemySpawnMax);
-    let y = Random.int(enemySpawnCfg.min, enemySpawnMax);
-    let pos = [x, y];
-    const detectDist = enemyCfg.baseDetectDistance + (numEnemies * enemyCfg.detectDistancePerEnemy);
-    // NOTE: Only "blob" is spawned today. Per-type stats/behaviors and
-    // depth-based spawn weighting are tracked in tmp/docs/planned-features.md
-    // (Enemy Variety + Depth Scaling). The bat/ghost sprite offsets in
-    // enemy.js are intentionally retained as scaffolding for that feature.
-    const enemy = createEnemy(pos, 48, 48, gameState.sprites.monsters, "blob", detectDist, gameState);
-    room.enemies[`${enemy.pos}`] = enemy;
+
+  const devEnemySpawnCounts = () => {
+    let hasOverride = false;
+    const counts = {};
+    for (const type of enemyCfg.types) {
+      const value = DEV_FLAGS[ENEMY_SPAWN_FLAG_BY_TYPE[type]];
+      if (Number.isFinite(value)) hasOverride = true;
+      counts[type] = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+    }
+    return hasOverride ? counts : null;
+  };
+
+  const addEnemy = (enemy) => {
+    enemy.room = room;
+    let key = `${enemy.pos}`;
+    let suffix = 1;
+    while (room.enemies[key]) {
+      key = `${enemy.pos}-${suffix}`;
+      suffix++;
+    }
+    room.enemies[key] = enemy;
+  };
+
+  room.addEnemy = addEnemy;
+
+  room.addEnemyProjectile = (projectile) => {
+    room.enemyProjectiles.push(projectile);
+  };
+
+  room.updateEnemyProjectiles = (player) => {
+    if (room.enemyProjectiles.length === 0) return;
+    room.enemyProjectiles.forEach(projectile => projectile.update(room, player));
+    room.enemyProjectiles = room.enemyProjectiles.filter(projectile => !projectile.done);
+  };
+
+  room.drawEnemyProjectiles = (ctx) => {
+    room.enemyProjectiles.forEach(projectile => projectile.draw(ctx));
+  };
+
+  const removeEnemy = (enemy) => {
+    for (const [key, roomEnemy] of Object.entries(room.enemies)) {
+      if (roomEnemy === enemy) {
+        delete room.enemies[key];
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const enemyEntryPos = (exitDir, enemy) => {
+    const zone = ENTRY_POS_BY_EXIT[exitDir];
+    return [
+      Random.int(zone.x[0], zone.x[1]) - (enemy.width / 2),
+      Random.int(zone.y[0], zone.y[1]) - (enemy.height / 2),
+    ];
+  };
+
+  room.enemyCanExit = (exitDir) => {
+    const exitLetters = { up: "U", down: "D", left: "L", right: "R" };
+    return room.bgConfig?.paths?.includes(exitLetters[exitDir]) ?? false;
+  };
+
+  room.transferEnemyToExit = (enemy, exitDir) => {
+    if (!room.enemyCanExit(exitDir) || !EXIT_NODE_DELTA[exitDir]) return false;
+
+    const [dx, dy] = EXIT_NODE_DELTA[exitDir];
+    const nextNodePos = [room.nodePos[0] + dx, room.nodePos[1] + dy];
+    const session = gameState.session;
+    let nextRoom = session.rooms[`${nextNodePos}`];
+    if (!nextRoom) {
+      nextRoom = createRoom({ [exitDir]: room }, gameState);
+      addValidNeighbors(room, gameState);
+      addValidNeighbors(nextRoom, gameState);
+    }
+
+    if (!removeEnemy(enemy)) return false;
+
+    enemy.pos = enemyEntryPos(exitDir, enemy);
+    enemy.chasingPlayer = false;
+    enemy.idleCount = 0;
+    enemy.room = nextRoom;
+    enemy.updateSides();
+    enemy.drawOptions.x = enemy.pos[0];
+    enemy.drawOptions.y = enemy.pos[1];
+    nextRoom.addEnemy(enemy);
+    return true;
+  };
+
+  room.spawnEnemy = (type, totalEnemies, spawnPos = null) => {
+    const pos = spawnPos ?? [
+      Random.int(enemySpawnCfg.min, enemySpawnMax),
+      Random.int(enemySpawnCfg.min, enemySpawnMax),
+    ];
+    const detectDist = enemyCfg.baseDetectDistance + (totalEnemies * enemyCfg.detectDistancePerEnemy);
+    const enemy = createEnemy({
+      pos,
+      width: 48,
+      height: 48,
+      spritePalette: gameState.sprites.monsters,
+      type,
+      detectDist,
+      gameState,
+    });
+    addEnemy(enemy);
+  };
+
+  room.scheduleEnemyRespawn = (enemy, now = Date.now()) => {
+    room.enemyRespawns.push({
+      type: enemy.type,
+      respawnAt: now + enemyCfg.respawnDelayMs,
+    });
+  };
+
+  room.tickEnemyRespawns = (now = Date.now()) => {
+    if (room.enemyRespawns.length === 0) return;
+
+    const pending = [];
+    const due = [];
+    for (const respawn of room.enemyRespawns) {
+      if (respawn.respawnAt <= now) {
+        due.push(respawn);
+      } else {
+        pending.push(respawn);
+      }
+    }
+
+    room.enemyRespawns = pending;
+    if (due.length === 0) return;
+
+    const totalEnemies = Math.max(1, Object.keys(room.enemies).length + due.length);
+    for (const respawn of due) {
+      const type = devEnemySpawnCounts() ? respawn.type : pickEnemyType(session);
+      room.spawnEnemy(type, totalEnemies);
+    }
+  };
+
+  room.spawnEnemies = (counts) => {
+    const totalToSpawn = Object.values(counts).reduce((total, count) => total + count, 0);
+    const totalEnemies = Math.max(1, Object.keys(room.enemies).length + totalToSpawn);
+    for (const type of enemyCfg.types) {
+      for (let i = 0; i < counts[type]; i++) {
+        room.spawnEnemy(type, totalEnemies);
+      }
+    }
+  };
+
+  room.spawnScaledEnemies = (targetCount = targetEnemyCount(session, room)) => {
+    if (devEnemySpawnCounts()) return;
+    const liveEnemies = Object.keys(room.enemies).length;
+    const pendingRespawns = room.enemyRespawns.length;
+    const countToSpawn = Math.max(0, targetCount - liveEnemies - pendingRespawns);
+    const totalEnemies = Math.max(1, liveEnemies + countToSpawn);
+    for (let i = 0; i < countToSpawn; i++) {
+      room.spawnEnemy(pickEnemyType(session), totalEnemies);
+    }
+  };
+
+  room.scaleToDifficulty = () => {
+    if (devEnemySpawnCounts()) return;
+    room.lastScaledDifficultyPoints = difficultyPoints(session);
+    room.lastScaledTargetCount = targetEnemyCount(session, room);
+    room.spawnScaledEnemies(room.lastScaledTargetCount);
+  };
+
+  room.spawnDevEnemies = () => {
+    const counts = devEnemySpawnCounts();
+    if (!counts) return;
+    room.spawnEnemies(counts);
+  };
+
+  // Generate enemies
+  const configuredSpawnCounts = devEnemySpawnCounts();
+  if (configuredSpawnCounts) {
+    room.spawnEnemies(configuredSpawnCounts);
+  } else {
+    room.scaleToDifficulty();
   }
 
   room.scatterEnemies = () => {
@@ -193,13 +383,18 @@ function createRoom(neighbor, gameState) {
   };
 
   room.resolveEnemyCollisions = () => {
+    const collisionBoxFor = (entity, otherEntity) => {
+      if (otherEntity.flying && !entity.flying && entity.headColBox) return entity.headColBox;
+      return entity.colBox;
+    };
+
     const enemies = Object.values(room.enemies);
     for (let i = 0; i < enemies.length; i++) {
       for (let j = i + 1; j < enemies.length; j++) {
         const a = enemies[i];
         const b = enemies[j];
-        const aBox = a.colBox;
-        const bBox = b.colBox;
+        const aBox = collisionBoxFor(a, b);
+        const bBox = collisionBoxFor(b, a);
 
         const overlapX = Math.min(aBox.pos[0] + aBox.width, bBox.pos[0] + bBox.width) - Math.max(aBox.pos[0], bBox.pos[0]);
         const overlapY = Math.min(aBox.pos[1] + aBox.height, bBox.pos[1] + bBox.height) - Math.max(aBox.pos[1], bBox.pos[1]);
@@ -208,11 +403,11 @@ function createRoom(neighbor, gameState) {
 
         // Push apart along the axis with the smaller overlap
         if (overlapX < overlapY) {
-          const sign = a.center[0] < b.center[0] ? -1 : 1;
+          const sign = aBox.center[0] < bBox.center[0] ? -1 : 1;
           a.pos[0] += sign * (overlapX / 2);
           b.pos[0] -= sign * (overlapX / 2);
         } else {
-          const sign = a.center[1] < b.center[1] ? -1 : 1;
+          const sign = aBox.center[1] < bBox.center[1] ? -1 : 1;
           a.pos[1] += sign * (overlapY / 2);
           b.pos[1] -= sign * (overlapY / 2);
         }
@@ -226,6 +421,8 @@ function createRoom(neighbor, gameState) {
   room.resolvePlayerEnemyCollisions = (player) => {
     const pBox = player.colBox;
     for (const enemy of Object.values(room.enemies)) {
+      if (enemy.flying) continue;
+
       const eBox = enemy.colBox;
 
       const overlapX = Math.min(pBox.pos[0] + pBox.width, eBox.pos[0] + eBox.width) - Math.max(pBox.pos[0], eBox.pos[0]);
@@ -275,7 +472,8 @@ function createRoom(neighbor, gameState) {
         player.attackHitIds.add(key);
         enemy.takeDamage(weapon.rollDamage(), weapon.knockback);
         if (!enemy.alive()) {
-          room.poofs.push(createPoof(enemy.center[0], enemy.center[1]));
+          const [poofX, poofY] = enemy.colBox.center;
+          room.poofs.push(createPoof(poofX, poofY));
           playPoofSound();
           const drops = enemy.drop();
           for (const coin of drops.coins) {
@@ -284,6 +482,8 @@ function createRoom(neighbor, gameState) {
           for (const potion of drops.hpPotions) {
             room.hpPotions[potion.id] = potion;
           }
+          session.enemiesKilled = (session.enemiesKilled ?? 0) + 1;
+          room.scheduleEnemyRespawn(enemy);
           delete room.enemies[key];
         }
       }

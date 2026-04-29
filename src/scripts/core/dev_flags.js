@@ -42,12 +42,17 @@ const BOOLEAN_KEYS = Object.freeze([
 
 const NUMERIC_KEYS = Object.freeze([
   "enemyHp",
+  "enemyBatSpawnCount",
+  "enemyBlobSpawnCount",
+  "enemyGoblinSpawnCount",
+  "enemySkeletonSpawnCount",
   "enemyItemDropRate",
   "enemyForcedDropCount",
   "ladderChance",
 ]);
 
 const STRING_KEYS = Object.freeze([
+  "playerWeapon",
   "winScene",
   // Pins every newly-generated room to a specific exit configuration --
   // a sorted, deduped string of `D L R U` letters (e.g. "DLR", "U", "DLRU").

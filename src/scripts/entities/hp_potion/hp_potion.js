@@ -5,18 +5,29 @@ import applyDropBehavior from "@effects/drop";
 
 let hpPotionIdCounter = 0;
 
+const COL_BOX_WIDTH_RATIO = 0.5;
+const COL_BOX_TOP_INSET = 4;
+const COL_BOX_BOTTOM_INSET = 3;
+
 // Health potion: a static 32x32 bottle sprite with two procedural particle
 // pools layered on top -- bubbles rising inside the liquid and red heal
 // crosses drifting up either side. Each particle picks its own random column,
 // lifetime, and respawn delay so two potions on screen never animate in sync.
 // Picking one up heals the player up to GAME_CONFIG.entities.player.hp.
 function createHpPotion(pos, width, height, spritePalette, gameState) {
-  const potion = createEntity(pos, width, height, spritePalette, { width, height });
+  const potion = createEntity(pos, width, height, spritePalette, {
+    width: width * COL_BOX_WIDTH_RATIO,
+    height: height - COL_BOX_TOP_INSET - COL_BOX_BOTTOM_INSET,
+  });
 
   potion.id = `hp_potion_${hpPotionIdCounter++}`;
   potion.gameState = gameState;
   potion.drawOptions.palX = 0;
   potion.drawOptions.palY = 0;
+  potion.colBoxHook = () => [
+    potion.drawOptions.x + ((potion.width - potion.colBox.width) / 2),
+    potion.drawOptions.y + potion.height - potion.colBox.height - COL_BOX_BOTTOM_INSET,
+  ];
 
   applyDropBehavior(potion, playHpPotionDrop);
 

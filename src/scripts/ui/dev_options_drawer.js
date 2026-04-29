@@ -13,6 +13,7 @@ import DEV_FLAGS, {
   setDevFlag,
   resetDevFlags,
 } from "@core/dev_flags";
+import { createWeaponById, DEFAULT_WEAPON_ID, WEAPON_GROUPS } from "@items/equipment/weapons/registry";
 import { cycleRoomBackground, getVariantCount, normalizeForcedConfig } from "@world/room/map_variants";
 
 export default function installDevOptionsDrawer(gameState) {
@@ -30,6 +31,26 @@ export default function installDevOptionsDrawer(gameState) {
   const mapInfo = document.getElementById("dev-current-map-info");
   const mapPrevBtn = document.getElementById("dev-map-prev");
   const mapNextBtn = document.getElementById("dev-map-next");
+  const weaponSelect = form.querySelector('[name="playerWeapon"]');
+
+  if (weaponSelect) {
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Default (Shortsword)";
+    weaponSelect.appendChild(defaultOption);
+
+    for (const group of WEAPON_GROUPS) {
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = group.label;
+      for (const option of group.options) {
+        const el = document.createElement("option");
+        el.value = option.id;
+        el.textContent = option.label;
+        optgroup.appendChild(el);
+      }
+      weaponSelect.appendChild(optgroup);
+    }
+  }
 
   // Placeholders mirror the canonical game_config defaults. Leaving a field
   // blank = "use the config default," which the call sites read via `?? cfg.x`.
@@ -41,6 +62,16 @@ export default function installDevOptionsDrawer(gameState) {
   // The currently active room (if a game is in progress). Returns null
   // pre-game / between sessions so callers can disable the cycle controls.
   const currentRoom = () => gameState?.session?.game?.room ?? null;
+  const currentPlayer = () => gameState?.session?.player ?? null;
+
+  const applyPlayerWeapon = () => {
+    const player = currentPlayer();
+    if (!player) return;
+    player.weapon = createWeaponById(DEV_FLAGS.playerWeapon || DEFAULT_WEAPON_ID, gameState);
+    player.attackTimer = 0;
+    player.attackCooldownTimer = 0;
+    player.attackHitIds.clear();
+  };
 
   const refreshMapInfo = () => {
     if (!mapInfo) return;
@@ -114,6 +145,8 @@ export default function installDevOptionsDrawer(gameState) {
         }
       }
     }
+    applyPlayerWeapon();
+    currentRoom()?.spawnDevEnemies?.();
     // Refresh from the store so any rejected / coerced inputs reflect truth.
     populate();
     flashApplied();
@@ -149,6 +182,7 @@ export default function installDevOptionsDrawer(gameState) {
   resetBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     resetDevFlags();
+    applyPlayerWeapon();
     populate();
   });
 

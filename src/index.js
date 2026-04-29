@@ -133,6 +133,18 @@ document.addEventListener("DOMContentLoaded", () => {
     gameState.sprites.ladder = ladderSprite;
   };
 
+  let shortswordSprite = new Image();
+  shortswordSprite.src = "./src/assets/items/equipment/weapons/swords/shortsword/sprite.png";
+  shortswordSprite.onload = () => {
+    gameState.sprites.shortsword = shortswordSprite;
+  };
+
+  let daggerSprite = new Image();
+  daggerSprite.src = "./src/assets/items/equipment/weapons/daggers/dagger/sprite.png";
+  daggerSprite.onload = () => {
+    gameState.sprites.dagger = daggerSprite;
+  };
+
   let monstersSprites = new Image();
   monstersSprites.src = "./src/assets/entities/enemy/sprite.png";
   monstersSprites.onload = () => {
