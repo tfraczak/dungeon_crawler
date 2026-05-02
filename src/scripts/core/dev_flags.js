@@ -27,6 +27,8 @@
 
 import * as GAME_CONFIG from "./game_config";
 import GOBLIN_CONFIG from "@entities/enemy/goblin/config";
+import SKELETON_CONFIG from "@entities/enemy/skeleton/config";
+import ICE_CRYSTAL_CONFIG from "@entities/projectiles/ice_crystal/config";
 
 const isProd = process.env.NODE_ENV === "production";
 const STORAGE_KEY = "devFlags";
@@ -35,9 +37,6 @@ const BOOLEAN_KEYS = Object.freeze([
   "showCollisionBoxes",
   "showEnemyDetectRadius",
   "showEnemyHp",
-  "godMode",
-  "infiniteStamina",
-  "oneShot",
   "forceLadder",
 ]);
 
@@ -50,11 +49,32 @@ const NUMERIC_KEYS = Object.freeze([
   "enemyItemDropRate",
   "enemyForcedDropCount",
   "enemyGoblinStealChance",
+  "playerSpeedMultiplier",
+  "playerSprintMultiplier",
+  "playerStaminaDrain",
+  "playerStaminaRegenIdle",
+  "playerStaminaRegenMoving",
+  "difficultyMaxEnemies",
+  "difficultyPointsPerEnemy",
+  "difficultyRoomCountPoints",
+  "difficultyRoomDifficultyPoints",
+  "skeletonCastCooldownFrames",
+  "skeletonCastDistance",
+  "skeletonCastDissipateFrames",
+  "skeletonCastInterruptedDelayFrames",
+  "skeletonCastWindupFrames",
+  "iceCrystalDamageMax",
+  "iceCrystalDamageMin",
+  "iceCrystalMaxDistance",
+  "iceCrystalSpeed",
+  "iceCrystalColdDurationFrames",
+  "iceCrystalColdSpeedMultiplier",
+  "winCoinCount",
+  "hpPotionHealAmount",
   "ladderChance",
 ]);
 
 const STRING_KEYS = Object.freeze([
-  "playerWeapon",
   "winScene",
   // Pins every newly-generated room to a specific exit configuration --
   // a sorted, deduped string of `D L R U` letters (e.g. "DLR", "U", "DLRU").
@@ -83,12 +103,35 @@ export const CONFIG_DEFAULTS = Object.freeze({
   enemyHp: GAME_CONFIG.entities.enemy.hp,
   enemyGoblinStealChance: GOBLIN_CONFIG.steal.chance,
   enemyItemDropRate: GAME_CONFIG.entities.enemy.drops[0]?.chance ?? 0,
+  playerSpeedMultiplier: GAME_CONFIG.entities.player.speedMultiplier,
+  playerSprintMultiplier: GAME_CONFIG.entities.player.sprintMultiplier,
+  playerStaminaDrain: GAME_CONFIG.entities.player.staminaDrain,
+  playerStaminaRegenIdle: GAME_CONFIG.entities.player.staminaRegenIdle,
+  playerStaminaRegenMoving: GAME_CONFIG.entities.player.staminaRegenMoving,
+  difficultyMaxEnemies: 8,
+  difficultyPointsPerEnemy: 5,
+  difficultyRoomCountPoints: 1,
+  difficultyRoomDifficultyPoints: 1,
+  skeletonCastCooldownFrames: SKELETON_CONFIG.magic.castCooldownFrames,
+  skeletonCastDistance: SKELETON_CONFIG.magic.castDistance,
+  skeletonCastDissipateFrames: SKELETON_CONFIG.magic.castDissipateFrames,
+  skeletonCastInterruptedDelayFrames: SKELETON_CONFIG.magic.castInterruptedDelayFrames,
+  skeletonCastWindupFrames: SKELETON_CONFIG.magic.castWindupFrames,
+  iceCrystalDamageMax: ICE_CRYSTAL_CONFIG.damageMax,
+  iceCrystalDamageMin: ICE_CRYSTAL_CONFIG.damageMin,
+  iceCrystalMaxDistance: ICE_CRYSTAL_CONFIG.maxDistance,
+  iceCrystalSpeed: ICE_CRYSTAL_CONFIG.speed,
+  iceCrystalColdDurationFrames: ICE_CRYSTAL_CONFIG.coldDurationFrames,
+  iceCrystalColdSpeedMultiplier: ICE_CRYSTAL_CONFIG.coldSpeedMultiplier,
+  winCoinCount: GAME_CONFIG.game.winCoinCount,
+  hpPotionHealAmount: GAME_CONFIG.entities.hpPotion.healAmount,
   ladderChance: GAME_CONFIG.entities.ladder.chance,
 });
 
 export const isBooleanFlag = (key) => BOOLEAN_KEYS.includes(key);
 export const isNumericFlag = (key) => NUMERIC_KEYS.includes(key);
 export const isStringFlag = (key) => STRING_KEYS.includes(key);
+export const configValue = ({ value, override }) => override ?? value;
 
 const DEV_FLAGS = {};
 for (const k of BOOLEAN_KEYS) DEV_FLAGS[k] = false;

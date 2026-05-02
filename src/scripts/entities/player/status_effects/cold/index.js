@@ -1,4 +1,5 @@
 import ICE_CRYSTAL_CONFIG from "@entities/projectiles/ice_crystal/config";
+import DEV_FLAGS, { configValue } from "@core/dev_flags";
 import Random from "@utils/random";
 
 const makeColdShard = (width, height, index, count) => {
@@ -180,7 +181,10 @@ export const updateColdStatus = (player) => {
 
 export const applyColdSpeedModifier = (player) => {
   if (player.coldTimer > 0) {
-    player.speedModifier *= ICE_CRYSTAL_CONFIG.coldSpeedMultiplier;
+    player.speedModifier *= configValue({
+      value: ICE_CRYSTAL_CONFIG.coldSpeedMultiplier,
+      override: DEV_FLAGS.iceCrystalColdSpeedMultiplier,
+    });
   }
 };
 

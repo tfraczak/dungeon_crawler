@@ -2,7 +2,7 @@ import createCoin from "@entities/coin/coin";
 import createEnemy from "@entities/enemy/enemy";
 import createLadder from "@entities/ladder/ladder";
 import * as GAME_CONFIG from "@core/game_config";
-import DEV_FLAGS from "@core/dev_flags";
+import DEV_FLAGS, { configValue } from "@core/dev_flags";
 import { shuffle } from "@utils/helpers";
 import Random from "@utils/random";
 import setupRoomCombat from "./combat";
@@ -488,7 +488,11 @@ function createRoom(neighbor, gameState) {
   room.tryRollLadder = (coinCount) => {
     if (room.ladder || room.ladderRolled) return;
     const force = DEV_FLAGS.forceLadder;
-    if (!force && coinCount < GAME_CONFIG.game.winCoinCount) return;
+    const winCoinCount = configValue({
+      value: GAME_CONFIG.game.winCoinCount,
+      override: DEV_FLAGS.winCoinCount,
+    });
+    if (!force && coinCount < winCoinCount) return;
 
     room.ladderRolled = true;
     const chance = (typeof DEV_FLAGS.ladderChance === "number")
@@ -526,7 +530,11 @@ function createRoom(neighbor, gameState) {
         delete room.hpPotions[potion.id];
         const player = gameState.session.player;
         const maxHp = GAME_CONFIG.entities.player.hp;
-        player.hp = Math.min(maxHp, player.hp + GAME_CONFIG.entities.hpPotion.healAmount);
+        const healAmount = configValue({
+          value: GAME_CONFIG.entities.hpPotion.healAmount,
+          override: DEV_FLAGS.hpPotionHealAmount,
+        });
+        player.hp = Math.min(maxHp, player.hp + healAmount);
         return;
       }
     }
@@ -577,8 +585,33 @@ function createRoom(neighbor, gameState) {
     // (yarn serve/watch keep it visible; yarn build hides it).
     if (process.env.NODE_ENV !== "production") {
       ctx.fillText(`Room [ ${room.nodePos} ]`, 15, 30);
+      ctx.fillText(`Kills x ${session.enemiesKilled ?? 0}`, 15, 55);
     }
-    ctx.fillText(`Coins x ${session.coinCount}`, ctx.canvas.width - 130, 30);
+    const coinText = `x ${session.coinCount}`;
+    const coinSprite = gameState.sprites.coin;
+    const coinFrameSize = 16;
+    const coinRenderSize = GAME_CONFIG.entities.coin.renderSize;
+    const coinGap = 8;
+    const coinTextWidth = ctx.measureText(coinText).width;
+    const coinX = ctx.canvas.width - coinRenderSize - coinGap - coinTextWidth - 15;
+    const coinY = 12;
+    if (coinSprite?.complete && coinSprite.naturalWidth > 0) {
+      const frame = Math.floor(Date.now() / (GAME_CONFIG.entities.coin.frameInterval * (1000 / 60))) % 8;
+      ctx.drawImage(
+        coinSprite,
+        frame * coinFrameSize,
+        0,
+        coinFrameSize,
+        coinFrameSize,
+        coinX,
+        coinY,
+        coinRenderSize,
+        coinRenderSize,
+      );
+      ctx.fillText(coinText, coinX + coinRenderSize + coinGap, 30);
+    } else {
+      ctx.fillText(`Coins ${coinText}`, ctx.canvas.width - 130, 30);
+    }
 
     // HP bar reads left-to-right: red fill = remaining HP on top of a solid
     // black track (missing HP). Stamina stays yellow, invulnerability cyan.

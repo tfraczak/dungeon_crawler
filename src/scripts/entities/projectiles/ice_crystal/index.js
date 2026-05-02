@@ -1,5 +1,6 @@
 import createEntity from "@entities/entity";
-import DEV_FLAGS from "@core/dev_flags";
+import DEV_FLAGS, { configValue } from "@core/dev_flags";
+import TEST_STATE, { TEST_IDS } from "@core/player_testing";
 import Random from "@utils/random";
 import { projectileBlockerImpact } from "@world/room/projectile_collision";
 import { boxesOverlap } from "@entities/enemy/base_enemy/collision_boxes";
@@ -104,7 +105,7 @@ const startWallShatter = (crystal, impact) => {
 
 const createIceCrystal = ({ pos, angle, onWallHit = () => {} }) => {
   const cfg = ICE_CRYSTAL_CONFIG;
-  const speed = cfg.speed;
+  const speed = configValue({ value: cfg.speed, override: DEV_FLAGS.iceCrystalSpeed });
   const vx = Math.cos(angle) * speed;
   const vy = Math.sin(angle) * speed;
   const crystal = createEntity(
@@ -122,16 +123,22 @@ const createIceCrystal = ({ pos, angle, onWallHit = () => {} }) => {
   crystal.shattering = false;
   crystal.shatterShards = [];
 
-  crystal.damage = () => Random.int(cfg.damageMin, cfg.damageMax);
+  crystal.damage = () => Random.int(
+    configValue({ value: cfg.damageMin, override: DEV_FLAGS.iceCrystalDamageMin }),
+    configValue({ value: cfg.damageMax, override: DEV_FLAGS.iceCrystalDamageMax }),
+  );
 
   crystal.hitPlayer = (player) => {
     if (player.invulnerable) return;
     playIceCrystalHit();
-    if (!DEV_FLAGS.godMode) {
+    if (!TEST_STATE[TEST_IDS.a]) {
       player.hp -= crystal.damage();
       if (player.hp < 0) player.hp = 0;
     }
-    player.applyCold?.(cfg.coldDurationFrames);
+    player.applyCold?.(configValue({
+      value: cfg.coldDurationFrames,
+      override: DEV_FLAGS.iceCrystalColdDurationFrames,
+    }));
     player.hit();
   };
 
@@ -161,7 +168,9 @@ const createIceCrystal = ({ pos, angle, onWallHit = () => {} }) => {
       return;
     }
 
-    if (crystal.distance >= cfg.maxDistance) crystal.done = true;
+    if (crystal.distance >= configValue({ value: cfg.maxDistance, override: DEV_FLAGS.iceCrystalMaxDistance })) {
+      crystal.done = true;
+    }
   };
 
   crystal.draw = (ctx) => {

@@ -16,7 +16,7 @@ body:not(.dev-mode) .dev-only {
 // Wrench icon trigger lives in the social-icons nav alongside GitHub /
 // LinkedIn. Keep it the same size/shape so the row reads cleanly, but tint
 // the default state subtly so it reads as "tool" rather than "social link".
-#dev-options-link {
+.dev-options-link {
   color: color.adjust($off-white, $lightness: -20%);
   text-decoration: none;
   cursor: pointer;

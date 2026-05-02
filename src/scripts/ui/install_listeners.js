@@ -1,5 +1,7 @@
 import { newGame } from "@core/lifecycle";
 import { playClick } from "./sound";
+import installAdditionalAccess from "./additional/access";
+import installAdditionalDrawer from "./additional/drawer";
 import installDevOptionsDrawer from "./dev_options_drawer";
 import installSoundSandbox from "./sound_sandbox/install";
 
@@ -9,6 +11,8 @@ export default (gameState) => {
   // production via `body:not(.dev-mode) .dev-only`.
   installDevOptionsDrawer(gameState);
   installSoundSandbox(gameState);
+  const additionalDrawer = installAdditionalDrawer(gameState);
+  installAdditionalAccess({ onUnlock: additionalDrawer.unlock });
 
   const keys = gameState.keys;
 

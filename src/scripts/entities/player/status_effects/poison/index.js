@@ -1,4 +1,4 @@
-import DEV_FLAGS from "@core/dev_flags";
+import TEST_STATE, { TEST_IDS } from "@core/player_testing";
 import Random from "@utils/random";
 import { playPoisonStatusEffect } from "./sound";
 
@@ -87,7 +87,7 @@ export const updatePoisonStatus = (player) => {
       const damage = Math.round(
         Random.int(player.poisonConfig.damageMin, player.poisonConfig.damageMax) * poisonIntensity(player),
       );
-      if (!DEV_FLAGS.godMode && damage > 0) {
+      if (!TEST_STATE[TEST_IDS.a] && damage > 0) {
         player.hp -= damage;
         if (player.hp < 0) player.hp = 0;
       }

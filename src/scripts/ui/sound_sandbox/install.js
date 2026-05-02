@@ -36,6 +36,7 @@ import { renderActions, renderPanel } from "./knob_renderer";
 import { formatPayloadString } from "./copy_format";
 import { playProfileSynth } from "@core/profile_synth";
 import { slugifyId } from "./naming";
+import buildSoundSandboxMarkup from "./markup";
 
 const PRESET_PREFIX = "preset_";
 const CUSTOM_PREFIX = "custom_";
@@ -307,13 +308,17 @@ const promptForCustomSound = () => {
 export default function installSoundSandbox(_gameState) {
   if (process.env.NODE_ENV === "production") return;
 
-  const drawer = document.getElementById("dev-sound-sandbox-page");
-  const openBtn = document.getElementById("dev-sound-sandbox-link");
-  const closeBtn = document.getElementById("dev-sound-sandbox-close");
-  const select = document.getElementById("dev-sound-sandbox-select");
-  const knobSlot = document.getElementById("dev-sound-sandbox-knob-slot");
-  const addCustomBtn = document.getElementById("dev-sound-sandbox-add-custom");
-  const actionsSlot = document.getElementById("dev-sound-sandbox-actions");
+  const ui = buildSoundSandboxMarkup();
+  if (!ui) return;
+  const {
+    drawer,
+    openBtn,
+    closeBtn,
+    select,
+    knobSlot,
+    addCustomBtn,
+    actionsSlot,
+  } = ui;
   if (!drawer || !openBtn || !select || !knobSlot || !actionsSlot) return;
   const statusEl = document.getElementById("dev-sound-sandbox-status") ?? createStatusElement();
   statusEl.remove();

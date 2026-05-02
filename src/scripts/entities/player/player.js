@@ -1,7 +1,8 @@
 import createEntity from "@entities/entity";
 import { createWeaponById, DEFAULT_WEAPON_ID } from "@items/equipment/weapons/registry";
 import * as GAME_CONFIG from "@core/game_config";
-import DEV_FLAGS from "@core/dev_flags";
+import DEV_FLAGS, { configValue } from "@core/dev_flags";
+import TEST_STATE, { TEST_IDS } from "@core/player_testing";
 import { roomChange } from "@world/room/generation";
 import playFootstep from "./sound";
 import setupPlayerStatusEffects from "./status_effects";
@@ -19,7 +20,10 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
   };
 
   player.gameState = gameState;
-  player.speed = BASE_SPEED * cfg.speedMultiplier;
+  player.speed = BASE_SPEED * configValue({
+    value: cfg.speedMultiplier,
+    override: DEV_FLAGS.playerSpeedMultiplier,
+  });
   player.normalizedSpeed = player.speed / Math.sqrt(2);
   player.pace = 24 / player.speed;
   player.speedModifier = 1;
@@ -95,7 +99,7 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     return Math.floor(player.invulnerable / 5) % 2 === 0;
   };
 
-  player.weapon = createWeaponById(DEV_FLAGS.playerWeapon || DEFAULT_WEAPON_ID, gameState);
+  player.weapon = createWeaponById(TEST_STATE[TEST_IDS.d] || DEFAULT_WEAPON_ID, gameState);
   player.facing = "down";
   player.attackTimer = 0;          // frames remaining in current swing
   player.attackCooldownTimer = 0;  // frames before next swing allowed
@@ -206,14 +210,25 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     ];
 
     const moving = up || down || left || right;
+    player.speed = BASE_SPEED * configValue({
+      value: cfg.speedMultiplier,
+      override: DEV_FLAGS.playerSpeedMultiplier,
+    });
+    player.normalizedSpeed = player.speed / Math.sqrt(2);
 
     statusEffects.update();
     visualEffects.update();
 
     player.sprinting = shift && player.stamina > 0 && moving;
     if (player.sprinting) {
-      player.speedModifier = cfg.sprintMultiplier;
-      player.stamina -= cfg.staminaDrain * statusEffects.staminaDrainMultiplier();
+      player.speedModifier = configValue({
+        value: cfg.sprintMultiplier,
+        override: DEV_FLAGS.playerSprintMultiplier,
+      });
+      player.stamina -= configValue({
+        value: cfg.staminaDrain,
+        override: DEV_FLAGS.playerStaminaDrain,
+      }) * statusEffects.staminaDrainMultiplier();
     } else {
       player.speedModifier = 1;
     }
@@ -223,12 +238,18 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     if (player.stamina < 0) player.stamina = 0;
     if (player.stamina < cfg.stamina) {
       if (!moving) {
-        player.stamina += cfg.staminaRegenIdle;
+        player.stamina += configValue({
+          value: cfg.staminaRegenIdle,
+          override: DEV_FLAGS.playerStaminaRegenIdle,
+        });
       } else if (!shift) {
-        player.stamina += cfg.staminaRegenMoving;
+        player.stamina += configValue({
+          value: cfg.staminaRegenMoving,
+          override: DEV_FLAGS.playerStaminaRegenMoving,
+        });
       }
     }
-    if (DEV_FLAGS.infiniteStamina) player.stamina = cfg.stamina;
+    if (TEST_STATE[TEST_IDS.b]) player.stamina = cfg.stamina;
     if (player.invulnerable) player.invulnerable--;
     if (player.invulnerable < 0) player.invulnerable = 0;
 

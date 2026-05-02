@@ -1,4 +1,5 @@
-import DEV_FLAGS from "@core/dev_flags";
+import DEV_FLAGS, { configValue } from "@core/dev_flags";
+import TEST_STATE, { TEST_IDS } from "@core/player_testing";
 import createCoin from "@entities/coin/coin";
 import { playCoinStolen } from "@entities/coin/sound";
 import createDagger from "@items/equipment/weapons/daggers/dagger/dagger";
@@ -53,7 +54,7 @@ const applyPlayerHit = (player, goblin) => {
   player.knockbackVx = (dx / dist) * goblin.weapon.knockback;
   player.knockbackVy = (dy / dist) * goblin.weapon.knockback;
 
-  if (!DEV_FLAGS.godMode) {
+  if (!TEST_STATE[TEST_IDS.a]) {
     player.hp -= goblin.weapon.rollDamage();
     if (player.hp < 0) player.hp = 0;
   }
@@ -123,8 +124,10 @@ export const setupGoblinDaggerCombat = (goblin, gameState) => {
     goblin.actionLockoutTimer = GOBLIN_CONFIG.steal.actionLockoutFrames;
     goblin.attacksSinceStealAttempt = 0;
 
-    const stealChance = DEV_FLAGS.enemyGoblinStealChance
-      ?? GOBLIN_CONFIG.steal.chance;
+    const stealChance = configValue({
+      value: GOBLIN_CONFIG.steal.chance,
+      override: DEV_FLAGS.enemyGoblinStealChance,
+    });
     if (
       gameState.session.coinCount <= 0
       || roomHasUnclaimedStolenCoin(goblin.room)

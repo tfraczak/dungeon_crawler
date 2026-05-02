@@ -1,4 +1,5 @@
 import { boxesOverlap } from "@entities/enemy/base_enemy/collision_boxes";
+import DEV_FLAGS, { configValue } from "@core/dev_flags";
 import SKELETON_CONFIG from "./config";
 
 const directionToward = (from, to) => {
@@ -27,6 +28,10 @@ const distanceBetween = (from, to) => {
 
 export const createSkeletonBehavior = () => {
   const magicCfg = SKELETON_CONFIG.magic;
+  const castDistance = () => configValue({
+    value: magicCfg.castDistance,
+    override: DEV_FLAGS.skeletonCastDistance,
+  });
   let strafeDir = 1;
   let strafeTimer = 0;
 
@@ -84,7 +89,7 @@ export const createSkeletonBehavior = () => {
         if (!enemy.canCastFromCenter?.(candidate, player)) return;
 
         const target = playerBodyTarget(player);
-        const castDistanceDelta = Math.abs(distanceBetween(candidate, target) - magicCfg.castDistance);
+        const castDistanceDelta = Math.abs(distanceBetween(candidate, target) - castDistance());
         const score = sampleDistance + (castDistanceDelta * 0.2);
         if (!best || score < best.score) best = { center: candidate, score };
       });
@@ -107,7 +112,7 @@ export const createSkeletonBehavior = () => {
   const adjustMovement = (nx, ny, _speed, enemy) => {
     if (enemy.isCasting?.()) return [0, 0];
     if (!enemy.chasingPlayer) return [nx, ny];
-    if (enemy.distToPlayer() <= magicCfg.castDistance) {
+    if (enemy.distToPlayer() <= castDistance()) {
       const player = enemy.gameState.session.player;
       enemy.repositioningForLineOfSight = true;
       const castPosition = findCastPosition(enemy, player);

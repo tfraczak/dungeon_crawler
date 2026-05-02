@@ -1,7 +1,7 @@
 import createCoin from "@entities/coin/coin";
 import createHpPotion from "@entities/hp_potion/hp_potion";
 import Random from "@utils/random";
-import DEV_FLAGS from "@core/dev_flags";
+import DEV_FLAGS, { configValue } from "@core/dev_flags";
 
 const createDroppedCoin = (enemy, gameState) => {
   const coin = createCoin(
@@ -31,7 +31,7 @@ export const setupDrops = (enemy, cfg, gameState) => {
       if (useForced) {
         count = baseCount + (Random.chance(bonusChance) ? 1 : 0);
       } else {
-        const dropChance = DEV_FLAGS.enemyItemDropRate ?? drop.chance;
+        const dropChance = configValue({ value: drop.chance, override: DEV_FLAGS.enemyItemDropRate });
         count = Random.chance(dropChance) ? 1 : 0;
       }
 

@@ -1,6 +1,6 @@
 import createEntity from "@entities/entity";
 import * as GAME_CONFIG from "@core/game_config";
-import DEV_FLAGS from "@core/dev_flags";
+import DEV_FLAGS, { configValue } from "@core/dev_flags";
 import { rollHp } from "./hp";
 import { anchorMainColBox, setupHeadColBox } from "./collision_boxes";
 import { setupAnimation } from "./animation";
@@ -28,9 +28,12 @@ function createBaseEnemy({
   anchorMainColBox(enemy, options.colBoxAnchor);
 
   enemy.gameState = gameState;
-  enemy.hp = DEV_FLAGS.enemyHp ?? rollHp({
-    baseHp: options.hp ?? cfg.hp,
-    variance: options.hpVariance ?? cfg.hpVariance,
+  enemy.hp = configValue({
+    value: rollHp({
+      baseHp: options.hp ?? cfg.hp,
+      variance: options.hpVariance ?? cfg.hpVariance,
+    }),
+    override: DEV_FLAGS.enemyHp,
   });
   enemy.maxHp = enemy.hp;
   enemy.strength = cfg.strength;

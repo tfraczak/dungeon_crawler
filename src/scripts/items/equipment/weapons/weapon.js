@@ -1,6 +1,6 @@
 import createEquipment from "@items/equipment/equipment";
 import Random from "@utils/random";
-import DEV_FLAGS from "@core/dev_flags";
+import TEST_STATE, { TEST_IDS } from "@core/player_testing";
 
 function createWeapon({
   name,
@@ -29,7 +29,7 @@ function createWeapon({
   // (current max is GAME_CONFIG.entities.enemy.hp = 50, so 9999 is comfortably lethal
   // regardless of any enemy_hp override).
   weapon.rollDamage = () => {
-    if (DEV_FLAGS.oneShot) {
+    if (TEST_STATE[TEST_IDS.c]) {
       weapon.lastDamageRoll = { baseDamage: 9999, critical: false, damage: 9999 };
       return 9999;
     }

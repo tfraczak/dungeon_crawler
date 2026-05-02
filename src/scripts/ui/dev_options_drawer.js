@@ -13,33 +13,53 @@ import DEV_FLAGS, {
   setDevFlag,
   resetDevFlags,
 } from "@core/dev_flags";
+import TEST_STATE, {
+  TEST_IDS,
+  TEST_KEYS,
+  isTestBooleanKey,
+  isTestStringKey,
+  setTestValue,
+  resetTestValues,
+} from "@core/player_testing";
 import BAT_CONFIG from "@entities/enemy/bat/config";
 import { playBatBite } from "@entities/enemy/bat/sound";
 import BLOB_CONFIG from "@entities/enemy/blob/config";
 import { playBlobAttackHit } from "@entities/enemy/blob/sound";
 import { createWeaponById, DEFAULT_WEAPON_ID, WEAPON_GROUPS } from "@items/equipment/weapons/registry";
 import { cycleRoomBackground, getVariantCount, normalizeForcedConfig } from "@world/room/map_variants";
+import {
+  enemyCountPoints,
+  enemyDifficultyPoints,
+  enemyTypeWeights,
+  targetEnemyCount,
+} from "@world/room/difficulty";
+import buildDevOptionsMarkup from "./dev_options_markup";
 
 export default function installDevOptionsDrawer(gameState) {
   if (process.env.NODE_ENV === "production") return;
 
-  const drawer = document.getElementById("dev-options-page");
-  const openBtn = document.getElementById("dev-options-link");
-  const closeBtn = document.getElementById("dev-options-close");
-  const applyBtn = document.getElementById("dev-options-apply");
-  const resetBtn = document.getElementById("dev-options-reset");
-  const form = drawer?.querySelector(".dev-options-form");
-  const body = form?.querySelector(".dev-options-body");
-  const headerTitle = drawer?.querySelector(".dev-options-header h1");
+  const ui = buildDevOptionsMarkup();
+  if (!ui) return;
+  const {
+    drawer,
+    openBtn,
+    closeBtn,
+    applyBtn,
+    resetBtn,
+    form,
+    body,
+    headerTitle,
+    mapInfo,
+    mapPrevBtn,
+    mapNextBtn,
+    difficultyInfo,
+    previewBatBiteBtn,
+    previewBlobHitBtn,
+  } = ui;
 
   if (!drawer || !openBtn || !form || !body) return;
 
-  const mapInfo = document.getElementById("dev-current-map-info");
-  const mapPrevBtn = document.getElementById("dev-map-prev");
-  const mapNextBtn = document.getElementById("dev-map-next");
-  const previewBatBiteBtn = document.getElementById("dev-preview-bat-bite");
-  const previewBlobHitBtn = document.getElementById("dev-preview-blob-hit");
-  const weaponSelect = form.querySelector('[name="playerWeapon"]');
+  const weaponSelect = form.querySelector(`[name="${TEST_IDS.d}"]`);
   const sections = Array.from(body.querySelectorAll(".dev-options-section"));
 
   const showMenu = () => {
@@ -62,7 +82,7 @@ export default function installDevOptionsDrawer(gameState) {
       closeBtn.setAttribute("aria-label", "Back to Dev Options");
     }
     body.scrollTop = 0;
-    refreshMapInfo();
+    refreshReadouts();
   };
 
   const buildSubdrawerMenu = () => {
@@ -119,7 +139,7 @@ export default function installDevOptionsDrawer(gameState) {
   const applyPlayerWeapon = () => {
     const player = currentPlayer();
     if (!player) return;
-    player.weapon = createWeaponById(DEV_FLAGS.playerWeapon || DEFAULT_WEAPON_ID, gameState);
+    player.weapon = createWeaponById(TEST_STATE[TEST_IDS.d] || DEFAULT_WEAPON_ID, gameState);
     player.attackTimer = 0;
     player.attackCooldownTimer = 0;
     player.attackHitIds.clear();
@@ -156,6 +176,35 @@ export default function installDevOptionsDrawer(gameState) {
     if (mapNextBtn) mapNextBtn.disabled = !cycleable;
   };
 
+  const refreshDifficultyInfo = () => {
+    if (!difficultyInfo) return;
+    const room = currentRoom();
+    const session = gameState?.session;
+    if (!room || !session) {
+      difficultyInfo.textContent = "No active room.";
+      return;
+    }
+    const countPoints = enemyCountPoints(session);
+    const difficultyPoints = enemyDifficultyPoints(session);
+    const weights = enemyTypeWeights(difficultyPoints);
+    const liveEnemies = Object.keys(room.enemies ?? {}).length;
+    difficultyInfo.textContent = [
+      `Room [${room.nodePos}]`,
+      `coins ${session.coinCount ?? 0}`,
+      `kills ${session.enemiesKilled ?? 0}`,
+      `live enemies ${liveEnemies}`,
+      `count points ${countPoints}`,
+      `difficulty points ${difficultyPoints}`,
+      `target ${targetEnemyCount(session, room)}`,
+      `weights BLOB:${weights.blob} BAT:${weights.bat} SKEL:${weights.skeleton} GOB:${weights.goblin}`,
+    ].join(" | ");
+  };
+
+  const refreshReadouts = () => {
+    refreshMapInfo();
+    refreshDifficultyInfo();
+  };
+
   const populate = () => {
     for (const key of DEV_FLAG_KEYS) {
       const input = form.querySelector(`[name="${key}"]`);
@@ -170,7 +219,17 @@ export default function installDevOptionsDrawer(gameState) {
         input.value = v === undefined || v === null ? "" : String(v);
       }
     }
-    refreshMapInfo();
+    for (const key of TEST_KEYS) {
+      const input = form.querySelector(`[name="${key}"]`);
+      if (!input) continue;
+      if (input.type === "checkbox") {
+        input.checked = Boolean(TEST_STATE[key]);
+      } else {
+        const v = TEST_STATE[key];
+        input.value = v === undefined || v === null ? "" : String(v);
+      }
+    }
+    refreshReadouts();
   };
 
   const open = () => {
@@ -213,6 +272,15 @@ export default function installDevOptionsDrawer(gameState) {
         }
       }
     }
+    for (const key of TEST_KEYS) {
+      const input = form.querySelector(`[name="${key}"]`);
+      if (!input) continue;
+      if (isTestBooleanKey(key)) {
+        setTestValue(key, Boolean(input.checked));
+      } else if (isTestStringKey(key)) {
+        setTestValue(key, input.value);
+      }
+    }
     applyPlayerWeapon();
     currentRoom()?.spawnDevEnemies?.();
     // Refresh from the store so any rejected / coerced inputs reflect truth.
@@ -232,7 +300,7 @@ export default function installDevOptionsDrawer(gameState) {
     const room = currentRoom();
     if (!room) return;
     cycleRoomBackground(room, gameState.bgImgs, delta);
-    refreshMapInfo();
+    refreshReadouts();
   };
 
   openBtn.addEventListener("click", (e) => {
@@ -251,6 +319,7 @@ export default function installDevOptionsDrawer(gameState) {
   resetBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     resetDevFlags();
+    resetTestValues();
     applyPlayerWeapon();
     populate();
   });

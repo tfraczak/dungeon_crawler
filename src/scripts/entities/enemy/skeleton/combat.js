@@ -1,4 +1,5 @@
 import * as GAME_CONFIG from "@core/game_config";
+import DEV_FLAGS, { configValue } from "@core/dev_flags";
 import Random from "@utils/random";
 import createIceCrystal from "@entities/projectiles/ice_crystal";
 import ICE_CRYSTAL_CONFIG, { ICE_CRYSTAL_HITBOX_SIZE } from "@entities/projectiles/ice_crystal/config";
@@ -15,6 +16,16 @@ const {
 const PROJECTILE_CLEARANCE = ICE_CRYSTAL_HITBOX_SIZE / 2;
 const WALL_THICKNESS = GAME_CONFIG.world.tileSize;
 const ROOM_SIZE = WALL_THICKNESS * 15;
+
+const magicValue = (key, flagKey) => configValue({
+  value: SKELETON_CONFIG.magic[key],
+  override: DEV_FLAGS[flagKey],
+});
+
+const iceCrystalValue = (key, flagKey) => configValue({
+  value: ICE_CRYSTAL_CONFIG[key],
+  override: DEV_FLAGS[flagKey],
+});
 
 const angleToward = (from, to) => Math.atan2(to[1] - from[1], to[0] - from[0]);
 const playerBodyTarget = player => player.colBox.center ?? player.center;
@@ -46,7 +57,7 @@ const predictedTarget = (origin, player, room) => {
   const [vx, vy] = player.velocity ?? [0, 0];
   const dx = target[0] - origin[0];
   const dy = target[1] - origin[1];
-  const speed = ICE_CRYSTAL_CONFIG.speed;
+  const speed = iceCrystalValue("speed", "iceCrystalSpeed");
   const a = (vx * vx) + (vy * vy) - (speed * speed);
   const b = 2 * ((dx * vx) + (dy * vy));
   const c = (dx * dx) + (dy * dy);
@@ -66,7 +77,7 @@ const predictedTarget = (origin, player, room) => {
     }
   }
 
-  const maxTime = ICE_CRYSTAL_CONFIG.maxDistance / speed;
+  const maxTime = iceCrystalValue("maxDistance", "iceCrystalMaxDistance") / speed;
   const t = Math.max(0, Math.min(interceptTime, maxTime));
   if (projectedPlayerHitsWall(player, vx, vy, t, room?.walls)) return target;
   return [target[0] + (vx * t), target[1] + (vy * t)];
@@ -230,7 +241,14 @@ const staffGeometry = (skeleton, staffAngleOverride = null, center = skeleton.ce
 };
 
 export const setupSkeletonMagicCombat = (skeleton) => {
-  const cfg = SKELETON_CONFIG.magic;
+  const castCooldownFrames = () => magicValue("castCooldownFrames", "skeletonCastCooldownFrames");
+  const castDistance = () => magicValue("castDistance", "skeletonCastDistance");
+  const castDissipateFrames = () => magicValue("castDissipateFrames", "skeletonCastDissipateFrames");
+  const castInterruptedDelayFrames = () => magicValue(
+    "castInterruptedDelayFrames",
+    "skeletonCastInterruptedDelayFrames",
+  );
+  const castWindupFrames = () => magicValue("castWindupFrames", "skeletonCastWindupFrames");
   skeleton.castCooldownTimer = 0;
   skeleton.castWindupTimer = 0;
   skeleton.castInterruptedDelayTimer = 0;
@@ -288,7 +306,7 @@ export const setupSkeletonMagicCombat = (skeleton) => {
     if (!skeleton.isCasting()) return;
     skeleton.castWindupTimer = 0;
     if (startCooldown) {
-      skeleton.castCooldownTimer = Math.max(skeleton.castCooldownTimer, cfg.castCooldownFrames);
+      skeleton.castCooldownTimer = Math.max(skeleton.castCooldownTimer, castCooldownFrames());
     }
     skeleton.castDissipateTimer = 0;
     skeleton.castSoundHandle?.stop?.(0.04);
@@ -297,7 +315,7 @@ export const setupSkeletonMagicCombat = (skeleton) => {
 
   skeleton.onKnockback = () => {
     skeleton.cancelCasting({ startCooldown: false });
-    skeleton.castInterruptedDelayTimer = cfg.castInterruptedDelayFrames ?? 0;
+    skeleton.castInterruptedDelayTimer = castInterruptedDelayFrames() ?? 0;
   };
 
   skeleton.onProjectileWallHit = () => {
@@ -314,7 +332,7 @@ export const setupSkeletonMagicCombat = (skeleton) => {
       onWallHit: skeleton.onProjectileWallHit,
       pos: tip,
     }));
-    skeleton.castDissipateTimer = cfg.castDissipateFrames ?? 0;
+    skeleton.castDissipateTimer = castDissipateFrames() ?? 0;
   };
 
   skeleton.hitPlayer = () => {
@@ -329,14 +347,14 @@ export const setupSkeletonMagicCombat = (skeleton) => {
       skeleton.castWindupTimer--;
       if (skeleton.castWindupTimer === 0) {
         spawnCrystal(player);
-        skeleton.castCooldownTimer = cfg.castCooldownFrames;
+        skeleton.castCooldownTimer = castCooldownFrames();
         skeleton.castSoundHandle = null;
       }
       return;
     }
 
     if (
-      (skeleton.distToPlayer() <= cfg.castDistance || skeleton.repositioningForLineOfSight)
+      (skeleton.distToPlayer() <= castDistance() || skeleton.repositioningForLineOfSight)
       && skeleton.castCooldownTimer === 0
       && skeleton.castInterruptedDelayTimer === 0
       && !isKnockbackActive(skeleton)
@@ -349,7 +367,7 @@ export const setupSkeletonMagicCombat = (skeleton) => {
         ? STAFF_SLASH_ANGLE
         : STAFF_BACKSLASH_ANGLE;
       skeleton.castAngle = aimAngle(skeleton.center, player, skeleton.castPredictive, skeleton.room);
-      skeleton.castWindupTimer = cfg.castWindupFrames;
+      skeleton.castWindupTimer = castWindupFrames();
       skeleton.castEffectSeed = Random.range(0, Math.PI * 2);
       skeleton.castSoundHandle = playIceCrystalCast();
     }
@@ -373,12 +391,13 @@ function drawCastFootEffect(ctx, skeleton) {
   const dissipating = skeleton.castDissipateTimer > 0;
   if (!skeleton.isCasting() && !dissipating) return;
 
-  const cfg = SKELETON_CONFIG.magic;
+  const castWindupFrames = magicValue("castWindupFrames", "skeletonCastWindupFrames");
+  const castDissipateFrames = magicValue("castDissipateFrames", "skeletonCastDissipateFrames");
   const windupProgress = skeleton.isCasting()
-    ? 1 - (skeleton.castWindupTimer / cfg.castWindupFrames)
+    ? 1 - (skeleton.castWindupTimer / castWindupFrames)
     : 1;
   const dissipateProgress = dissipating
-    ? 1 - (skeleton.castDissipateTimer / (cfg.castDissipateFrames ?? 1))
+    ? 1 - (skeleton.castDissipateTimer / (castDissipateFrames ?? 1))
     : 0;
   const alpha = skeleton.isCasting()
     ? 0.22 + (windupProgress * 0.48)
@@ -388,7 +407,7 @@ function drawCastFootEffect(ctx, skeleton) {
     : 18 + (dissipateProgress * 10);
   const x = skeleton.pos[0] + (skeleton.width / 2);
   const y = skeleton.pos[1] + skeleton.height - 2;
-  const time = (cfg.castWindupFrames - skeleton.castWindupTimer) + (dissipateProgress * 18);
+  const time = (castWindupFrames - skeleton.castWindupTimer) + (dissipateProgress * 18);
   const spin = skeleton.castEffectSeed + (time * 0.18);
 
   ctx.save();
@@ -428,12 +447,12 @@ function drawCastFootEffect(ctx, skeleton) {
 function drawCastAuraParticles(ctx, skeleton) {
   if (!skeleton.isCasting()) return;
 
-  const cfg = SKELETON_CONFIG.magic;
-  const progress = 1 - (skeleton.castWindupTimer / cfg.castWindupFrames);
+  const castWindupFrames = magicValue("castWindupFrames", "skeletonCastWindupFrames");
+  const progress = 1 - (skeleton.castWindupTimer / castWindupFrames);
   const centerX = skeleton.pos[0] + (skeleton.width / 2);
   const footY = skeleton.pos[1] + skeleton.height - 2;
   const bodyHeight = skeleton.height * 0.82;
-  const time = cfg.castWindupFrames - skeleton.castWindupTimer;
+  const time = castWindupFrames - skeleton.castWindupTimer;
   const seed = skeleton.castEffectSeed;
 
   ctx.save();
@@ -472,7 +491,9 @@ function drawCastAuraParticles(ctx, skeleton) {
 
 function drawStaff(ctx, skeleton) {
   const { base, staffAngle, tip } = staffGeometry(skeleton);
-  const progress = 1 - (skeleton.castWindupTimer / SKELETON_CONFIG.magic.castWindupFrames);
+  const progress = 1 - (
+    skeleton.castWindupTimer / magicValue("castWindupFrames", "skeletonCastWindupFrames")
+  );
 
   ctx.save();
   ctx.lineCap = "round";

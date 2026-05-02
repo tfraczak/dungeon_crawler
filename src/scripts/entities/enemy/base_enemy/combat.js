@@ -1,5 +1,5 @@
 import * as GAME_CONFIG from "@core/game_config";
-import DEV_FLAGS from "@core/dev_flags";
+import TEST_STATE, { TEST_IDS } from "@core/player_testing";
 import Random from "@utils/random";
 import { boxesOverlap } from "./collision_boxes";
 
@@ -50,7 +50,7 @@ export const setupCombat = (enemy, cfg) => {
       const knockback = GAME_CONFIG.entities.player.hitKnockback;
       player.knockbackVx = (dx / dist) * knockback;
       player.knockbackVy = (dy / dist) * knockback;
-      if (!DEV_FLAGS.godMode) {
+      if (!TEST_STATE[TEST_IDS.a]) {
         player.hp -= enemy.damage();
         if (player.hp < 0) player.hp = 0;
       }

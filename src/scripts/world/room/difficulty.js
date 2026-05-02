@@ -1,3 +1,4 @@
+import DEV_FLAGS, { configValue } from "@core/dev_flags";
 import Random from "@utils/random";
 
 const ROOM_COUNT_POINTS = 1;
@@ -10,13 +11,19 @@ const roomsExplored = session => Object.keys(session.rooms ?? {}).length;
 // Enemy count pressure mostly comes from coins, with explored rooms adding
 // ambient pressure so deep exploration still fills rooms even before looting.
 export const enemyCountPoints = session => (
-  (session.coinCount ?? 0) + (roomsExplored(session) * ROOM_COUNT_POINTS)
+  (session.coinCount ?? 0) + (roomsExplored(session) * configValue({
+    value: ROOM_COUNT_POINTS,
+    override: DEV_FLAGS.difficultyRoomCountPoints,
+  }))
 );
 
 // Enemy variety pressure mostly comes from kills, with explored rooms nudging
 // harder monster odds up over time as the run expands.
 export const enemyDifficultyPoints = session => (
-  ((session.enemiesKilled ?? 0) * 2) + (roomsExplored(session) * ROOM_DIFFICULTY_POINTS)
+  ((session.enemiesKilled ?? 0) * 2) + (roomsExplored(session) * configValue({
+    value: ROOM_DIFFICULTY_POINTS,
+    override: DEV_FLAGS.difficultyRoomDifficultyPoints,
+  }))
 );
 
 const isStartingRoom = room => room?.nodePos?.[0] === 0 && room?.nodePos?.[1] === 0;
@@ -24,9 +31,16 @@ const isStartingRoom = room => room?.nodePos?.[0] === 0 && room?.nodePos?.[1] ==
 export const targetEnemyCount = (session, room) => {
   const points = enemyCountPoints(session);
   if (points === 0 && isStartingRoom(room)) return 0;
+  const pointsPerEnemy = Math.max(1, configValue({
+    value: POINTS_PER_EXTRA_ENEMY,
+    override: DEV_FLAGS.difficultyPointsPerEnemy,
+  }));
   // Rooms start light, then add roughly one enemy every five points until the
   // cap keeps fights from overcrowding the room.
-  return Math.min(MAX_ENEMIES_PER_ROOM, 1 + Math.floor(points / POINTS_PER_EXTRA_ENEMY));
+  return Math.min(
+    configValue({ value: MAX_ENEMIES_PER_ROOM, override: DEV_FLAGS.difficultyMaxEnemies }),
+    1 + Math.floor(points / pointsPerEnemy),
+  );
 };
 
 export const enemyTypeWeights = (points) => ({

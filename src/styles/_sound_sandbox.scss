@@ -2,9 +2,9 @@
 @use 'vars' as *;
 
 // Music-note icon trigger lives in the social-icons nav alongside the
-// wrench (#dev-options-link). Same dim-by-default tint so it reads as
+// wrench. Same dim-by-default tint so it reads as
 // "tool" rather than "social link", and brightens to banana on hover.
-#dev-sound-sandbox-link {
+.dev-sound-sandbox-link {
   color: color.adjust($off-white, $lightness: -20%);
   text-decoration: none;
   cursor: pointer;
