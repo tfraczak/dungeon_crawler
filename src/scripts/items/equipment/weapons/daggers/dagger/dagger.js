@@ -1,5 +1,6 @@
 import createWeapon from "@items/equipment/weapons/weapon";
 import * as GAME_CONFIG from "@core/game_config";
+import { playDaggerHit, playDaggerSwing } from "@items/equipment/weapons/daggers/sound";
 
 const DIRECTION = Object.freeze({
   up: Object.freeze({ x: 0, y: -1 }),
@@ -53,6 +54,8 @@ function createDagger(overrides = {}) {
   dagger.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
   dagger.thrustWidth = overrides.thrustWidth ?? defaults.thrustWidth;
   dagger.sprite = overrides.sprite ?? null;
+  dagger.onAttackStart = () => playDaggerSwing();
+  dagger.onHit = () => playDaggerHit();
 
   dagger.computeHitbox = (center, facing) => {
     const halfWidth = dagger.thrustWidth / 2;

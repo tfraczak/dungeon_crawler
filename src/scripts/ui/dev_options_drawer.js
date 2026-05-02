@@ -13,6 +13,10 @@ import DEV_FLAGS, {
   setDevFlag,
   resetDevFlags,
 } from "@core/dev_flags";
+import BAT_CONFIG from "@entities/enemy/bat/config";
+import { playBatBite } from "@entities/enemy/bat/sound";
+import BLOB_CONFIG from "@entities/enemy/blob/config";
+import { playBlobAttackHit } from "@entities/enemy/blob/sound";
 import { createWeaponById, DEFAULT_WEAPON_ID, WEAPON_GROUPS } from "@items/equipment/weapons/registry";
 import { cycleRoomBackground, getVariantCount, normalizeForcedConfig } from "@world/room/map_variants";
 
@@ -25,13 +29,61 @@ export default function installDevOptionsDrawer(gameState) {
   const applyBtn = document.getElementById("dev-options-apply");
   const resetBtn = document.getElementById("dev-options-reset");
   const form = drawer?.querySelector(".dev-options-form");
+  const body = form?.querySelector(".dev-options-body");
+  const headerTitle = drawer?.querySelector(".dev-options-header h1");
 
-  if (!drawer || !openBtn || !form) return;
+  if (!drawer || !openBtn || !form || !body) return;
 
   const mapInfo = document.getElementById("dev-current-map-info");
   const mapPrevBtn = document.getElementById("dev-map-prev");
   const mapNextBtn = document.getElementById("dev-map-next");
+  const previewBatBiteBtn = document.getElementById("dev-preview-bat-bite");
+  const previewBlobHitBtn = document.getElementById("dev-preview-blob-hit");
   const weaponSelect = form.querySelector('[name="playerWeapon"]');
+  const sections = Array.from(body.querySelectorAll(".dev-options-section"));
+
+  const showMenu = () => {
+    body.classList.remove("subdrawer-active");
+    sections.forEach(section => section.classList.remove("active"));
+    if (headerTitle) headerTitle.textContent = "Dev Options";
+    if (closeBtn) {
+      closeBtn.textContent = "\u2190 Close";
+      closeBtn.setAttribute("aria-label", "Close");
+    }
+    body.scrollTop = 0;
+  };
+
+  const showSection = (section) => {
+    body.classList.add("subdrawer-active");
+    sections.forEach(optionSection => optionSection.classList.toggle("active", optionSection === section));
+    if (headerTitle) headerTitle.textContent = section.querySelector("h2")?.textContent ?? "Dev Options";
+    if (closeBtn) {
+      closeBtn.textContent = "\u2190 Back";
+      closeBtn.setAttribute("aria-label", "Back to Dev Options");
+    }
+    body.scrollTop = 0;
+    refreshMapInfo();
+  };
+
+  const buildSubdrawerMenu = () => {
+    const menu = document.createElement("nav");
+    menu.className = "dev-options-menu";
+    menu.setAttribute("aria-label", "Dev option categories");
+
+    for (const section of sections) {
+      const heading = section.querySelector("h2")?.textContent ?? "Options";
+      const menuButton = document.createElement("button");
+      menuButton.type = "button";
+      menuButton.className = "dev-options-menu-button";
+      menuButton.textContent = `${heading} >`;
+      menuButton.addEventListener("click", () => showSection(section));
+      menu.appendChild(menuButton);
+    }
+
+    body.insertBefore(menu, body.firstElementChild);
+  };
+
+  buildSubdrawerMenu();
 
   if (weaponSelect) {
     const defaultOption = document.createElement("option");
@@ -73,6 +125,20 @@ export default function installDevOptionsDrawer(gameState) {
     player.attackHitIds.clear();
   };
 
+  const previewBatBite = () => {
+    const player = currentPlayer();
+    if (!player) return;
+    playBatBite();
+    player.showBiteMark?.(player.flyingHitBox?.center ?? player.center, BAT_CONFIG.bite);
+  };
+
+  const previewBlobHit = () => {
+    const player = currentPlayer();
+    if (!player) return;
+    playBlobAttackHit();
+    player.showBlobHit?.(player.flyingHitBox?.center ?? player.center, BLOB_CONFIG.hitEffect);
+  };
+
   const refreshMapInfo = () => {
     if (!mapInfo) return;
     const room = currentRoom();
@@ -109,6 +175,7 @@ export default function installDevOptionsDrawer(gameState) {
 
   const open = () => {
     populate();
+    showMenu();
     drawer.classList.add("active");
     drawer.setAttribute("aria-hidden", "false");
     drawer.scrollTop = 0;
@@ -117,6 +184,7 @@ export default function installDevOptionsDrawer(gameState) {
   const close = () => {
     drawer.classList.remove("active");
     drawer.setAttribute("aria-hidden", "true");
+    showMenu();
   };
 
   const apply = () => {
@@ -173,7 +241,8 @@ export default function installDevOptionsDrawer(gameState) {
   });
   closeBtn?.addEventListener("click", (e) => {
     e.preventDefault();
-    close();
+    if (body.classList.contains("subdrawer-active")) showMenu();
+    else close();
   });
   applyBtn?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -194,8 +263,18 @@ export default function installDevOptionsDrawer(gameState) {
     e.preventDefault();
     cycle(1);
   });
+  previewBatBiteBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    previewBatBite();
+  });
+  previewBlobHitBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    previewBlobHit();
+  });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && drawer.classList.contains("active")) close();
+    if (e.key !== "Escape" || !drawer.classList.contains("active")) return;
+    if (body.classList.contains("subdrawer-active")) showMenu();
+    else close();
   });
 }

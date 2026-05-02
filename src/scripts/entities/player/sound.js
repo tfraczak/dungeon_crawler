@@ -97,6 +97,9 @@ export default function playFootstep(sprinting = false, overrides = {}) {
   const variantKey = sprinting ? "sprinting" : "walking";
   const baseParams = FOOTSTEP_PARAMS[variantKey];
   const overrideVariant = overrides && overrides[variantKey] ? overrides[variantKey] : {};
+  const extraProfiles = Array.isArray(overrideVariant.extraProfiles)
+    ? overrideVariant.extraProfiles
+    : FOOTSTEP_VARIANT_EXTRAS[variantKey];
   const params = { ...baseParams, ...overrideVariant };
 
   const ctx = getAudioContext();
@@ -144,8 +147,7 @@ export default function playFootstep(sprinting = false, overrides = {}) {
   osc.start(now);
   osc.stop(now + params.thudDuration + 0.01);
 
-  const variantExtras = FOOTSTEP_VARIANT_EXTRAS[variantKey];
-  if (variantExtras && variantExtras.length > 0) {
-    playProfileSynth(pitchTrackedProfiles(variantExtras, baseParams.baseFreq, bandpassFreq));
+  if (extraProfiles && extraProfiles.length > 0) {
+    playProfileSynth(pitchTrackedProfiles(extraProfiles, baseParams.baseFreq, bandpassFreq));
   }
 }

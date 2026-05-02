@@ -1,21 +1,8 @@
-import * as GAME_CONFIG from "@core/game_config";
+import playCoinSound from "@entities/coin/sound";
+import { boxesOverlap } from "@entities/enemy/base_enemy/collision_boxes";
+import GOBLIN_CONFIG from "./config";
 
-const LOW_HP_THRESHOLD = 10;
-const SPRINT_DELAY_MS = 300;
-const CHASE_SPRINT_SPEED_MODIFIER = GAME_CONFIG.entities.player.sprintMultiplier * 0.93;
-const FLEE_SPRINT_SPEED_MODIFIER = GAME_CONFIG.entities.player.sprintMultiplier * 0.75;
-const EXIT_BLOCK_DISTANCE = 96;
-const PLAYER_STANDOFF_DISTANCE = 8;
-const ROOM_MIN = 0;
-const ROOM_MAX = 720;
-const EXIT_MIN = 288;
-const EXIT_MAX = 432;
-const EXITS = Object.freeze({
-  U: Object.freeze({ dir: "up", x: 360, y: 0, dx: 0, dy: -1 }),
-  D: Object.freeze({ dir: "down", x: 360, y: 720, dx: 0, dy: 1 }),
-  L: Object.freeze({ dir: "left", x: 0, y: 360, dx: -1, dy: 0 }),
-  R: Object.freeze({ dir: "right", x: 720, y: 360, dx: 1, dy: 0 }),
-});
+const { exits: EXITS } = GOBLIN_CONFIG;
 
 const exitDistance = (enemy, exit) => {
   const dx = exit.x - enemy.center[0];
@@ -38,7 +25,7 @@ const playerBlocksExit = (enemy, player, exit) => {
   const closestY = enemy.center[1] + (exitY * projection);
   const distX = player.center[0] - closestX;
   const distY = player.center[1] - closestY;
-  return Math.sqrt((distX * distX) + (distY * distY)) < EXIT_BLOCK_DISTANCE;
+  return Math.sqrt((distX * distX) + (distY * distY)) < GOBLIN_CONFIG.exitBlockDistance;
 };
 
 const normalize = (x, y) => {
@@ -66,10 +53,10 @@ const nearestPlayerSideTarget = (enemy, player) => {
   const halfEnemyW = enemy.colBox.width / 2;
   const halfEnemyH = enemy.colBox.height / 2;
   const candidates = [
-    [playerCenter[0], py - PLAYER_STANDOFF_DISTANCE - halfEnemyH],
-    [playerCenter[0], py + player.colBox.height + PLAYER_STANDOFF_DISTANCE + halfEnemyH],
-    [px - PLAYER_STANDOFF_DISTANCE - halfEnemyW, playerCenter[1]],
-    [px + player.colBox.width + PLAYER_STANDOFF_DISTANCE + halfEnemyW, playerCenter[1]],
+    [playerCenter[0], py - GOBLIN_CONFIG.playerStandoffDistance - halfEnemyH],
+    [playerCenter[0], py + player.colBox.height + GOBLIN_CONFIG.playerStandoffDistance + halfEnemyH],
+    [px - GOBLIN_CONFIG.playerStandoffDistance - halfEnemyW, playerCenter[1]],
+    [px + player.colBox.width + GOBLIN_CONFIG.playerStandoffDistance + halfEnemyW, playerCenter[1]],
   ];
 
   return candidates.reduce((nearest, candidate) => {
@@ -91,9 +78,9 @@ const keepPlayerStandoff = (nx, ny, speed, enemy, player) => {
   if (targetDistance > 0.5) return [targetDx, targetDy];
 
   const gap = boxDistance(enemy.colBox, player.colBox);
-  if (gap < PLAYER_STANDOFF_DISTANCE) {
+  if (gap < GOBLIN_CONFIG.playerStandoffDistance) {
     const [awayX, awayY] = normalize(enemy.center[0] - player.center[0], enemy.center[1] - player.center[1]);
-    const correction = Math.min(speed, PLAYER_STANDOFF_DISTANCE - gap);
+    const correction = Math.min(speed, GOBLIN_CONFIG.playerStandoffDistance - gap);
     return [awayX * correction, awayY * correction];
   }
 
@@ -103,12 +90,12 @@ const keepPlayerStandoff = (nx, ny, speed, enemy, player) => {
     enemy.colBox.pos[0] + nx,
     enemy.colBox.pos[1] + ny,
   );
-  if (nextGap >= PLAYER_STANDOFF_DISTANCE || nextGap >= gap) return [nx, ny];
+  if (nextGap >= GOBLIN_CONFIG.playerStandoffDistance || nextGap >= gap) return [nx, ny];
 
   const closingDistance = gap - nextGap;
   if (closingDistance <= 0) return [nx, ny];
 
-  const scale = Math.max(0, Math.min(1, (gap - PLAYER_STANDOFF_DISTANCE) / closingDistance));
+  const scale = Math.max(0, Math.min(1, (gap - GOBLIN_CONFIG.playerStandoffDistance) / closingDistance));
   return [nx * scale, ny * scale];
 };
 
@@ -123,10 +110,60 @@ const openExitsFor = (room) => (
     .filter(Boolean)
 );
 
+const stolenCoinDistance = (enemy, coin) => {
+  const dx = coin.center[0] - enemy.center[0];
+  const dy = coin.center[1] - enemy.center[1];
+  return Math.sqrt((dx * dx) + (dy * dy));
+};
+
+const findStolenCoinTarget = (enemy) => (
+  Object.values(enemy.room?.coins ?? {})
+    .filter(coin => coin.stolen && !coin.claimedBy)
+    .map(coin => ({ coin, dist: stolenCoinDistance(enemy, coin) }))
+    .filter(({ dist }) => dist <= enemy.detectDist)
+    .sort((a, b) => a.dist - b.dist)[0]?.coin ?? null
+);
+
+const clearCoinAlert = (enemy) => {
+  if (enemy.coinAlertActive) enemy.coinAlertFadeTimer = GOBLIN_CONFIG.alert.fadeFrames;
+  enemy.coinAlertActive = false;
+  enemy.stolenCoinTargetId = null;
+};
+
+const updateStolenCoinTarget = (enemy) => {
+  if (enemy.hp < GOBLIN_CONFIG.lowHpThreshold || enemy.hasStolenCoin) {
+    clearCoinAlert(enemy);
+    return null;
+  }
+
+  const coin = findStolenCoinTarget(enemy);
+  if (!coin) {
+    clearCoinAlert(enemy);
+    return null;
+  }
+
+  enemy.coinAlertActive = true;
+  enemy.coinAlertFadeTimer = GOBLIN_CONFIG.alert.fadeFrames;
+  enemy.stolenCoinTargetId = coin.id;
+  return coin;
+};
+
+const collectStolenCoinIfReady = (enemy, coin) => {
+  if (!coin || coin.dropping || !boxesOverlap(enemy.colBox, coin.colBox)) return false;
+
+  delete enemy.room.coins[coin.id];
+  enemy.hasStolenCoin = true;
+  enemy.stolenCoinTargetId = null;
+  enemy.coinAlertActive = false;
+  enemy.coinAlertFadeTimer = GOBLIN_CONFIG.alert.fadeFrames;
+  playCoinSound();
+  return true;
+};
+
 const inExitOpening = (enemy, exitDir) => {
   const [x, y] = enemy.colBox.center;
-  if (exitDir === "up" || exitDir === "down") return x >= EXIT_MIN && x <= EXIT_MAX;
-  return y >= EXIT_MIN && y <= EXIT_MAX;
+  if (exitDir === "up" || exitDir === "down") return x >= GOBLIN_CONFIG.exitMin && x <= GOBLIN_CONFIG.exitMax;
+  return y >= GOBLIN_CONFIG.exitMin && y <= GOBLIN_CONFIG.exitMax;
 };
 
 const reachedExit = (enemy, exitDir) => {
@@ -134,13 +171,13 @@ const reachedExit = (enemy, exitDir) => {
 
   switch (exitDir) {
     case "up":
-      return enemy.colBox.top[1] <= ROOM_MIN;
+      return enemy.colBox.top[1] <= GOBLIN_CONFIG.roomMin;
     case "down":
-      return enemy.colBox.bottom[1] >= ROOM_MAX;
+      return enemy.colBox.bottom[1] >= GOBLIN_CONFIG.roomMax;
     case "left":
-      return enemy.colBox.left[0] <= ROOM_MIN;
+      return enemy.colBox.left[0] <= GOBLIN_CONFIG.roomMin;
     case "right":
-      return enemy.colBox.right[0] >= ROOM_MAX;
+      return enemy.colBox.right[0] >= GOBLIN_CONFIG.roomMax;
     default:
       return false;
   }
@@ -175,13 +212,18 @@ const circleAroundPlayer = (enemy, player, exit, speed) => {
 export const createGoblinBehavior = () => {
   let sprintRequestedAt = null;
 
-  const fleeing = enemy => enemy.hp < LOW_HP_THRESHOLD;
+  const fleeing = enemy => enemy.hp < GOBLIN_CONFIG.lowHpThreshold || enemy.hasStolenCoin;
 
   const resolveSpeedModifier = (enemy, cfg) => {
     const player = enemy.gameState.session.player;
+    if (updateStolenCoinTarget(enemy)) {
+      sprintRequestedAt = null;
+      return GOBLIN_CONFIG.fleeSprintSpeedModifier;
+    }
+
     if (fleeing(enemy)) {
       sprintRequestedAt = null;
-      return FLEE_SPRINT_SPEED_MODIFIER;
+      return GOBLIN_CONFIG.fleeSprintSpeedModifier;
     }
 
     if (!enemy.chasingPlayer || !player.sprinting) {
@@ -190,13 +232,22 @@ export const createGoblinBehavior = () => {
     }
 
     sprintRequestedAt ??= Date.now();
-    return Date.now() - sprintRequestedAt >= SPRINT_DELAY_MS
-      ? CHASE_SPRINT_SPEED_MODIFIER
+    return Date.now() - sprintRequestedAt >= GOBLIN_CONFIG.sprintDelayMs
+      ? GOBLIN_CONFIG.chaseSprintSpeedModifier
       : cfg.chaseSpeedModifier;
   };
 
   const adjustMovement = (nx, ny, speed, enemy) => {
     const player = enemy.gameState.session.player;
+    const stolenCoin = enemy.stolenCoinTargetId
+      ? enemy.room?.coins?.[enemy.stolenCoinTargetId]
+      : null;
+    if (stolenCoin) {
+      if (collectStolenCoinIfReady(enemy, stolenCoin)) return [0, 0];
+      const [coinX, coinY] = normalize(stolenCoin.center[0] - enemy.center[0], stolenCoin.center[1] - enemy.center[1]);
+      return [coinX * speed, coinY * speed];
+    }
+
     if (!fleeing(enemy)) {
       enemy.fleeExitDir = null;
       if (enemy.chasingPlayer) return keepPlayerStandoff(nx, ny, speed, enemy, player);
@@ -227,6 +278,11 @@ export const createGoblinBehavior = () => {
   };
 
   const resolveSpriteDir = (nx, ny, enemy) => {
+    const stolenCoin = enemy.stolenCoinTargetId
+      ? enemy.room?.coins?.[enemy.stolenCoinTargetId]
+      : null;
+    if (stolenCoin) return directionToward(enemy.center, stolenCoin.center);
+
     if (enemy.chasingPlayer && !fleeing(enemy)) {
       const player = enemy.gameState.session.player;
       return directionToward(enemy.center, player.center);
@@ -241,7 +297,7 @@ export const createGoblinBehavior = () => {
     beforeWallCheck: transferIfReady,
     adjustMovement,
     afterMove: transferIfReady,
-    forceMovement: fleeing,
+    forceMovement: enemy => fleeing(enemy) || Boolean(enemy.stolenCoinTargetId),
     resolveSpriteDir,
     resolveSpeedModifier,
   };

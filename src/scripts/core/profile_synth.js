@@ -24,11 +24,13 @@ import { getEffect } from "./profile_effects";
 // pop on longer durations.
 const ENVELOPE_TAIL = 0.02;
 
-// Play a single profile. Returns nothing — fire and forget; the source
-// node is scheduled to stop on its own and will be garbage-collected.
+// Play a single profile. Returns a small stop handle so long/charging
+// sounds can be cut short when the animation/action is interrupted.
 const playOneProfile = (ctx, profile) => {
+  if (profile?.muted === true) return null;
+
   const sourceDef = getSource(profile.type);
-  if (!sourceDef) return;
+  if (!sourceDef) return null;
 
   // Merge source-type defaults under the profile's own values so partial
   // profiles still work.
@@ -38,33 +40,72 @@ const playOneProfile = (ctx, profile) => {
   const startOffset = Number.isFinite(profile.startOffset) ? Math.max(0, profile.startOffset) : 0;
   const duration = Number.isFinite(profile.duration) ? Math.max(0.001, profile.duration) : 0.04;
   const peakGain = Number.isFinite(profile.gain) ? Math.max(0, profile.gain) : 0.2;
+  const attackTime = Number.isFinite(profile.attackTime) ? Math.max(0, profile.attackTime) : 0;
+  const attackEndOffset = Math.min(duration * 0.95, attackTime);
 
   const startAt = ctx.currentTime + startOffset;
   const stopAt = startAt + duration + ENVELOPE_TAIL;
+  const peakAt = startAt + attackEndOffset;
+  const decayEndsAt = startAt + duration;
 
-  // Universal envelope: instant attack to `peakGain`, exponential decay to
-  // a near-zero floor over `duration`. exponentialRampToValueAtTime can't
-  // hit 0, hence the small floor.
+  // Universal envelope: optional attack to `peakGain`, then decay to a
+  // near-zero floor. exponentialRampToValueAtTime can't hit 0, hence the
+  // small floor.
   const envelope = ctx.createGain();
-  envelope.gain.setValueAtTime(peakGain, startAt);
-  envelope.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  envelope.gain.setValueAtTime(attackEndOffset > 0 ? 0.0001 : peakGain, startAt);
+  if (attackEndOffset > 0) envelope.gain.linearRampToValueAtTime(peakGain, peakAt);
+  if (profile.decayCurve === "linear") {
+    envelope.gain.linearRampToValueAtTime(0.0001, decayEndsAt);
+  } else {
+    envelope.gain.exponentialRampToValueAtTime(0.0001, decayEndsAt);
+  }
 
   // Wire source -> envelope -> [effects chain] -> destination.
   built.output.connect(envelope);
   let lastNode = envelope;
   const effects = Array.isArray(profile.effects) ? profile.effects : [];
+  const builtEffects = [];
   for (const effect of effects) {
     const effectDef = getEffect(effect.type);
     if (!effectDef) continue;
     const effectParams = { ...effectDef.defaults, ...effect };
+    if (profile.reverseBuffer === true && effect.reverseBuffer == null) {
+      effectParams.reverseBuffer = true;
+    }
+    effectParams.profileDuration = duration;
     const effectNode = effectDef.build(ctx, effectParams);
     lastNode.connect(effectNode.input);
     lastNode = effectNode.output;
+    builtEffects.push(effectNode);
   }
-  lastNode.connect(ctx.destination);
+  const output = ctx.createGain();
+  output.gain.setValueAtTime(1, ctx.currentTime);
+  lastNode.connect(output);
+  output.connect(ctx.destination);
 
+  builtEffects.forEach(effectNode => effectNode.start?.(startAt));
   built.start(startAt);
+  builtEffects.forEach(effectNode => effectNode.stop?.(stopAt));
   built.stop(stopAt);
+
+  return {
+    stop: (fadeSeconds = 0.03) => {
+      const now = ctx.currentTime;
+      const fadeUntil = now + Math.max(0.001, fadeSeconds);
+      output.gain.cancelScheduledValues(now);
+      output.gain.setValueAtTime(output.gain.value, now);
+      output.gain.linearRampToValueAtTime(0, fadeUntil);
+      envelope.gain.cancelScheduledValues(now);
+      envelope.gain.setValueAtTime(Math.max(0.0001, envelope.gain.value), now);
+      envelope.gain.exponentialRampToValueAtTime(0.0001, fadeUntil);
+      try {
+        built.stop(Math.max(now, startAt));
+      } catch {
+        // Source may already have been stopped by its scheduled stop.
+      }
+      setTimeout(() => output.disconnect(), (fadeSeconds + ENVELOPE_TAIL) * 1000);
+    },
+  };
 };
 
 // Pitch-locking helper for layering Sound Profiles on top of a bespoke
@@ -97,11 +138,16 @@ export const pitchTrackedProfiles = (extras, defaultBaseFreq, baseFreq) => {
 // Play an entire profile_synth sound: fan out, schedule each profile.
 export const playProfileSynth = (profiles) => {
   const ctx = getAudioContext();
-  if (!ctx) return;
+  if (!ctx) return { stop: () => {} };
   // Browsers suspend the context if it was created before any user
   // gesture. Resuming inside the gesture handler is safe and a no-op
   // when already running.
   if (ctx.state === "suspended") ctx.resume?.().catch?.(() => {});
-  if (!Array.isArray(profiles)) return;
-  for (const profile of profiles) playOneProfile(ctx, profile);
+  if (!Array.isArray(profiles)) return { stop: () => {} };
+  const handles = profiles.map(profile => playOneProfile(ctx, profile)).filter(Boolean);
+  return {
+    stop: (fadeSeconds) => {
+      handles.forEach(handle => handle.stop(fadeSeconds));
+    },
+  };
 };

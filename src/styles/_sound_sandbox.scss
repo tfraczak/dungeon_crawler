@@ -102,11 +102,13 @@
 
   .dev-sound-sandbox-actions {
     flex-shrink: 0;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
     padding: 16px 28px 24px;
     border-top: 2px solid rgba(255, 255, 255, 0.25);
+    background-color: rgba(12, 16, 18, 0.96);
+
+    .dev-sound-actions {
+      width: 100%;
+    }
 
     .button {
       font-family: $rubik;
@@ -328,6 +330,17 @@
         color: $off-white;
       }
     }
+
+    &.dev-sound-check {
+      justify-content: flex-start;
+
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: $banana;
+        cursor: pointer;
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -364,6 +377,18 @@
         cursor: not-allowed;
       }
 
+      &.copied {
+        border-color: #7bd06b;
+        color: #7bd06b;
+        background-color: rgba(42, 96, 48, 0.35);
+      }
+
+      &.copy-failed {
+        border-color: #d97070;
+        color: #f0a8a8;
+        background-color: rgba(96, 42, 42, 0.35);
+      }
+
       &.danger {
         border-color: rgba(217, 112, 112, 0.7);
 
@@ -395,6 +420,19 @@
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 4px;
     background-color: rgba(0, 0, 0, 0.18);
+
+    &.muted {
+      opacity: 0.58;
+      border-color: rgba(217, 112, 112, 0.45);
+
+      .dev-sound-card-header h3::after {
+        content: " muted";
+        font-family: $rubik;
+        font-size: 11px;
+        color: #f0a8a8;
+        text-transform: uppercase;
+      }
+    }
 
     .dev-sound-card-header {
       display: flex;
@@ -516,12 +554,41 @@
   // Inline status bubble — used after Copy values to flash success/failure.
   // ---------------------------------------------------------------------------
   .dev-sound-status {
-    font-size: 12px;
+    width: 100%;
+    min-height: 0;
+    max-height: 0;
+    padding: 0 12px;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.35;
+    text-align: center;
     color: color.adjust(white, $lightness: -25%);
-    min-height: 16px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background-color: transparent;
+    opacity: 0;
+    transition:
+      max-height 0.15s ease-in-out,
+      padding 0.15s ease-in-out,
+      opacity 0.15s ease-in-out;
 
-    &.ok { color: #7bd06b; }
-    &.err { color: #f0a8a8; }
+    &.visible {
+      max-height: 48px;
+      padding: 8px 12px;
+      opacity: 1;
+    }
+
+    &.ok {
+      color: #7bd06b;
+      border-color: rgba(123, 208, 107, 0.45);
+      background-color: rgba(42, 96, 48, 0.25);
+    }
+
+    &.err {
+      color: #f0a8a8;
+      border-color: rgba(217, 112, 112, 0.45);
+      background-color: rgba(96, 42, 42, 0.25);
+    }
   }
 
   @media (max-width: 720px) {

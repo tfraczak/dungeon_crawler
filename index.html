@@ -173,6 +173,10 @@
               <input type="number" name="enemyItemDropRate" step="0.05" min="0" max="1" inputmode="decimal" />
             </label>
             <label class="dev-field">
+              <span>Goblin steal chance</span>
+              <input type="number" name="enemyGoblinStealChance" step="0.05" min="0" max="1" inputmode="decimal" />
+            </label>
+            <label class="dev-field">
               <span>Forced drops per kill</span>
               <input type="number" name="enemyForcedDropCount" step="1" min="0" inputmode="numeric" />
             </label>
@@ -183,6 +187,12 @@
             <label class="dev-check"><input type="checkbox" name="showCollisionBoxes" /> <span>Collision boxes</span></label>
             <label class="dev-check"><input type="checkbox" name="showEnemyDetectRadius" /> <span>Enemy detect radius</span></label>
             <label class="dev-check"><input type="checkbox" name="showEnemyHp" /> <span>Enemy HP bars</span></label>
+            <div class="dev-options-button-row">
+              <button type="button" id="dev-preview-bat-bite" class="button secondary">Preview bat bite effect</button>
+            </div>
+            <div class="dev-options-button-row">
+              <button type="button" id="dev-preview-blob-hit" class="button secondary">Preview blob ooze effect</button>
+            </div>
           </section>
 
           <section class="dev-options-section">
@@ -245,8 +255,9 @@
           </div>
 
           <div id="dev-sound-sandbox-knob-slot"></div>
-          <div id="dev-sound-sandbox-status" class="dev-sound-status" role="status"></div>
         </div>
+
+        <div id="dev-sound-sandbox-actions" class="dev-sound-sandbox-actions"></div>
       </div>
     </aside>
 

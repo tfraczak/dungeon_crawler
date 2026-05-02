@@ -1,14 +1,9 @@
 import createBaseEnemy from "../base_enemy/index";
 import createErraticFlight from "./movement";
 import * as GAME_CONFIG from "@core/game_config";
-
-const BAT_SPEED_MODIFIER = 1.12;
-
-const BAT_ANIMATION_PACE = Object.freeze({
-  idle: 7,
-  chase: 5,
-  dead: 10,
-});
+import Random from "@utils/random";
+import BAT_CONFIG from "./config";
+import { playBatBite } from "./sound";
 
 function createBatEnemy({ pos, width, height, spritePalette, detectDist, gameState }) {
   const bat = createBaseEnemy({
@@ -21,18 +16,26 @@ function createBatEnemy({ pos, width, height, spritePalette, detectDist, gameSta
     detectDist,
     gameState,
     options: {
-      colBox: { width: 26, height: 20 },
+      hp: BAT_CONFIG.hp,
+      colBox: BAT_CONFIG.colBox,
       colBoxAnchor: "center",
       flying: true,
       adjustMovement: createErraticFlight(),
       defaultSpriteDir: "down",
       animationPace: (enemy) => {
-        if (!enemy.alive()) return BAT_ANIMATION_PACE.dead;
-        return enemy.chasingPlayer ? BAT_ANIMATION_PACE.chase : BAT_ANIMATION_PACE.idle;
+        if (!enemy.alive()) return BAT_CONFIG.animationPace.dead;
+        return enemy.chasingPlayer ? BAT_CONFIG.animationPace.chase : BAT_CONFIG.animationPace.idle;
       },
     },
   });
-  bat.speed = GAME_CONFIG.world.baseSpeed * GAME_CONFIG.entities.enemy.speedMultiplier * BAT_SPEED_MODIFIER;
+  bat.speed = GAME_CONFIG.world.baseSpeed * GAME_CONFIG.entities.enemy.speedMultiplier * BAT_CONFIG.speedModifier;
+  bat.onPlayerHit = (player, { hitCenter }) => {
+    playBatBite();
+    player.showBiteMark?.(hitCenter, BAT_CONFIG.bite);
+    if (Random.chance(BAT_CONFIG.poison.chance)) {
+      player.applyPoison?.(BAT_CONFIG.poison);
+    }
+  };
   return bat;
 }
 

@@ -67,7 +67,62 @@ export const COIN_DROP_EXTRA_PROFILES = Object.freeze([
   }),
 ]);
 
+export const COIN_STOLEN_PROFILES = Object.freeze([
+  Object.freeze({
+    type: "periodic_wave",
+    frequency: 5406,
+    harmonics: "bell",
+    reverseBuffer: false,
+    muted: false,
+    startOffset: 0,
+    duration: 0.04,
+    gain: 0.5,
+    effects: Object.freeze([
+      Object.freeze({
+        type: "reverb",
+        duration: 1.5,
+        decay: 2.5,
+        mix: 0.35,
+      }),
+    ]),
+  }),
+  Object.freeze({
+    type: "periodic_wave",
+    startOffset: 0,
+    duration: 0.04,
+    gain: 0.65,
+    frequency: 9614,
+    harmonics: "square8",
+    reverseBuffer: false,
+    effects: Object.freeze([
+      Object.freeze({
+        type: "delay",
+        delayTime: 0.06,
+        feedback: 0.35,
+        mix: 0.4,
+      }),
+      Object.freeze({
+        type: "reverb",
+        duration: 1.5,
+        decay: 2.5,
+        mix: 0.35,
+      }),
+      Object.freeze({
+        type: "delay",
+        delayTime: 0.12,
+        feedback: 0.1,
+        mix: 1,
+      }),
+    ]),
+  }),
+]);
+
+export const playCoinStolen = (profiles = COIN_STOLEN_PROFILES) => playProfileSynth(profiles);
+
 export function playCoinDrop(overrides = {}) {
+  const extraProfiles = Array.isArray(overrides.extraProfiles)
+    ? overrides.extraProfiles
+    : COIN_DROP_EXTRA_PROFILES;
   const params = { ...COIN_DROP_PARAMS, ...overrides };
   const ctx = getAudioContext();
   const now = ctx.currentTime;
@@ -85,10 +140,15 @@ export function playCoinDrop(overrides = {}) {
   osc.start(now);
   osc.stop(now + params.duration);
 
-  playProfileSynth(pitchTrackedProfiles(COIN_DROP_EXTRA_PROFILES, COIN_DROP_PARAMS.baseFreq, baseFreq));
+  if (extraProfiles.length > 0) {
+    playProfileSynth(pitchTrackedProfiles(extraProfiles, COIN_DROP_PARAMS.baseFreq, baseFreq));
+  }
 }
 
 export default function playCoinSound(overrides = {}) {
+  const extraProfiles = Array.isArray(overrides.extraProfiles)
+    ? overrides.extraProfiles
+    : COIN_PICKUP_EXTRA_PROFILES;
   const params = { ...COIN_PICKUP_PARAMS, ...overrides };
   const ctx = getAudioContext();
   const now = ctx.currentTime;
@@ -121,5 +181,7 @@ export default function playCoinSound(overrides = {}) {
   osc2.start(now);
   osc2.stop(now + params.harmonicDuration);
 
-  playProfileSynth(pitchTrackedProfiles(COIN_PICKUP_EXTRA_PROFILES, COIN_PICKUP_PARAMS.baseFreq, baseFreq));
+  if (extraProfiles.length > 0) {
+    playProfileSynth(pitchTrackedProfiles(extraProfiles, COIN_PICKUP_PARAMS.baseFreq, baseFreq));
+  }
 }

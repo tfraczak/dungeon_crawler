@@ -1,5 +1,6 @@
 import createBaseEnemy from "../base_enemy/index";
 import { createSkeletonBehavior } from "./behavior";
+import SKELETON_CONFIG from "./config";
 import { setupSkeletonMagicCombat } from "./combat";
 
 function createSkeletonEnemy({ pos, width, height, spritePalette, detectDist, gameState }) {
@@ -11,9 +12,12 @@ function createSkeletonEnemy({ pos, width, height, spritePalette, detectDist, ga
     spritePalette,
     type: "skeleton",
     spriteGridPos: { row: 1, column: 1 },
-    detectDist,
     gameState,
-    options: behavior,
+    detectDist,
+    options: {
+      ...behavior,
+      hp: SKELETON_CONFIG.hp,
+    },
   });
   setupSkeletonMagicCombat(skeleton);
   return skeleton;

@@ -1,4 +1,3 @@
-import createWall from "@world/wall";
 import createCoin from "@entities/coin/coin";
 import createEnemy from "@entities/enemy/enemy";
 import createLadder from "@entities/ladder/ladder";
@@ -8,6 +7,7 @@ import { shuffle } from "@utils/helpers";
 import Random from "@utils/random";
 import setupRoomCombat from "./combat";
 import { pickVariantIndex, getForcedConfig } from "./map_variants";
+import createRoomMap from "./room_map";
 import {
   enemyCountPoints,
   enemyDifficultyPoints,
@@ -115,7 +115,7 @@ function createRoom(neighbor, gameState) {
   session.rooms[`${room.nodePos}`] = room;
 
   addValidNeighbors(room, gameState);
-  let walls, numPaths;
+  let numPaths;
   let newPaths = [];
   let paths = buildPaths(room, gameState);
   let pathsArr = paths.split("");
@@ -138,8 +138,8 @@ function createRoom(neighbor, gameState) {
     room.background = forcedBg;
     room.bgConfig = { numPaths, paths: forcedPaths, variantIdx: randIdx };
     assignBlockedPaths(room, forcedPaths);
-    walls = buildRoomWalls(forcedPaths);
-    room.walls.push(...walls);
+    room.map = createRoomMap(forcedPaths, room.bgConfig);
+    room.walls.push(...room.map.movementWalls);
     session.rooms[`${room.nodePos}`] = room;
   } else if (neighbor) {
     pathsArr = pathsArr.filter(path => path !== entryDir);
@@ -149,8 +149,8 @@ function createRoom(neighbor, gameState) {
       room.background = bgImgs[`${numPaths}${paths}${randIdx}`];
       room.bgConfig = { numPaths, paths, variantIdx: randIdx };
       assignBlockedPaths(room, paths);
-      walls = buildRoomWalls(paths);
-      room.walls.push(...walls);
+      room.map = createRoomMap(paths, room.bgConfig);
+      room.walls.push(...room.map.movementWalls);
       session.rooms[`${room.nodePos}`] = room;
     } else {
       shuffle(pathsArr);
@@ -162,8 +162,8 @@ function createRoom(neighbor, gameState) {
       room.background = bgImgs[`${numPaths + 1}${newPaths}${randIdx}`];
       room.bgConfig = { numPaths: numPaths + 1, paths: newPaths, variantIdx: randIdx };
       assignBlockedPaths(room, newPaths);
-      walls = buildRoomWalls(newPaths);
-      room.walls.push(...walls);
+      room.map = createRoomMap(newPaths, room.bgConfig);
+      room.walls.push(...room.map.movementWalls);
       session.rooms[`${room.nodePos}`] = room;
     }
   } else {
@@ -172,8 +172,8 @@ function createRoom(neighbor, gameState) {
       randIdx = pickVariantIndex(numPaths, paths);
       room.background = bgImgs[`${numPaths}${paths}${randIdx}`];
       room.bgConfig = { numPaths, paths, variantIdx: randIdx };
-      walls = buildRoomWalls(paths);
-      room.walls.push(...walls);
+      room.map = createRoomMap(paths, room.bgConfig);
+      room.walls.push(...room.map.movementWalls);
       session.rooms[`${room.nodePos}`] = room;
     } else {
       shuffle(pathsArr);
@@ -183,8 +183,8 @@ function createRoom(neighbor, gameState) {
       room.background = bgImgs[`${numPaths}${newPaths}${randIdx}`];
       room.bgConfig = { numPaths, paths: newPaths, variantIdx: randIdx };
       assignBlockedPaths(room, newPaths);
-      walls = buildRoomWalls(newPaths);
-      room.walls.push(...walls);
+      room.map = createRoomMap(newPaths, room.bgConfig);
+      room.walls.push(...room.map.movementWalls);
       session.rooms[`${room.nodePos}`] = room;
     }
   }
@@ -712,42 +712,6 @@ function randSpawnAxis(spawnCfg) {
     return Random.int(spawnCfg.min, spawnCfg.min + lowerSpan - 1);
   }
   return Random.int(spawnCfg.excludeMax, spawnCfg.excludeMax + upperSpan - 1);
-}
-
-function buildRoomWalls(paths) {
-  const T = GAME_CONFIG.world.tileSize;
-  const S = T * 15;
-  const walls = [];
-
-  if (paths.includes("U")) {
-    walls.push(createWall([0, 0], T * 6, T));
-    walls.push(createWall([T * 9, 0], T * 6, T));
-  } else {
-    walls.push(createWall([0, 0], S, T));
-  }
-
-  if (paths.includes("D")) {
-    walls.push(createWall([0, S - T], T * 6, T));
-    walls.push(createWall([T * 9, S - T], T * 6, T));
-  } else {
-    walls.push(createWall([0, S - T], S, T));
-  }
-
-  if (paths.includes("L")) {
-    walls.push(createWall([0, 0], T, T * 6));
-    walls.push(createWall([0, T * 9], T, T * 6));
-  } else {
-    walls.push(createWall([0, 0], T, S));
-  }
-
-  if (paths.includes("R")) {
-    walls.push(createWall([S - T, 0], T, T * 6));
-    walls.push(createWall([S - T, T * 9], T, T * 6));
-  } else {
-    walls.push(createWall([S - T, 0], T, S));
-  }
-
-  return walls;
 }
 
 export default createRoom;

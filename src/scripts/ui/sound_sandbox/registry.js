@@ -11,11 +11,48 @@
 // User-spawned customs and library presets are merged into this manifest
 // at runtime by `install.js` via `getEffectiveEntries()` -- see below.
 
-import playCoinSound, { playCoinDrop, COIN_PICKUP_PARAMS, COIN_DROP_PARAMS } from "@entities/coin/sound";
-import playHpPotionSound, { playHpPotionDrop, HP_POTION_PICKUP_PARAMS, HP_POTION_DROP_PARAMS } from "@entities/hp_potion/sound";
-import playFootstep, { FOOTSTEP_PARAMS } from "@entities/player/sound";
-import playPoofSound, { POOF_PARAMS } from "@entities/enemy/sound";
-import { playSlashHit, playSlashWhiff, SLASH_HIT_PARAMS, SLASH_WHIFF_PARAMS } from "@items/equipment/weapons/swords/sound";
+import playCoinSound, {
+  playCoinDrop,
+  playCoinStolen,
+  COIN_PICKUP_PARAMS,
+  COIN_PICKUP_EXTRA_PROFILES,
+  COIN_DROP_PARAMS,
+  COIN_DROP_EXTRA_PROFILES,
+  COIN_STOLEN_PROFILES,
+} from "@entities/coin/sound";
+import playHpPotionSound, {
+  playHpPotionDrop,
+  HP_POTION_PICKUP_PARAMS,
+  HP_POTION_DROP_PARAMS,
+  HP_POTION_DROP_EXTRA_PROFILES,
+} from "@entities/hp_potion/sound";
+import playFootstep, {
+  FOOTSTEP_PARAMS,
+  FOOTSTEP_WALKING_EXTRA_PROFILES,
+  FOOTSTEP_SPRINTING_EXTRA_PROFILES,
+} from "@entities/player/sound";
+import {
+  playPoisonStatusEffect,
+  POISON_STATUS_EFFECT_PROFILES,
+} from "@entities/player/status_effects/poison/sound";
+import playPoofSound, { POOF_PROFILES } from "@entities/enemy/sound";
+import { BAT_BITE_PROFILES, playBatBite } from "@entities/enemy/bat/sound";
+import { BLOB_ATTACK_HIT_PROFILES, playBlobAttackHit } from "@entities/enemy/blob/sound";
+import {
+  playIceCrystalCast,
+  playIceCrystalHit,
+  playIceCrystalWallHit,
+  ICE_CRYSTAL_CAST_PROFILES,
+  ICE_CRYSTAL_HIT_PROFILES,
+  ICE_CRYSTAL_WALL_HIT_PROFILES,
+} from "@entities/projectiles/ice_crystal/sound";
+import {
+  playDaggerHit,
+  playDaggerSwing,
+  DAGGER_HIT_PROFILES,
+  DAGGER_SWING_PROFILES,
+} from "@items/equipment/weapons/daggers/sound";
+import { playSlashHit, playSlashSwing, SLASH_HIT_PROFILES, SLASH_SWING_PROFILES } from "@items/equipment/weapons/swords/sound";
 import { playClick, DEFAULT_CLICK_PROFILES } from "@ui/sound";
 
 // ---------------------------------------------------------------------------
@@ -46,7 +83,10 @@ const BUILT_IN_ENTRIES = [
     sourceFile: "src/scripts/entities/coin/sound.js",
     constName: "COIN_PICKUP_PARAMS",
     defaults: COIN_PICKUP_PARAMS,
-    play: (overrides) => playCoinSound(overrides),
+    defaultExtraProfiles: COIN_PICKUP_EXTRA_PROFILES,
+    extraProfilesConstName: "COIN_PICKUP_EXTRA_PROFILES",
+    handlesProfiles: true,
+    play: (overrides, profiles) => playCoinSound({ ...overrides, extraProfiles: profiles }),
     knobs: [
       range("baseFreq",         "Base freq",         200, 5000, 10, { unit: "Hz" }),
       range("freqRandomRange",  "Freq jitter",         0, 3000, 10, { unit: "Hz" }),
@@ -68,7 +108,10 @@ const BUILT_IN_ENTRIES = [
     sourceFile: "src/scripts/entities/coin/sound.js",
     constName: "COIN_DROP_PARAMS",
     defaults: COIN_DROP_PARAMS,
-    play: (overrides) => playCoinDrop(overrides),
+    defaultExtraProfiles: COIN_DROP_EXTRA_PROFILES,
+    extraProfilesConstName: "COIN_DROP_EXTRA_PROFILES",
+    handlesProfiles: true,
+    play: (overrides, profiles) => playCoinDrop({ ...overrides, extraProfiles: profiles }),
     knobs: [
       range("baseFreq",        "Base freq",      100, 3000, 10, { unit: "Hz" }),
       range("freqRandomRange", "Freq jitter",      0, 2000, 10, { unit: "Hz" }),
@@ -76,6 +119,17 @@ const BUILT_IN_ENTRIES = [
       range("gain",            "Gain",             0,    1, 0.01),
       range("duration",        "Duration",      0.02,    2, 0.02, { unit: "s" }),
     ],
+  },
+  {
+    id: "coin_stolen",
+    defaultName: "Coin stolen sound",
+    defaultDescription: "The sound that's played when a coin is stolen.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/entities/coin/sound.js",
+    constName: "COIN_STOLEN_PROFILES",
+    defaults: { profiles: COIN_STOLEN_PROFILES },
+    play: (overrides) => playCoinStolen(overrides?.profiles ?? overrides),
   },
   {
     id: "hp_potion_pickup",
@@ -105,7 +159,10 @@ const BUILT_IN_ENTRIES = [
     sourceFile: "src/scripts/entities/hp_potion/sound.js",
     constName: "HP_POTION_DROP_PARAMS",
     defaults: HP_POTION_DROP_PARAMS,
-    play: (overrides) => playHpPotionDrop(overrides),
+    defaultExtraProfiles: HP_POTION_DROP_EXTRA_PROFILES,
+    extraProfilesConstName: "HP_POTION_DROP_EXTRA_PROFILES",
+    handlesProfiles: true,
+    play: (overrides, profiles) => playHpPotionDrop({ ...overrides, extraProfiles: profiles }),
     knobs: [
       range("baseFreq",        "Base freq",      80, 2000, 10, { unit: "Hz" }),
       range("freqRandomRange", "Freq jitter",     0, 1000, 10, { unit: "Hz" }),
@@ -128,7 +185,11 @@ const BUILT_IN_ENTRIES = [
     // sibling of FOOTSTEP_PARAMS in player/sound.js.
     extraProfilesConstName: "FOOTSTEP_WALKING_EXTRA_PROFILES",
     defaults: FOOTSTEP_PARAMS.walking,
-    play: (overrides) => playFootstep(false, { walking: overrides }),
+    defaultExtraProfiles: FOOTSTEP_WALKING_EXTRA_PROFILES,
+    handlesProfiles: true,
+    play: (overrides, profiles) => playFootstep(false, {
+      walking: { ...overrides, extraProfiles: profiles },
+    }),
     knobs: [
       range("duration",       "Duration",      0.02,    1, 0.01, { unit: "s" }),
       range("volume",         "Volume",           0,    1, 0.01),
@@ -153,7 +214,11 @@ const BUILT_IN_ENTRIES = [
     // See note on footstep_walking above.
     extraProfilesConstName: "FOOTSTEP_SPRINTING_EXTRA_PROFILES",
     defaults: FOOTSTEP_PARAMS.sprinting,
-    play: (overrides) => playFootstep(true, { sprinting: overrides }),
+    defaultExtraProfiles: FOOTSTEP_SPRINTING_EXTRA_PROFILES,
+    handlesProfiles: true,
+    play: (overrides, profiles) => playFootstep(true, {
+      sprinting: { ...overrides, extraProfiles: profiles },
+    }),
     knobs: [
       range("duration",       "Duration",      0.02,    1, 0.01, { unit: "s" }),
       range("volume",         "Volume",           0,    1, 0.01),
@@ -168,62 +233,125 @@ const BUILT_IN_ENTRIES = [
     ],
   },
   {
+    id: "poison_status_effect",
+    defaultName: "Poison status effect",
+    defaultDescription: "The bubbling sounds of being poisoned.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/entities/player/status_effects/poison/sound.js",
+    constName: "POISON_STATUS_EFFECT_PROFILES",
+    defaults: { profiles: POISON_STATUS_EFFECT_PROFILES },
+    play: (overrides) => playPoisonStatusEffect(overrides?.profiles ?? overrides),
+  },
+  {
     id: "enemy_poof",
     defaultName: "Enemy poof",
-    defaultDescription: "Lowpass-swept noise burst with a low thump for enemy defeat",
+    defaultDescription: "Sound played when an enemy is killed.",
     category: "Game sounds",
-    kind: "tunable_recipe",
+    kind: "profile_synth",
     sourceFile: "src/scripts/entities/enemy/sound.js",
-    constName: "POOF_PARAMS",
-    defaults: POOF_PARAMS,
-    play: (overrides) => playPoofSound(overrides),
-    knobs: [
-      range("duration",        "Duration",      0.05,     2, 0.01, { unit: "s" }),
-      range("noiseGain",       "Noise gain",       0,     1, 0.01),
-      range("filterStartFreq", "Filter start", 50, 5000, 10, { unit: "Hz" }),
-      range("filterEndFreq",   "Filter end",   20, 3000, 10, { unit: "Hz" }),
-      range("thumpStartFreq",  "Thump start",  20,  500,  1, { unit: "Hz" }),
-      range("thumpEndFreq",    "Thump end",    10,  300,  1, { unit: "Hz" }),
-      range("thumpGain",       "Thump gain",       0,     1, 0.01),
-      range("thumpDuration",   "Thump dur",     0.01,  0.5, 0.01, { unit: "s" }),
-    ],
+    constName: "POOF_PROFILES",
+    defaults: { profiles: POOF_PROFILES },
+    play: (overrides) => playPoofSound(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "bat_bite",
+    defaultName: "Bat bite",
+    defaultDescription: "Short piercing gouging sound when the bat bites",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/entities/enemy/bat/sound.js",
+    constName: "BAT_BITE_PROFILES",
+    defaults: { profiles: BAT_BITE_PROFILES },
+    play: (overrides) => playBatBite(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "blob_attack_hit",
+    defaultName: "Blob attack hit sound",
+    defaultDescription: "Low thud followed by a dripping noise when a blob hits the player",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/entities/enemy/blob/sound.js",
+    constName: "BLOB_ATTACK_HIT_PROFILES",
+    defaults: { profiles: BLOB_ATTACK_HIT_PROFILES },
+    play: (overrides) => playBlobAttackHit(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "dagger_swing",
+    defaultName: "Dagger swing",
+    defaultDescription: "Quick reversed noise stab for dagger attacks",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/daggers/sound.js",
+    constName: "DAGGER_SWING_PROFILES",
+    defaults: { profiles: DAGGER_SWING_PROFILES },
+    play: (overrides) => playDaggerSwing(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "dagger_hit",
+    defaultName: "Dagger hit",
+    defaultDescription: "Short piercing impact when the dagger connects",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/daggers/sound.js",
+    constName: "DAGGER_HIT_PROFILES",
+    defaults: { profiles: DAGGER_HIT_PROFILES },
+    play: (overrides) => playDaggerHit(overrides?.profiles ?? overrides),
   },
   {
     id: "slash_hit",
     defaultName: "Sword slash hit",
-    defaultDescription: "Stuttered bandpass noise burst when the sword connects",
+    defaultDescription: "Layered distorted bandpass impacts when the sword connects",
     category: "Game sounds",
-    kind: "tunable_recipe",
+    kind: "profile_synth",
     sourceFile: "src/scripts/items/equipment/weapons/swords/sound.js",
-    constName: "SLASH_HIT_PARAMS",
-    defaults: SLASH_HIT_PARAMS,
-    play: (overrides) => playSlashHit(overrides),
-    knobs: [
-      range("duration",        "Duration",      0.05,    2, 0.01, { unit: "s" }),
-      range("rippleFreq",      "Ripple freq",     20, 2000, 10, { unit: "Hz" }),
-      range("decayPow",        "Decay power",    0.1,    5, 0.1),
-      range("gain",            "Gain",             0,    1, 0.01),
-      range("filterStartFreq", "Filter start",    50, 8000, 10, { unit: "Hz" }),
-      range("filterEndFreq",   "Filter end",      20, 5000, 10, { unit: "Hz" }),
-      range("q",               "Filter Q",       0.1,   30, 0.1),
-    ],
+    constName: "SLASH_HIT_PROFILES",
+    defaults: { profiles: SLASH_HIT_PROFILES },
+    play: (overrides) => playSlashHit(overrides?.profiles ?? overrides),
   },
   {
     id: "slash_whiff",
-    defaultName: "Sword slash whiff",
-    defaultDescription: "Highpass noise sweep for a sword swing that misses",
+    defaultName: "Sword swing",
+    defaultDescription: "Short reversed noise sweep for a sword swing",
     category: "Game sounds",
-    kind: "tunable_recipe",
+    kind: "profile_synth",
     sourceFile: "src/scripts/items/equipment/weapons/swords/sound.js",
-    constName: "SLASH_WHIFF_PARAMS",
-    defaults: SLASH_WHIFF_PARAMS,
-    play: (overrides) => playSlashWhiff(overrides),
-    knobs: [
-      range("duration",        "Duration",      0.02,    1, 0.01, { unit: "s" }),
-      range("gain",            "Gain",             0,    1, 0.01),
-      range("filterStartFreq", "Filter start",    50, 8000, 10, { unit: "Hz" }),
-      range("filterEndFreq",   "Filter end",      20, 8000, 10, { unit: "Hz" }),
-    ],
+    constName: "SLASH_SWING_PROFILES",
+    defaults: { profiles: SLASH_SWING_PROFILES },
+    play: (overrides) => playSlashSwing(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "ice_crystal_cast",
+    defaultName: "Ice crystal cast",
+    defaultDescription: "Charging magic sound for the skeleton ice crystal cast",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/entities/projectiles/ice_crystal/sound.js",
+    constName: "ICE_CRYSTAL_CAST_PROFILES",
+    defaults: { profiles: ICE_CRYSTAL_CAST_PROFILES },
+    play: (overrides) => playIceCrystalCast(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "ice_crystal_hit",
+    defaultName: "Ice crystal hit",
+    defaultDescription: "Quick descending magic zap when an ice crystal hits the player",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/entities/projectiles/ice_crystal/sound.js",
+    constName: "ICE_CRYSTAL_HIT_PROFILES",
+    defaults: { profiles: ICE_CRYSTAL_HIT_PROFILES },
+    play: (overrides) => playIceCrystalHit(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "ice_crystal_hit_wall",
+    defaultName: "Ice crystal hit wall",
+    defaultDescription: "Quick descending magic zap when an ice crystal hits the wall",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/entities/projectiles/ice_crystal/sound.js",
+    constName: "ICE_CRYSTAL_WALL_HIT_PROFILES",
+    defaults: { profiles: ICE_CRYSTAL_WALL_HIT_PROFILES },
+    play: (overrides) => playIceCrystalWallHit(overrides?.profiles ?? overrides),
   },
   {
     id: "click",

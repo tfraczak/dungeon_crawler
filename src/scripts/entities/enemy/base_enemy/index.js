@@ -28,7 +28,10 @@ function createBaseEnemy({
   anchorMainColBox(enemy, options.colBoxAnchor);
 
   enemy.gameState = gameState;
-  enemy.hp = DEV_FLAGS.enemyHp ?? rollHp(cfg, type);
+  enemy.hp = DEV_FLAGS.enemyHp ?? rollHp({
+    baseHp: options.hp ?? cfg.hp,
+    variance: options.hpVariance ?? cfg.hpVariance,
+  });
   enemy.maxHp = enemy.hp;
   enemy.strength = cfg.strength;
   enemy.speed = BASE_SPEED * cfg.speedMultiplier;

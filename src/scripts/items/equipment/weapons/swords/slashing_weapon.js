@@ -1,4 +1,5 @@
 import createWeapon from "@items/equipment/weapons/weapon";
+import { playSlashHit, playSlashSwing } from "@items/equipment/weapons/swords/sound";
 
 const SWORD_SPRITE_SIZE = 48;
 const SWORD_NATURAL_BLADE_ANGLE = -Math.PI / 4;
@@ -43,6 +44,8 @@ function createSlashingWeapon({
   weapon.duration = overrides.duration ?? defaults.duration;
   weapon.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
   weapon.sprite = overrides.sprite ?? null;
+  weapon.onAttackStart = () => playSlashSwing();
+  weapon.onHit = () => playSlashHit();
 
   weapon.computeHitbox = (center, facing, attackTimer) => {
     const [cx, cy] = center;

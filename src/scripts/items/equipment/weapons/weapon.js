@@ -45,6 +45,8 @@ function createWeapon({
   };
 
   weapon.hitsTarget = (_hitbox, _colBox) => false;
+  weapon.onAttackStart = () => {};
+  weapon.onHit = () => {};
 
   return weapon;
 }

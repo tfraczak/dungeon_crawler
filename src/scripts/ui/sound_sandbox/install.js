@@ -32,7 +32,7 @@ import {
   deleteCustomSound,
   isCustomSoundIdTaken,
 } from "./storage";
-import { renderPanel } from "./knob_renderer";
+import { renderActions, renderPanel } from "./knob_renderer";
 import { formatPayloadString } from "./copy_format";
 import { playProfileSynth } from "@core/profile_synth";
 import { slugifyId } from "./naming";
@@ -40,6 +40,7 @@ import { slugifyId } from "./naming";
 const PRESET_PREFIX = "preset_";
 const CUSTOM_PREFIX = "custom_";
 const PERSIST_DEBOUNCE_MS = 150;
+const COPY_BUTTON_TEXT = "Copy values";
 
 // ---------------------------------------------------------------------------
 // Virtual entries: presets + custom sounds wrapped to look like registry
@@ -84,6 +85,14 @@ const collectAllEntries = () => {
 
 const findEntry = (id, allEntries) => allEntries.find((e) => e.id === id) ?? null;
 
+const isTextEntryTarget = (target) => {
+  const tagName = target?.tagName;
+  return tagName === "INPUT"
+    || tagName === "TEXTAREA"
+    || tagName === "SELECT"
+    || target?.isContentEditable;
+};
+
 // ---------------------------------------------------------------------------
 // State derivation: registry defaults merged with localStorage overrides.
 // `tunable_recipe`: state = { name, description, params: {...} }
@@ -91,6 +100,7 @@ const findEntry = (id, allEntries) => allEntries.find((e) => e.id === id) ?? nul
 // ---------------------------------------------------------------------------
 
 const deepClone = (v) => (v == null ? v : JSON.parse(JSON.stringify(v)));
+const deepEqual = (left, right) => JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
 
 const buildInitialState = (entry) => {
   const overrides = readOverrides(entry.id) ?? {};
@@ -98,13 +108,13 @@ const buildInitialState = (entry) => {
   const description = overrides.description ?? entry.defaultDescription ?? "";
 
   if (entry.kind === "tunable_recipe") {
+    const fromOverride = Array.isArray(overrides.profiles) ? overrides.profiles : null;
+    const fromDefault = Array.isArray(entry.defaultExtraProfiles) ? entry.defaultExtraProfiles : [];
     return {
       name,
       description,
       params: { ...entry.defaults, ...(overrides.params ?? {}) },
-      // Optional extra Sound Profiles layered on top of the bespoke
-      // synthesis (defaults to empty -- no augmentation).
-      profiles: deepClone(Array.isArray(overrides.profiles) ? overrides.profiles : []),
+      profiles: deepClone(fromOverride ?? fromDefault),
     };
   }
   if (entry.kind === "profile_synth") {
@@ -136,7 +146,12 @@ const minimizeOverrides = (entry, state) => {
     // Extra layered profiles persist when present; an empty array means
     // "no augmentation" and is omitted so the entry can fully revert to
     // pristine defaults.
-    if (Array.isArray(state.profiles) && state.profiles.length > 0) {
+    const defaultProfiles = Array.isArray(entry.defaultExtraProfiles) ? entry.defaultExtraProfiles : [];
+    if (
+      Array.isArray(state.profiles)
+      && state.profiles.length > 0
+      && !deepEqual(state.profiles, defaultProfiles)
+    ) {
       out.profiles = deepClone(state.profiles);
     }
   } else if (entry.kind === "profile_synth") {
@@ -179,7 +194,7 @@ const populateSelect = (select, entries, currentId) => {
 
 const flashStatus = (statusEl, text, kind = "ok", ttl = 2000) => {
   statusEl.textContent = text;
-  statusEl.className = `dev-sound-status ${kind}`;
+  statusEl.className = `dev-sound-status ${kind} visible`;
   if (statusEl._flashTimer) clearTimeout(statusEl._flashTimer);
   statusEl._flashTimer = setTimeout(() => {
     statusEl.textContent = "";
@@ -211,6 +226,28 @@ const writeToClipboard = async (text) => {
   } catch {
     return false;
   }
+};
+
+const createStatusElement = () => {
+  const status = document.createElement("div");
+  status.id = "dev-sound-sandbox-status";
+  status.className = "dev-sound-status";
+  status.setAttribute("role", "status");
+  return status;
+};
+
+const setCopyButtonState = (button, text, className, resetDelay = 1600) => {
+  if (!button) return;
+  if (button._copyFeedbackTimer) clearTimeout(button._copyFeedbackTimer);
+  button.textContent = text;
+  button.classList.remove("copied", "copy-failed", "copying");
+  if (className) button.classList.add(className);
+  if (resetDelay == null) return;
+  button._copyFeedbackTimer = setTimeout(() => {
+    button.textContent = COPY_BUTTON_TEXT;
+    button.classList.remove("copied", "copy-failed", "copying");
+    button._copyFeedbackTimer = null;
+  }, resetDelay);
 };
 
 // ---------------------------------------------------------------------------
@@ -275,14 +312,85 @@ export default function installSoundSandbox(_gameState) {
   const closeBtn = document.getElementById("dev-sound-sandbox-close");
   const select = document.getElementById("dev-sound-sandbox-select");
   const knobSlot = document.getElementById("dev-sound-sandbox-knob-slot");
-  const statusEl = document.getElementById("dev-sound-sandbox-status");
   const addCustomBtn = document.getElementById("dev-sound-sandbox-add-custom");
-  if (!drawer || !openBtn || !select || !knobSlot) return;
+  const actionsSlot = document.getElementById("dev-sound-sandbox-actions");
+  if (!drawer || !openBtn || !select || !knobSlot || !actionsSlot) return;
+  const statusEl = document.getElementById("dev-sound-sandbox-status") ?? createStatusElement();
+  statusEl.remove();
 
   let allEntries = collectAllEntries();
   let currentEntry = allEntries[0] ?? null;
   let currentState = currentEntry ? buildInitialState(currentEntry) : null;
   let persistTimer = null;
+
+  const playCurrentSound = () => {
+    try {
+      if (currentEntry.kind === "tunable_recipe") {
+        currentEntry.play(currentState.params, currentState.profiles);
+        // Layer any extra Sound Profiles on top of the bespoke synthesis so
+        // the user hears them play simultaneously.
+        if (
+          !currentEntry.handlesProfiles
+          && Array.isArray(currentState.profiles)
+          && currentState.profiles.length > 0
+        ) {
+          playProfileSynth(currentState.profiles);
+        }
+      } else {
+        currentEntry.play({ profiles: currentState.profiles });
+      }
+    } catch (err) {
+      flashStatus(statusEl, `Play failed: ${err.message}`, "err");
+    }
+  };
+
+  const resetCurrentSound = () => {
+    if (currentEntry.isCustom) {
+      // For customs, "reset" means revert to the preset/empty profiles the
+      // entry was created from. We don't track that, so the safest UX is
+      // no-op + status hint. Users can edit freely or delete to start over.
+      flashStatus(statusEl, "Custom sounds have no defaults to reset to.", "err");
+      return;
+    }
+    clearOverrides(currentEntry.id);
+    currentState = buildInitialState(currentEntry);
+    renderCurrentPanel();
+    flashStatus(statusEl, "Reset to defaults.");
+  };
+
+  const copyCurrentSound = async (event) => {
+    const copyButton = event?.currentTarget;
+    setCopyButtonState(copyButton, "Copying...", "copying", null);
+
+    try {
+      // For tunable_recipe entries we now carry both `params` (the bespoke
+      // knobs) and an optional `profiles` array (extra layered Sound Profiles).
+      // copy_format inspects both fields and emits the extras only when present.
+      const valuesForPayload = currentEntry.kind === "tunable_recipe"
+        ? { params: currentState.params, profiles: currentState.profiles }
+        : { profiles: currentState.profiles };
+      const text = formatPayloadString(currentEntry, valuesForPayload, {
+        name: currentState.name,
+        description: currentState.description,
+      });
+      const ok = await writeToClipboard(text);
+      setCopyButtonState(copyButton, ok ? "Copied!" : "Copy failed", ok ? "copied" : "copy-failed");
+    } catch {
+      setCopyButtonState(copyButton, "Copy failed", "copy-failed");
+    }
+  };
+
+  const deleteCurrentSound = () => {
+    if (!currentEntry?.isCustom) return;
+    if (!window.confirm(`Delete "${currentState.name}"? This cannot be undone.`)) return;
+    deleteCustomSound(currentEntry.customId);
+    allEntries = collectAllEntries();
+    currentEntry = allEntries[0] ?? null;
+    currentState = currentEntry ? buildInitialState(currentEntry) : null;
+    populateSelect(select, allEntries, currentEntry?.id);
+    renderCurrentPanel();
+    flashStatus(statusEl, "Custom sound deleted.");
+  };
 
   const open = () => {
     drawer.classList.add("active");
@@ -328,80 +436,33 @@ export default function installSoundSandbox(_gameState) {
   // Build + mount the panel for the current entry.
   const renderCurrentPanel = () => {
     knobSlot.innerHTML = "";
+    actionsSlot.innerHTML = "";
     if (!currentEntry || !currentState) return;
 
     const panel = renderPanel({
       entry: currentEntry,
       state: currentState,
       onPersist: schedulePersist,
-      onPlay: () => {
-        try {
-          if (currentEntry.kind === "tunable_recipe") {
-            currentEntry.play(currentState.params);
-            // Layer any extra Sound Profiles on top of the bespoke
-            // synthesis so the user hears them play simultaneously.
-            if (Array.isArray(currentState.profiles) && currentState.profiles.length > 0) {
-              playProfileSynth(currentState.profiles);
-            }
-          } else {
-            currentEntry.play({ profiles: currentState.profiles });
-          }
-        } catch (err) {
-          flashStatus(statusEl, `Play failed: ${err.message}`, "err");
-        }
-      },
-      onSample: currentEntry.sample?.audioElementId
-        ? () => {
-            const audio = document.getElementById(currentEntry.sample.audioElementId);
-            if (audio) {
-              audio.currentTime = 0;
-              audio.play().catch(() => {});
-            }
-          }
-        : null,
-      onReset: () => {
-        if (currentEntry.isCustom) {
-          // For customs, "reset" means revert to the preset/empty
-          // profiles the entry was created from. We don't track that,
-          // so the safest UX is no-op + status hint. Users can edit
-          // freely or delete to start over.
-          flashStatus(statusEl, "Custom sounds have no defaults to reset to.", "err");
-          return;
-        }
-        clearOverrides(currentEntry.id);
-        currentState = buildInitialState(currentEntry);
-        renderCurrentPanel();
-        flashStatus(statusEl, "Reset to defaults.");
-      },
-      onCopy: async () => {
-        // For tunable_recipe entries we now carry both `params` (the
-        // bespoke knobs) and an optional `profiles` array (extra layered
-        // Sound Profiles). copy_format inspects both fields and emits the
-        // extras only when present.
-        const valuesForPayload = currentEntry.kind === "tunable_recipe"
-          ? { params: currentState.params, profiles: currentState.profiles }
-          : { profiles: currentState.profiles };
-        const text = formatPayloadString(currentEntry, valuesForPayload, {
-          name: currentState.name,
-          description: currentState.description,
-        });
-        const ok = await writeToClipboard(text);
-        flashStatus(statusEl, ok ? "Copied to clipboard." : "Could not access clipboard.", ok ? "ok" : "err");
-      },
-      onDelete: currentEntry.isCustom
-        ? () => {
-            if (!window.confirm(`Delete "${currentState.name}"? This cannot be undone.`)) return;
-            deleteCustomSound(currentEntry.customId);
-            allEntries = collectAllEntries();
-            currentEntry = allEntries[0] ?? null;
-            currentState = currentEntry ? buildInitialState(currentEntry) : null;
-            populateSelect(select, allEntries, currentEntry?.id);
-            renderCurrentPanel();
-            flashStatus(statusEl, "Custom sound deleted.");
-          }
-        : null,
     });
     knobSlot.appendChild(panel);
+    const playSample = currentEntry.sample?.audioElementId
+      ? () => {
+          const audio = document.getElementById(currentEntry.sample.audioElementId);
+          if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(() => {});
+          }
+        }
+      : null;
+    actionsSlot.appendChild(renderActions({
+      entry: currentEntry,
+      onPlay: playCurrentSound,
+      onSample: playSample,
+      onReset: resetCurrentSound,
+      onCopy: copyCurrentSound,
+      onDelete: currentEntry.isCustom ? deleteCurrentSound : null,
+    }));
+    if (statusEl) actionsSlot.appendChild(statusEl);
   };
 
   // Initial dropdown + panel population.
@@ -453,6 +514,11 @@ export default function installSoundSandbox(_gameState) {
   closeBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     close();
+  });
+
+  drawer.addEventListener("keydown", (e) => {
+    if (!drawer.classList.contains("active")) return;
+    if (isTextEntryTarget(e.target)) e.stopPropagation();
   });
 
   document.addEventListener("keydown", (e) => {

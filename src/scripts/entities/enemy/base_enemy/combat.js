@@ -25,6 +25,7 @@ export const setupCombat = (enemy, cfg) => {
     const factor = cfg.knockbackFactor ?? 1;
     enemy.knockbackVx = (dx / dist) * knockback * factor;
     enemy.knockbackVy = (dy / dist) * knockback * factor;
+    if (knockback > 0) enemy.onKnockback?.();
   };
 
   enemy.hitPlayer = () => {
@@ -54,6 +55,7 @@ export const setupCombat = (enemy, cfg) => {
         if (player.hp < 0) player.hp = 0;
       }
       player.hit();
+      enemy.onPlayerHit?.(player, { hitCenter });
     }
   };
 };

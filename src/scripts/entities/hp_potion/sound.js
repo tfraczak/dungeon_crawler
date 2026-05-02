@@ -42,6 +42,9 @@ export const HP_POTION_DROP_EXTRA_PROFILES = Object.freeze([
 ]);
 
 export function playHpPotionDrop(overrides = {}) {
+  const extraProfiles = Array.isArray(overrides.extraProfiles)
+    ? overrides.extraProfiles
+    : HP_POTION_DROP_EXTRA_PROFILES;
   const params = { ...HP_POTION_DROP_PARAMS, ...overrides };
   const ctx = getAudioContext();
   const now = ctx.currentTime;
@@ -59,7 +62,9 @@ export function playHpPotionDrop(overrides = {}) {
   osc.start(now);
   osc.stop(now + params.duration);
 
-  playProfileSynth(pitchTrackedProfiles(HP_POTION_DROP_EXTRA_PROFILES, HP_POTION_DROP_PARAMS.baseFreq, baseFreq));
+  if (extraProfiles.length > 0) {
+    playProfileSynth(pitchTrackedProfiles(extraProfiles, HP_POTION_DROP_PARAMS.baseFreq, baseFreq));
+  }
 }
 
 export default function playHpPotionSound(overrides = {}) {

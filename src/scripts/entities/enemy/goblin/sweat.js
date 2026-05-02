@@ -1,7 +1,5 @@
 import Random from "@utils/random";
-
-const LOW_HP_THRESHOLD = 10;
-const SWEAT_PERIOD_MS = 420;
+import GOBLIN_CONFIG from "./config";
 
 const drawDrop = (ctx, x, y, scale, alpha) => {
   ctx.save();
@@ -20,7 +18,7 @@ export const setupGoblinSweat = (goblin) => {
   const baseDraw = goblin.draw;
   const drops = Array.from({ length: 3 }, (_, i) => ({
     drift: Random.range(9, 14),
-    phaseOffsetMs: Random.int(0, SWEAT_PERIOD_MS - 1),
+    phaseOffsetMs: Random.int(0, GOBLIN_CONFIG.sweat.periodMs - 1),
     scale: Random.range(0.7, 1.15),
     side: i === 0 ? -1 : i === 1 ? 1 : Random.pick([-1, 1]),
     xOffset: Random.range(6, 12),
@@ -29,14 +27,14 @@ export const setupGoblinSweat = (goblin) => {
 
   goblin.draw = (ctx) => {
     baseDraw(ctx);
-    if (goblin.hp >= LOW_HP_THRESHOLD) return;
+    if (goblin.hp >= GOBLIN_CONFIG.lowHpThreshold || goblin.hasStolenCoin) return;
 
     const now = Date.now();
     const headY = goblin.pos[1] + 8;
     const headX = goblin.center[0];
 
     for (const drop of drops) {
-      const phase = ((now + drop.phaseOffsetMs) % SWEAT_PERIOD_MS) / SWEAT_PERIOD_MS;
+      const phase = ((now + drop.phaseOffsetMs) % GOBLIN_CONFIG.sweat.periodMs) / GOBLIN_CONFIG.sweat.periodMs;
       const x = headX + (drop.side * drop.xOffset);
       const y = headY + drop.yOffset + (phase * drop.drift);
       const alpha = 0.9 * (1 - phase);

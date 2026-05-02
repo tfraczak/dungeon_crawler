@@ -1,15 +1,8 @@
 import Random from "@utils/random";
+import BAT_CONFIG from "./config";
 
-const DEFAULT_FLIGHT_CONFIG = Object.freeze({
-  minFrames: 5,
-  maxFrames: 12,
-  minStrength: 0.25,
-  maxStrength: 0.75,
-  maxSpeedMultiplier: 1.4,
-});
-
-function createErraticFlight(config = DEFAULT_FLIGHT_CONFIG) {
-  const flightConfig = { ...DEFAULT_FLIGHT_CONFIG, ...config };
+function createErraticFlight(config = BAT_CONFIG.flight) {
+  const flightConfig = { ...BAT_CONFIG.flight, ...config };
   let jitter = { timer: 0, x: 0, y: 0 };
 
   return (nx, ny, speed) => {

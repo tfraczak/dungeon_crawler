@@ -64,6 +64,8 @@ const parseUncappedNumber = (raw) => {
   return n;
 };
 
+const cloneProfile = (profile) => JSON.parse(JSON.stringify(profile));
+
 // ---------------------------------------------------------------------------
 // Single knob renderers (range / text_number / select)
 // ---------------------------------------------------------------------------
@@ -123,11 +125,24 @@ const renderSelectKnob = (knob, value, onValue) => {
   ]);
 };
 
+const renderCheckboxKnob = (knob, value, onValue) => {
+  const input = el("input", {
+    type: "checkbox",
+    checked: Boolean(value),
+    onChange: (e) => onValue(e.target.checked),
+  });
+  return el("label", { class: "dev-sound-field dev-sound-check" }, [
+    el("span", { text: knob.label }),
+    input,
+  ]);
+};
+
 const renderKnob = (knob, value, onValue) => {
   switch (knob.type) {
     case "range":       return renderRangeKnob(knob, value, onValue);
     case "text_number": return renderTextNumberKnob(knob, value, onValue);
     case "select":      return renderSelectKnob(knob, value, onValue);
+    case "checkbox":    return renderCheckboxKnob(knob, value, onValue);
     default:            return el("div", { text: `Unknown knob type: ${knob.type}` });
   }
 };
@@ -191,7 +206,7 @@ const renderHeaderBlock = (state, onMetaChange) => {
 // Action row (Play / Sample / Reset / Copy / optional Delete for customs)
 // ---------------------------------------------------------------------------
 
-const renderActions = ({ entry, onPlay, onSample, onReset, onCopy, onDelete }) => {
+export const renderActions = ({ entry, onPlay, onSample, onReset, onCopy, onDelete }) => {
   const buttons = [];
   buttons.push(el("button", { type: "button", class: "button play", onClick: onPlay }, ["\u25B6 Play"]));
   if (entry.sample?.audioElementId && onSample) {
@@ -269,40 +284,53 @@ const renderEffectCard = (effect, onChange, onRemove) => {
   return card;
 };
 
-const renderProfileCard = (profile, idx, onChange, onRemove) => {
+const renderProfileCard = (profile, idx, onChange, onRemove, onClone) => {
   const card = el("div", { class: "dev-sound-profile-card" });
+  if (profile.muted === true) card.classList.add("muted");
 
   const typeSelect = el("select", {
     onChange: (e) => {
       const newType = e.target.value;
       const preserved = {
+        muted: profile.muted ?? false,
+        reverseBuffer: profile.reverseBuffer ?? false,
         startOffset: profile.startOffset ?? 0,
         duration: profile.duration ?? 0.04,
         gain: profile.gain ?? 0.2,
+        attackTime: profile.attackTime ?? 0,
+        decayCurve: profile.decayCurve ?? "exponential",
         effects: profile.effects ?? [],
       };
       const next = { type: newType, ...getSourceDefaults(newType), ...preserved };
       Object.keys(profile).forEach((k) => delete profile[k]);
       Object.assign(profile, next);
       onChange();
-      const fresh = renderProfileCard(profile, idx, onChange, onRemove);
+      const fresh = renderProfileCard(profile, idx, onChange, onRemove, onClone);
       card.replaceWith(fresh);
     },
   }, listSources().map((def) => el("option", { value: def.id, selected: def.id === profile.type ? "selected" : null }, [def.label])));
 
+  const cloneBtn = el("button", { type: "button", onClick: onClone }, ["Clone"]);
   const removeBtn = el("button", { type: "button", onClick: onRemove }, ["\u2715 Remove"]);
 
   const header = el("div", { class: "dev-sound-card-header" }, [
     el("h3", { text: `Profile ${idx + 1}` }),
-    el("div", { class: "dev-sound-card-controls" }, [typeSelect, removeBtn]),
+    el("div", { class: "dev-sound-card-controls" }, [typeSelect, cloneBtn, removeBtn]),
   ]);
   card.appendChild(header);
 
   // Universal envelope knobs first.
   const envList = el("div", { class: "dev-sound-knob-list" }, [
+    renderCheckboxKnob({ key: "muted", label: "Mute profile", type: "checkbox" }, profile.muted ?? false, (v) => {
+      profile.muted = v;
+      card.classList.toggle("muted", v);
+      onChange();
+    }),
     renderTextNumberKnob({ key: "startOffset", label: "startOffset", unit: "s", type: "text_number" }, profile.startOffset ?? 0, (v) => { profile.startOffset = v; onChange(); }),
     renderTextNumberKnob({ key: "duration",    label: "duration",    unit: "s", type: "text_number" }, profile.duration ?? 0.04, (v) => { profile.duration = v; onChange(); }),
     renderRangeKnob({ key: "gain", label: "gain", type: "range", min: 0, max: 1, step: 0.01 }, profile.gain ?? 0.2, (v) => { profile.gain = v; onChange(); }),
+    renderTextNumberKnob({ key: "attackTime", label: "attackTime", unit: "s", type: "text_number" }, profile.attackTime ?? 0, (v) => { profile.attackTime = v; onChange(); }),
+    renderSelectKnob({ key: "decayCurve", label: "decay curve", type: "select", options: ["exponential", "linear"] }, profile.decayCurve ?? "exponential", (v) => { profile.decayCurve = v; onChange(); }),
   ]);
   card.appendChild(envList);
 
@@ -355,15 +383,30 @@ const renderProfileSynthBody = (profiles, onChange) => {
   const wrap = el("div", { class: "dev-sound-knob-list" });
   const list = el("div", { class: "dev-sound-profile-list" });
 
-  const renderAll = () => {
+  const scrollProfileIntoView = (profileIdx) => {
+    requestAnimationFrame(() => {
+      list.children[profileIdx]?.scrollIntoView?.({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+  };
+
+  const renderAll = (scrollToIdx = null) => {
     list.innerHTML = "";
     profiles.forEach((profile, idx) => {
       list.appendChild(renderProfileCard(profile, idx, onChange, () => {
         profiles.splice(idx, 1);
         onChange();
         renderAll();
+      }, () => {
+        profiles.splice(idx + 1, 0, cloneProfile(profile));
+        onChange();
+        renderAll();
+        scrollProfileIntoView(idx + 1);
       }));
     });
+    if (scrollToIdx != null) scrollProfileIntoView(scrollToIdx);
   };
   renderAll();
   wrap.appendChild(list);
@@ -381,6 +424,8 @@ const renderProfileSynthBody = (profiles, onChange) => {
         startOffset: 0,
         duration: 0.04,
         gain: 0.2,
+        attackTime: 0,
+        decayCurve: "exponential",
         ...getSourceDefaults(lastType),
       });
       onChange();
@@ -401,18 +446,11 @@ export const renderPanel = ({
   entry,
   state,             // { name, description, params? | profiles? }
   onPersist,
-  onPlay,
-  onSample,
-  onReset,
-  onCopy,
-  onDelete,
 }) => {
   const root = el("section", { class: "dev-sound-panel" });
 
   const header = renderHeaderBlock(state, onPersist);
   root.appendChild(header);
-
-  root.appendChild(renderActions({ entry, onPlay, onSample, onReset, onCopy, onDelete }));
 
   if (entry.kind === "tunable_recipe") {
     if (!state.params) state.params = {};

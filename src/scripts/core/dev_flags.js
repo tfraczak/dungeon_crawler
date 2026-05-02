@@ -26,6 +26,7 @@
 // `#dev-options-page` panel in `index.html`.
 
 import * as GAME_CONFIG from "./game_config";
+import GOBLIN_CONFIG from "@entities/enemy/goblin/config";
 
 const isProd = process.env.NODE_ENV === "production";
 const STORAGE_KEY = "devFlags";
@@ -48,6 +49,7 @@ const NUMERIC_KEYS = Object.freeze([
   "enemySkeletonSpawnCount",
   "enemyItemDropRate",
   "enemyForcedDropCount",
+  "enemyGoblinStealChance",
   "ladderChance",
 ]);
 
@@ -79,6 +81,7 @@ export const DEV_FLAG_KEYS = Object.freeze([
 // won't auto-fill a placeholder for that field.
 export const CONFIG_DEFAULTS = Object.freeze({
   enemyHp: GAME_CONFIG.entities.enemy.hp,
+  enemyGoblinStealChance: GOBLIN_CONFIG.steal.chance,
   enemyItemDropRate: GAME_CONFIG.entities.enemy.drops[0]?.chance ?? 0,
   ladderChance: GAME_CONFIG.entities.ladder.chance,
 });

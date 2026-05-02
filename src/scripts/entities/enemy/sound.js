@@ -1,55 +1,56 @@
-import getAudioContext from "@core/audio_context";
+import { playProfileSynth } from "@core/profile_synth";
 
-// Enemy poof -- lowpass-swept noise burst plus a short low thump for the
-// kill confirmation feel. Played when an enemy dies / is dispelled.
-export const POOF_PARAMS = Object.freeze({
-  duration: 0.25,
-  noiseGain: 0.25,
-  filterStartFreq: 600,
-  filterEndFreq: 150,
-  thumpStartFreq: 80,
-  thumpEndFreq: 30,
-  thumpGain: 0.2,
-  thumpDuration: 0.15,
-});
+// Enemy poof -- lowpass noise layers for the kill confirmation feel.
+// Played when an enemy dies / is dispelled.
+export const POOF_PROFILES = Object.freeze([
+  Object.freeze({
+    type: "noise_filter",
+    filterType: "lowpass",
+    frequency: 135,
+    q: 6,
+    startOffset: 0,
+    duration: 0.5,
+    gain: 0.18,
+    effects: Object.freeze([
+      Object.freeze({
+        type: "distortion",
+        amount: 127,
+        oversample: "4x",
+      }),
+      Object.freeze({
+        type: "reverb",
+        duration: 1.5,
+        decay: 2.5,
+        mix: 0.35,
+      }),
+    ]),
+  }),
+  Object.freeze({
+    type: "noise_filter",
+    startOffset: 0.02,
+    duration: 0.04,
+    gain: 0.2,
+    filterType: "lowpass",
+    frequency: 397,
+    q: 6,
+    effects: Object.freeze([
+      Object.freeze({
+        type: "reverb",
+        duration: 0.8,
+        decay: 2.5,
+        mix: 0.35,
+      }),
+      Object.freeze({
+        type: "distortion",
+        amount: 50,
+        oversample: "4x",
+      }),
+    ]),
+  }),
+]);
 
-export default function playPoofSound(overrides = {}) {
-  const params = { ...POOF_PARAMS, ...overrides };
-  const ctx = getAudioContext();
-  const now = ctx.currentTime;
-  const sampleRate = ctx.sampleRate;
-  const length = Math.floor(sampleRate * params.duration);
-  const buffer = ctx.createBuffer(1, length, sampleRate);
-  const data = buffer.getChannelData(0);
+const playPoofSound = (profiles = POOF_PROFILES) => {
+  playProfileSynth(profiles);
+};
 
-  for (let i = 0; i < length; i++) {
-    const t = i / length;
-    const envelope = Math.sin(t * Math.PI) * (1 - t * 0.5);
-    data[i] = (Math.random() * 2 - 1) * envelope * params.noiseGain;
-  }
-
-  const source = ctx.createBufferSource();
-  source.buffer = buffer;
-
-  const filter = ctx.createBiquadFilter();
-  filter.type = "lowpass";
-  filter.frequency.setValueAtTime(params.filterStartFreq, now);
-  filter.frequency.exponentialRampToValueAtTime(params.filterEndFreq, now + params.duration);
-
-  source.connect(filter);
-  filter.connect(ctx.destination);
-  source.start();
-
-  // Soft low thump for body.
-  const osc = ctx.createOscillator();
-  const oscGain = ctx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(params.thumpStartFreq, now);
-  osc.frequency.exponentialRampToValueAtTime(params.thumpEndFreq, now + params.thumpDuration);
-  oscGain.gain.setValueAtTime(params.thumpGain, now);
-  oscGain.gain.exponentialRampToValueAtTime(0.001, now + params.thumpDuration);
-  osc.connect(oscGain);
-  oscGain.connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + params.thumpDuration);
-}
+export default playPoofSound;

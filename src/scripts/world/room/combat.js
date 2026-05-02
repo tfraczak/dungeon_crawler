@@ -1,6 +1,5 @@
 import createPoof from "@effects/poof";
 import playPoofSound from "@entities/enemy/sound";
-import { playSlashHit, playSlashWhiff } from "@items/equipment/weapons/swords/sound";
 
 function setupRoomCombat(room, gameState) {
   const { session } = gameState;
@@ -41,9 +40,7 @@ function setupRoomCombat(room, gameState) {
     }
 
     if (hitAny) {
-      playSlashHit();
-    } else if (player.attackTimer === 1 && player.attackHitIds.size === 0) {
-      playSlashWhiff();
+      weapon.onHit();
     }
   };
 }

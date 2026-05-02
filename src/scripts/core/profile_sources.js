@@ -62,6 +62,26 @@ const buildNoiseBuffer = (ctx, seconds, color = "white") => {
   return buffer;
 };
 
+const reverseBuffer = (buffer) => {
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    buffer.getChannelData(ch).reverse();
+  }
+  return buffer;
+};
+
+const scheduleFrequency = (param, when, duration, startFrequency, endFrequency, sweepEnabled, sweepCurve) => {
+  const start = Math.max(20, startFrequency);
+  const end = Math.max(20, endFrequency ?? start);
+  param.cancelScheduledValues(when);
+  param.setValueAtTime(start, when);
+  if (!sweepEnabled) return;
+  if (sweepCurve === "linear") {
+    param.linearRampToValueAtTime(end, when + duration);
+  } else {
+    param.exponentialRampToValueAtTime(end, when + duration);
+  }
+};
+
 // PeriodicWave harmonic preset library. Each preset is a Float32 amplitude
 // array for the `imag` argument; the `real` argument is left zero (sine
 // basis only) so users still get a recognizable timbre without needing to
@@ -84,7 +104,14 @@ const PERIODIC_WAVE_PRESETS = {
 const oscillatorSource = {
   id: "oscillator",
   label: "Oscillator",
-  defaults: { oscillatorType: "sine", frequency: 600 },
+  defaults: {
+    oscillatorType: "sine",
+    frequency: 600,
+    sweepEnabled: false,
+    frequencyEnd: 220,
+    frequencySweep: "exponential",
+    reverseBuffer: false,
+  },
   knobs: [
     {
       key: "oscillatorType",
@@ -101,14 +128,29 @@ const oscillatorSource = {
       max: 20000,
       step: 1,
     },
+    { key: "sweepEnabled", label: "Sweep frequency", type: "checkbox" },
+    { key: "frequencyEnd", label: "Frequency end", unit: "Hz", type: "range", min: 20, max: 20000, step: 1 },
+    { key: "frequencySweep", label: "Sweep curve", type: "select", options: ["linear", "exponential"] },
+    { key: "reverseBuffer", label: "Reverse reverb/delay", type: "checkbox" },
   ],
   build(ctx, params) {
     const osc = ctx.createOscillator();
     osc.type = params.oscillatorType ?? "sine";
-    osc.frequency.setValueAtTime(params.frequency ?? 600, ctx.currentTime);
     return {
       output: osc,
-      start: (when) => osc.start(when),
+      start: (when) => {
+        const duration = Math.max(0.001, params.duration ?? 0.04);
+        scheduleFrequency(
+          osc.frequency,
+          when,
+          duration,
+          params.frequency ?? 600,
+          params.frequencyEnd,
+          params.sweepEnabled,
+          params.frequencySweep,
+        );
+        osc.start(when);
+      },
       stop: (when) => osc.stop(when),
     };
   },
@@ -117,8 +159,21 @@ const oscillatorSource = {
 const noiseFilterSource = {
   id: "noise_filter",
   label: "Noise + filter",
-  defaults: { filterType: "bandpass", frequency: 2400, q: 6 },
+  defaults: {
+    noiseType: "white",
+    filterType: "bandpass",
+    frequency: 2400,
+    q: 6,
+    sweepEnabled: false,
+    frequencyEnd: 600,
+    frequencySweep: "exponential",
+    frequencyLfoEnabled: false,
+    frequencyLfoRate: 4,
+    frequencyLfoDepth: 180,
+    reverseBuffer: false,
+  },
   knobs: [
+    { key: "noiseType", label: "Noise color", type: "select", options: ["white", "pink", "brown"] },
     {
       key: "filterType",
       label: "Filter",
@@ -127,24 +182,53 @@ const noiseFilterSource = {
     },
     { key: "frequency", label: "Frequency", unit: "Hz", type: "range", min: 20, max: 20000, step: 1 },
     { key: "q",         label: "Q",                      type: "range", min: 0.1, max: 30, step: 0.1 },
+    { key: "sweepEnabled", label: "Sweep frequency", type: "checkbox" },
+    { key: "frequencyEnd", label: "Frequency end", unit: "Hz", type: "range", min: 20, max: 20000, step: 1 },
+    { key: "frequencySweep", label: "Sweep curve", type: "select", options: ["linear", "exponential"] },
+    { key: "frequencyLfoEnabled", label: "Filter wobble", type: "checkbox" },
+    { key: "frequencyLfoRate", label: "Wobble rate", unit: "Hz", type: "range", min: 0.1, max: 40, step: 0.1 },
+    { key: "frequencyLfoDepth", label: "Wobble depth", unit: "Hz", type: "range", min: 0, max: 2000, step: 1 },
+    { key: "reverseBuffer", label: "Reverse buffer", type: "checkbox" },
   ],
   build(ctx, params) {
     // Buffer length is sized to the profile duration in profile_synth's
     // wrapper (we don't know it here), so use a 1-second reservoir and
     // start/stop will trim it. Looping ensures longer durations don't run dry.
-    const buffer = buildNoiseBuffer(ctx, 1, "white");
+    const buffer = buildNoiseBuffer(ctx, 1, params.noiseType ?? "white");
     const src = ctx.createBufferSource();
-    src.buffer = buffer;
+    src.buffer = params.reverseBuffer ? reverseBuffer(buffer) : buffer;
     src.loop = true;
     const filter = ctx.createBiquadFilter();
     filter.type = params.filterType ?? "bandpass";
-    filter.frequency.setValueAtTime(params.frequency ?? 2400, ctx.currentTime);
     filter.Q.setValueAtTime(params.q ?? 6, ctx.currentTime);
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.type = "sine";
+    lfo.frequency.setValueAtTime(params.frequencyLfoRate ?? 4, ctx.currentTime);
+    lfoGain.gain.setValueAtTime(params.frequencyLfoDepth ?? 180, ctx.currentTime);
+    lfo.connect(lfoGain);
+    if (params.frequencyLfoEnabled) lfoGain.connect(filter.frequency);
     src.connect(filter);
     return {
       output: filter,
-      start: (when) => src.start(when),
-      stop: (when) => src.stop(when),
+      start: (when) => {
+        const duration = Math.max(0.001, params.duration ?? 0.04);
+        scheduleFrequency(
+          filter.frequency,
+          when,
+          duration,
+          params.frequency ?? 2400,
+          params.frequencyEnd,
+          params.sweepEnabled,
+          params.frequencySweep,
+        );
+        if (params.frequencyLfoEnabled) lfo.start(when);
+        src.start(when);
+      },
+      stop: (when) => {
+        src.stop(when);
+        if (params.frequencyLfoEnabled) lfo.stop(when);
+      },
     };
   },
 };
@@ -152,14 +236,15 @@ const noiseFilterSource = {
 const pureNoiseSource = {
   id: "pure_noise",
   label: "Pure noise",
-  defaults: { noiseType: "white" },
+  defaults: { noiseType: "white", reverseBuffer: false },
   knobs: [
     { key: "noiseType", label: "Color", type: "select", options: ["white", "pink", "brown"] },
+    { key: "reverseBuffer", label: "Reverse buffer", type: "checkbox" },
   ],
   build(ctx, params) {
     const buffer = buildNoiseBuffer(ctx, 1, params.noiseType ?? "white");
     const src = ctx.createBufferSource();
-    src.buffer = buffer;
+    src.buffer = params.reverseBuffer ? reverseBuffer(buffer) : buffer;
     src.loop = true;
     return {
       output: src,
@@ -172,7 +257,7 @@ const pureNoiseSource = {
 const periodicWaveSource = {
   id: "periodic_wave",
   label: "Periodic wave",
-  defaults: { frequency: 440, harmonics: "square8" },
+  defaults: { frequency: 440, harmonics: "square8", reverseBuffer: false },
   knobs: [
     { key: "frequency", label: "Frequency", unit: "Hz", type: "range", min: 20, max: 20000, step: 1 },
     {
@@ -181,6 +266,7 @@ const periodicWaveSource = {
       type: "select",
       options: Object.keys(PERIODIC_WAVE_PRESETS),
     },
+    { key: "reverseBuffer", label: "Reverse reverb/delay", type: "checkbox" },
   ],
   build(ctx, params) {
     const harmonics = params.harmonics ?? "square8";

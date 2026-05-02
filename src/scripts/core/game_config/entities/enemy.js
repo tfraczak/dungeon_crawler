@@ -18,17 +18,6 @@ export default Object.freeze({
   idleSpeedModifier: 0.5,
   knockbackFactor: 0.4,
   respawnDelayMs: 5 * 60 * 1000,
-  skeletonMagic: Object.freeze({
-    castCooldownFrames: 90,
-    castDistance: 140,
-    castWindupFrames: 18,
-    coldDurationFrames: 120,
-    coldSpeedMultiplier: 0.75,
-    projectileDamageMax: 8,
-    projectileDamageMin: 2,
-    projectileMaxDistance: 240,
-    projectileSpeed: 6,
-  }),
   spawn: {
     max: 614,
     min: 64,
@@ -37,10 +26,4 @@ export default Object.freeze({
   speedTransitionRate: 0.08,
   strength: 6,
   types: Object.freeze(["bat", "blob", "goblin", "skeleton"]),
-  typeHp: Object.freeze({
-    bat: 30,
-    blob: 50,
-    goblin: 70,
-    skeleton: 20,
-  }),
 });

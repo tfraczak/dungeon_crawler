@@ -3,6 +3,15 @@ import createHpPotion from "@entities/hp_potion/hp_potion";
 import Random from "@utils/random";
 import DEV_FLAGS from "@core/dev_flags";
 
+const createDroppedCoin = (enemy, gameState) => {
+  const coin = createCoin(
+    [enemy.center[0] - 8, enemy.center[1] - 8],
+    16, 16, gameState.sprites.coin, gameState,
+  );
+  coin.startDrop(enemy.center[0], enemy.center[1]);
+  return coin;
+};
+
 export const setupDrops = (enemy, cfg, gameState) => {
   // Roll each drop table entry. Dev flags can replace chance rolls or force counts.
   enemy.drop = () => {
@@ -28,12 +37,7 @@ export const setupDrops = (enemy, cfg, gameState) => {
 
       for (let r = 0; r < count; r++) {
         if (drop.type === "coin") {
-          const coin = createCoin(
-            [enemy.center[0] - 8, enemy.center[1] - 8],
-            16, 16, gameState.sprites.coin, gameState,
-          );
-          coin.startDrop(enemy.center[0], enemy.center[1]);
-          items.coins.push(coin);
+          items.coins.push(createDroppedCoin(enemy, gameState));
         } else if (drop.type === "hp_potion") {
           const potion = createHpPotion(
             [enemy.center[0] - 16, enemy.center[1] - 16],
@@ -43,6 +47,12 @@ export const setupDrops = (enemy, cfg, gameState) => {
           items.hpPotions.push(potion);
         }
       }
+    }
+    if (enemy.hasStolenCoin) {
+      items.coins.push(createDroppedCoin(enemy, gameState));
+      enemy.hasStolenCoin = false;
+      enemy.stolenCoinTargetId = null;
+      enemy.coinAlertActive = false;
     }
     return items;
   };

@@ -123,6 +123,54 @@ body:not(.dev-mode) .dev-only {
     flex-direction: column;
     gap: 28px;
     padding: 24px 28px 28px;
+
+    &:not(.subdrawer-active) .dev-options-section {
+      display: none;
+    }
+
+    &.subdrawer-active {
+      .dev-options-menu {
+        display: none;
+      }
+
+      .dev-options-section {
+        display: none;
+
+        &.active {
+          display: flex;
+        }
+      }
+    }
+  }
+
+  .dev-options-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .dev-options-menu-button {
+    padding: 12px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    background-color: rgba(0, 0, 0, 0.25);
+    color: inherit;
+    transition: all 0.15s ease-in-out;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.45);
+      border-color: $banana;
+      color: $banana;
+    }
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: $start-2p;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: left;
   }
 
   .dev-options-section {

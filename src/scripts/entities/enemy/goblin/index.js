@@ -1,10 +1,10 @@
 import * as GAME_CONFIG from "@core/game_config";
 import createBaseEnemy from "../base_enemy/index";
 import { createGoblinBehavior } from "./behavior";
+import GOBLIN_CONFIG from "./config";
 import { setupGoblinDaggerCombat } from "./combat";
+import { setupGoblinStealVisuals } from "./steal_visuals";
 import { setupGoblinSweat } from "./sweat";
-
-const BASE_SPEED_MODIFIER = 0.95;
 
 function createGoblinEnemy({ pos, width, height, spritePalette, detectDist, gameState }) {
   const behavior = createGoblinBehavior();
@@ -18,11 +18,15 @@ function createGoblinEnemy({ pos, width, height, spritePalette, detectDist, game
     spriteGridPos: { row: 0, column: 2 },
     detectDist,
     gameState,
-    options: behavior,
+    options: {
+      ...behavior,
+      hp: GOBLIN_CONFIG.hp,
+    },
   });
-  goblin.speed = GAME_CONFIG.world.baseSpeed * GAME_CONFIG.entities.player.speedMultiplier * BASE_SPEED_MODIFIER;
+  goblin.speed = GAME_CONFIG.world.baseSpeed * GAME_CONFIG.entities.player.speedMultiplier * GOBLIN_CONFIG.baseSpeedModifier;
   setupGoblinDaggerCombat(goblin, gameState);
   setupGoblinSweat(goblin);
+  setupGoblinStealVisuals(goblin);
   return goblin;
 }
 
