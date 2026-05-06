@@ -1,4 +1,5 @@
 import createEntity from "@entities/entity";
+import { createEquipmentById } from "@items/equipment/registry";
 import { createWeaponById, DEFAULT_WEAPON_ID } from "@items/equipment/weapons/registry";
 import createFists from "@items/equipment/weapons/fists/fists/fists";
 import {
@@ -113,6 +114,12 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
   player.keyCount = 0;
   const starterWeapon = player.inventory.add(createWeaponById(TEST_STATE[TEST_IDS.d] || DEFAULT_WEAPON_ID, gameState));
   equipItem(player.equipment, starterWeapon, EQUIPMENT_SLOTS.mainHand);
+  if (TEST_STATE[TEST_IDS.e]) {
+    const starterShield = createEquipmentById(TEST_STATE[TEST_IDS.e], gameState);
+    if (starterShield?.equipmentKind === "shield") {
+      equipItem(player.equipment, player.inventory.add(starterShield), EQUIPMENT_SLOTS.offHand);
+    }
+  }
   player.addInventoryItem = item => player.inventory.add(item);
   player.compatibleInventoryItems = slot => player.inventory.items.filter(item => item.compatibleSlots?.includes(slot));
   player.equipInventoryItem = (instanceId, slot) => {
