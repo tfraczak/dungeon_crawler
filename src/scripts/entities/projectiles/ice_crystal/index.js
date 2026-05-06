@@ -1,6 +1,6 @@
 import createEntity from "@entities/entity";
 import DEV_FLAGS, { configValue } from "@core/dev_flags";
-import TEST_STATE, { TEST_IDS } from "@core/player_testing";
+import { resolveIncomingPlayerHit } from "@entities/player/incoming_hit";
 import Random from "@utils/random";
 import { projectileBlockerImpact } from "@world/room/projectile_collision";
 import { boxesOverlap } from "@entities/enemy/base_enemy/collision_boxes";
@@ -129,17 +129,20 @@ const createIceCrystal = ({ pos, angle, onWallHit = () => {} }) => {
   );
 
   crystal.hitPlayer = (player) => {
-    if (player.invulnerable) return;
-    playIceCrystalHit();
-    if (!TEST_STATE[TEST_IDS.a]) {
-      player.hp -= crystal.damage();
-      if (player.hp < 0) player.hp = 0;
-    }
-    player.applyCold?.(configValue({
-      value: cfg.coldDurationFrames,
-      override: DEV_FLAGS.iceCrystalColdDurationFrames,
-    }));
-    player.hit();
+    const result = resolveIncomingPlayerHit(player, {
+      source: crystal,
+      sourceCenter: crystal.center,
+      hitCenter: player.center,
+      damage: () => crystal.damage(),
+      knockback: 0,
+      applyStatus: () => player.applyCold?.(configValue({
+        value: cfg.coldDurationFrames,
+        override: DEV_FLAGS.iceCrystalColdDurationFrames,
+      })),
+      onBlocked: () => playIceCrystalWallHit(),
+      onHit: () => playIceCrystalHit(),
+    });
+    return result;
   };
 
   crystal.update = (room, player) => {
@@ -163,8 +166,12 @@ const createIceCrystal = ({ pos, angle, onWallHit = () => {} }) => {
     }
 
     if (boxesOverlap(crystal.colBox, player.colBox)) {
-      crystal.hitPlayer(player);
+      const result = crystal.hitPlayer(player);
       crystal.done = true;
+      if (result?.blocked) {
+        crystal.shattering = false;
+        crystal.shatterShards = [];
+      }
       return;
     }
 

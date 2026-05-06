@@ -14,6 +14,7 @@ const PLAYER_SECTION_COPY = Object.freeze({
   c: getText("Pumpupal zahtpuh"),
   d: getText("Vul-zova rpssz"),
   e: getText("Dlhwvu"),
+  f: getText("Zoplsk"),
 });
 
 const field = ({ label, name, step = "1", min = null, max = null, inputmode = "numeric" }) => `
@@ -72,6 +73,10 @@ export default function buildDevOptionsMarkup() {
             <label class="dev-field">
               <span>${PLAYER_SECTION_COPY.e}</span>
               <select name="${TEST_IDS.d}"></select>
+            </label>
+            <label class="dev-field">
+              <span>${PLAYER_SECTION_COPY.f}</span>
+              <select name="${TEST_IDS.e}"></select>
             </label>
           </section>
 
@@ -152,6 +157,18 @@ export default function buildDevOptionsMarkup() {
           </section>
 
           <section class="dev-options-section">
+            <h2>Loot Cheats</h2>
+            <p class="dev-options-hint">One-shot actions on the live run. Coins / keys go straight into the player's pocket; "Force chest spawn" places an unopened chest in the current room and bypasses the difficulty gate, the per-room cooldown, and the one-at-a-time rule.</p>
+            <div class="dev-options-button-row">
+              <button type="button" class="button secondary" data-dev-ref="addCoins">+10 coins</button>
+              <button type="button" class="button secondary" data-dev-ref="addKeys">+1 key</button>
+            </div>
+            <div class="dev-options-button-row">
+              <button type="button" class="button secondary" data-dev-ref="spawnChest">Force chest spawn</button>
+            </div>
+          </section>
+
+          <section class="dev-options-section">
             <h2>Win & Economy</h2>
             <p class="dev-options-hint">Force ladder skips both the coin threshold and per-room roll. Win scene pins the post-climb backdrop.</p>
             ${check("forceLadder", "Force ladder spawn")}
@@ -193,5 +210,8 @@ export default function buildDevOptionsMarkup() {
     difficultyInfo: ref("difficultyInfo"),
     previewBatBiteBtn: ref("previewBatBite"),
     previewBlobHitBtn: ref("previewBlobHit"),
+    addCoinsBtn: ref("addCoins"),
+    addKeysBtn: ref("addKeys"),
+    spawnChestBtn: ref("spawnChest"),
   };
 }

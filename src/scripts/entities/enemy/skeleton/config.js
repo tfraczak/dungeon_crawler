@@ -1,5 +1,13 @@
 export default Object.freeze({
   hp: 40,
+  // Skeletons drop slightly more coins than the early-game enemies and
+  // are one of the two key sources for chest unlocks. Key chance is kept
+  // "rare" so chests still feel meaningfully gated.
+  drops: Object.freeze([
+    Object.freeze({ type: "coin", chance: 0.15 }),
+    Object.freeze({ type: "hp_potion", chance: 0.07 }),
+    Object.freeze({ type: "key", chance: 0.10 }),
+  ]),
   staff: Object.freeze({
     length: 28,
     angleOffset: Math.PI / 4,

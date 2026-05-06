@@ -3,6 +3,7 @@ import { playClick } from "./sound";
 import installAdditionalAccess from "./additional/access";
 import installAdditionalDrawer from "./additional/drawer";
 import installDevOptionsDrawer from "./dev_options_drawer";
+import installInventoryDrawer from "./inventory_drawer";
 import installSoundSandbox from "./sound_sandbox/install";
 
 export default (gameState) => {
@@ -11,8 +12,23 @@ export default (gameState) => {
   // production via `body:not(.dev-mode) .dev-only`.
   installDevOptionsDrawer(gameState);
   installSoundSandbox(gameState);
+  const inventoryDrawer = installInventoryDrawer(gameState);
   const additionalDrawer = installAdditionalDrawer(gameState);
   installAdditionalAccess({ onUnlock: additionalDrawer.unlock });
+
+  // Mobile inventory access lives inside the portrait rotate overlay: when
+  // the device is portrait the game is paused, and the overlay surfaces an
+  // "Open inventory" shortcut so the player has something useful to do
+  // while they're not actively playing. The button itself is hidden via
+  // CSS until `body.game-active` is set, so it only appears once a run is
+  // live (and `inventoryDrawer.open()` no-ops before that as a backstop).
+  const portraitInventoryBtn = document.getElementById("portrait-inventory-btn");
+  if (portraitInventoryBtn) {
+    portraitInventoryBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      inventoryDrawer.open();
+    });
+  }
 
   const keys = gameState.keys;
 
@@ -27,6 +43,8 @@ export default (gameState) => {
       case "a": case "arrowleft":  return "a";
       case "s": case "arrowdown":  return "s";
       case "d": case "arrowright": return "d";
+      case "c": return "c";
+      case "e": return "e";
       default: return null;
     }
   };
@@ -34,6 +52,7 @@ export default (gameState) => {
   document.addEventListener("keydown", e => {
     const slot = slotFor(e.key);
     if (slot === null || keys[slot]) return;
+    if (document.body.classList.contains("inventory-open")) return;
     keys[slot] = true;
     // Space scrolls the page and arrow keys scroll/move focus by default.
     if (slot === " " || e.key.startsWith("Arrow")) e.preventDefault();
@@ -224,6 +243,20 @@ export default (gameState) => {
     attackBtn.addEventListener("touchcancel", e => {
       e.preventDefault();
       keys[" "] = false;
+    });
+
+    const blockBtn = document.getElementById("block-btn");
+    blockBtn.addEventListener("touchstart", e => {
+      e.preventDefault();
+      keys.c = true;
+    }, { passive: false });
+    blockBtn.addEventListener("touchend", e => {
+      e.preventDefault();
+      keys.c = false;
+    });
+    blockBtn.addEventListener("touchcancel", e => {
+      e.preventDefault();
+      keys.c = false;
     });
 
     // Canvas tap: swallow the gesture (no scroll, no text-select, no

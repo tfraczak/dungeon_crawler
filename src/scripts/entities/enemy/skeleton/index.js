@@ -17,6 +17,7 @@ function createSkeletonEnemy({ pos, width, height, spritePalette, detectDist, ga
     options: {
       ...behavior,
       hp: SKELETON_CONFIG.hp,
+      drops: SKELETON_CONFIG.drops,
     },
   });
   setupSkeletonMagicCombat(skeleton);

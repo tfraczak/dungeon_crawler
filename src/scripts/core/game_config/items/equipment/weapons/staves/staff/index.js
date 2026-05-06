@@ -1,0 +1,15 @@
+export default Object.freeze({
+  arc: Math.PI * 0.6,
+  cooldown: 26,
+  criticalChance: 0.05,
+  criticalMultiplier: 2,
+  damageMax: 6,
+  damageMin: 3,
+  damageProfile: Object.freeze({ crushing: 0.65, piercing: 0.35 }),
+  damageType: "crushing",
+  duration: 12,
+  handedness: "twoHanded",
+  knockback: 36,
+  range: 72,
+  staminaCost: 160,
+});

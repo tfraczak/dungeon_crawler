@@ -1,7 +1,7 @@
 import DEV_FLAGS, { configValue } from "@core/dev_flags";
-import TEST_STATE, { TEST_IDS } from "@core/player_testing";
 import createCoin from "@entities/coin/coin";
 import { playCoinStolen } from "@entities/coin/sound";
+import { resolveIncomingPlayerHit } from "@entities/player/incoming_hit";
 import createDagger from "@items/equipment/weapons/daggers/dagger/dagger";
 import createShortsword from "@items/equipment/weapons/swords/shortsword/shortsword";
 import Random from "@utils/random";
@@ -46,21 +46,14 @@ const drawStealArc = (ctx, center, facing, attackTimer, weapon) => {
 };
 
 const applyPlayerHit = (player, goblin) => {
-  if (player.invulnerable) return false;
-
-  const dx = player.center[0] - goblin.center[0];
-  const dy = player.center[1] - goblin.center[1];
-  const dist = Math.sqrt((dx * dx) + (dy * dy)) || 1;
-  player.knockbackVx = (dx / dist) * goblin.weapon.knockback;
-  player.knockbackVy = (dy / dist) * goblin.weapon.knockback;
-
-  if (!TEST_STATE[TEST_IDS.a]) {
-    player.hp -= goblin.weapon.rollDamage();
-    if (player.hp < 0) player.hp = 0;
-  }
-
-  player.hit();
-  return true;
+  const result = resolveIncomingPlayerHit(player, {
+    source: goblin,
+    sourceCenter: goblin.center,
+    hitCenter: player.center,
+    damage: () => goblin.weapon.rollDamage(),
+    knockback: goblin.weapon.knockback,
+  });
+  return result.hit;
 };
 
 const roomHasUnclaimedStolenCoin = (room) => (

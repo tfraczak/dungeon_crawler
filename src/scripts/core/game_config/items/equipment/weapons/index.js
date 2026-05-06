@@ -1,2 +1,12 @@
+export * as axes from "./axes";
 export * as daggers from "./daggers";
+export * as fists from "./fists";
+export * as greataxes from "./greataxes";
+export * as greathammers from "./greathammers";
+export * as greatswords from "./greatswords";
+export * as hammers from "./hammers";
+export * as maces from "./maces";
+export * as polearms from "./polearms";
+export * as staves from "./staves";
 export * as swords from "./swords";
+export * as wands from "./wands";

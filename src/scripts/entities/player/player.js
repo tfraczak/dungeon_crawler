@@ -1,5 +1,13 @@
 import createEntity from "@entities/entity";
 import { createWeaponById, DEFAULT_WEAPON_ID } from "@items/equipment/weapons/registry";
+import createFists from "@items/equipment/weapons/fists/fists/fists";
+import {
+  createEquipmentState,
+  createInventory,
+  equipItem,
+  unequipItem,
+} from "@items/equipment/inventory";
+import { EQUIPMENT_SLOTS, HAND_SLOTS, uniqueEquippedItems } from "@items/equipment/slots";
 import * as GAME_CONFIG from "@core/game_config";
 import DEV_FLAGS, { configValue } from "@core/dev_flags";
 import TEST_STATE, { TEST_IDS } from "@core/player_testing";
@@ -99,11 +107,56 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     return Math.floor(player.invulnerable / 5) % 2 === 0;
   };
 
-  player.weapon = createWeaponById(TEST_STATE[TEST_IDS.d] || DEFAULT_WEAPON_ID, gameState);
+  player.inventory = createInventory();
+  player.equipment = createEquipmentState();
+  player.lastEquipResult = null;
+  player.keyCount = 0;
+  const starterWeapon = player.inventory.add(createWeaponById(TEST_STATE[TEST_IDS.d] || DEFAULT_WEAPON_ID, gameState));
+  equipItem(player.equipment, starterWeapon, EQUIPMENT_SLOTS.mainHand);
+  player.addInventoryItem = item => player.inventory.add(item);
+  player.compatibleInventoryItems = slot => player.inventory.items.filter(item => item.compatibleSlots?.includes(slot));
+  player.equipInventoryItem = (instanceId, slot) => {
+    const item = player.inventory.find(instanceId);
+    if (!item) return { ok: false, reason: "Item is not in inventory." };
+    const result = equipItem(player.equipment, item, slot);
+    player.lastEquipResult = result;
+    player.attackTimer = 0;
+    player.attackCooldownTimer = 0;
+    player.blockCooldownTimer = 0;
+    player.blockImpactTimer = 0;
+    player.attackHitIds.clear();
+    return result;
+  };
+  player.unequipSlot = (slot) => {
+    unequipItem(player.equipment, player.equipment[slot]);
+    player.lastEquipResult = { ok: true };
+  };
+  player.equippedItems = () => uniqueEquippedItems(player.equipment);
+  // Unarmed fallback. Created once and reused so the punch-cooldown / damage
+  // roll state on the weapon is stable across frames.
+  const unarmedWeapon = createFists();
+  player.activeWeapon = () => (
+    HAND_SLOTS.map(slot => player.equipment[slot]).find(item => item?.equipmentKind === "weapon")
+    ?? unarmedWeapon
+  );
+  player.activeShield = () => (
+    HAND_SLOTS.map(slot => player.equipment[slot]).find(item => item?.equipmentKind === "shield")
+    ?? null
+  );
+  Object.defineProperty(player, "weapon", {
+    get: () => player.activeWeapon(),
+    set: (weapon) => {
+      if (!weapon) return;
+      const owned = player.inventory.add(weapon);
+      equipItem(player.equipment, owned, EQUIPMENT_SLOTS.mainHand);
+    },
+  });
   player.facing = "down";
   player.attackTimer = 0;          // frames remaining in current swing
   player.attackCooldownTimer = 0;  // frames before next swing allowed
   player.attackHitIds = new Set(); // enemy keys already hit this swing
+  player.blockCooldownTimer = 0;
+  player.blockImpactTimer = 0;
   player.knockbackVx = 0;
   player.knockbackVy = 0;
   player.velocity = [0, 0];
@@ -194,6 +247,121 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
   player.attackHitbox = () =>
     player.weapon.computeHitbox(player.center, player.facing, player.attackTimer);
 
+  // The shield is "raised" whenever the player wants to block — keys.c is held,
+  // a shield is equipped, and the post-impact cooldown has elapsed. We track
+  // this separately from `isBlocking` so we can pause stamina regen even
+  // during the single frame the drain takes the pool to 0 (and `isBlocking`
+  // briefly returns false).
+  player.isShieldRaised = () => {
+    const shield = player.activeShield();
+    return Boolean(shield && player.blockCooldownTimer === 0 && player.gameState.keys.c);
+  };
+
+  player.isBlocking = () => player.isShieldRaised() && player.stamina > 0;
+
+  // Per-direction offset of the shield's center from the player's center.
+  // Each direction is hand-tuned to read as "held snug against the body":
+  //   - up:    pulled IN toward the body so the shield mostly hides behind
+  //            the player and only its top edge peeks above the head when
+  //            drawn behind the sprite (see drawShieldBehind).
+  //   - down:  small forward offset so the shield sits across the player's
+  //            torso/hands, not floating below the feet.
+  //   - left/right: 24 px reach matches the side-profile sprite's natural
+  //            "arm extended forward" pose.
+  const SHIELD_OFFSETS = Object.freeze({
+    up:    Object.freeze([0, -16]),
+    down:  Object.freeze([0, 8]),
+    left:  Object.freeze([-24, 0]),
+    right: Object.freeze([24, 0]),
+  });
+
+  const computeShieldDrawState = () => {
+    const shield = player.activeShield();
+    if (!shield || (!player.isBlocking() && player.blockImpactTimer <= 0)) return null;
+    const offset = SHIELD_OFFSETS[player.facing] ?? SHIELD_OFFSETS.down;
+    return {
+      shield,
+      cx: player.center[0] + offset[0],
+      cy: player.center[1] + offset[1],
+    };
+  };
+
+  const drawShieldSprite = (ctx, state) => {
+    // Up/down facing shows the shield face-on; left/right facing shows the
+    // edge profile. The side asset is authored with its convex face pointing
+    // LEFT, so flip horizontally when the player faces right.
+    const facingHorizontal = player.facing === "left" || player.facing === "right";
+    const sideSprite = state.shield.spriteSide;
+    const useSide = facingHorizontal && sideSprite?.complete;
+    const sprite = useSide ? sideSprite : state.shield.sprite;
+    if (!sprite?.complete) return;
+    if (useSide && player.facing === "right") {
+      ctx.save();
+      ctx.translate(state.cx, state.cy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(sprite, -18, -18, 36, 36);
+      ctx.restore();
+    } else {
+      ctx.drawImage(sprite, state.cx - 18, state.cy - 18, 36, 36);
+    }
+  };
+
+  const drawImpactArc = (ctx, state) => {
+    if (player.blockImpactTimer <= 0) return;
+    // Brief 180° arc fanning OUT in front of the shield (away from the
+    // player) when a hit is blocked. The closed half-disc + outer stroke
+    // reads as a deflected impact rather than a status aura around the
+    // shield.
+    const facingAngle = {
+      up: -Math.PI / 2,
+      down: Math.PI / 2,
+      left: Math.PI,
+      right: 0,
+    }[player.facing] ?? Math.PI / 2;
+    const arcStart = facingAngle - Math.PI / 2;
+    const arcEnd = facingAngle + Math.PI / 2;
+
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = "rgba(120, 180, 255, 0.28)";
+    ctx.beginPath();
+    ctx.arc(state.cx, state.cy, 30, arcStart, arcEnd);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(230, 245, 255, 0.9)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(state.cx, state.cy, 30, arcStart, arcEnd);
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  // Pre-draw pass for the shield when the player is facing AWAY from the
+  // camera. game.js calls this immediately before `player.draw(ctx)` so the
+  // player's body sprite paints over the lower half of the shield, leaving
+  // only the top peeking out above the head — which is what a shield held
+  // forward (in front of the player's chest) looks like from behind. For
+  // every other facing the shield draws on top of the player in drawBlock,
+  // so this is a no-op.
+  player.drawShieldBehind = (ctx) => {
+    if (player.facing !== "up") return;
+    const state = computeShieldDrawState();
+    if (!state) return;
+    drawShieldSprite(ctx, state);
+  };
+
+  player.drawBlock = (ctx) => {
+    const state = computeShieldDrawState();
+    if (!state) return;
+    // Skip the sprite when facing up — drawShieldBehind handled it before
+    // the player drew, so re-painting it here would put it back on top of
+    // the head. The impact arc, however, always draws on top so a blocked
+    // hit reads clearly regardless of facing.
+    if (player.facing !== "up") drawShieldSprite(ctx, state);
+    drawImpactArc(ctx, state);
+  };
+
   const baseDraw = player.draw;
   player.draw = (ctx) => {
     baseDraw(ctx);
@@ -235,8 +403,18 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
 
     statusEffects.applySpeedModifiers();
 
+    // While blocking, the shield's size dictates how heavily movement is
+    // restricted (small=0.75x, medium=0.5x, large=0.25x). Stacks
+    // multiplicatively with sprint and status effect modifiers.
+    if (player.isBlocking()) {
+      const blockingShield = player.activeShield();
+      player.speedModifier *= blockingShield.block.speedMultiplier ?? 1;
+    }
+
     if (player.stamina < 0) player.stamina = 0;
-    if (player.stamina < cfg.stamina) {
+    // Hold-to-block prevents stamina regen the same way hold-to-sprint does:
+    // release `e` (or let the shield drop) before stamina recovers.
+    if (player.stamina < cfg.stamina && !player.isShieldRaised()) {
       if (!moving) {
         player.stamina += configValue({
           value: cfg.staminaRegenIdle,
@@ -252,6 +430,8 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
     if (TEST_STATE[TEST_IDS.b]) player.stamina = cfg.stamina;
     if (player.invulnerable) player.invulnerable--;
     if (player.invulnerable < 0) player.invulnerable = 0;
+    if (player.blockCooldownTimer > 0) player.blockCooldownTimer--;
+    if (player.blockImpactTimer > 0) player.blockImpactTimer--;
 
     player.applyKnockback(walls);
 
@@ -260,7 +440,15 @@ function createPlayer(pos, width, height, spritePalette, gameState) {
 
     // Start a new attack: drain stamina, set timers, clear hit tracking
     const weapon = player.weapon;
-    if (keys[" "] && player.attackCooldownTimer === 0 && player.stamina >= weapon.staminaCost) {
+    // Bleed stamina each frame the shield is up. When this drops the pool to
+    // 0, `isBlocking()` returns false next frame and the shield naturally
+    // drops until the player releases `e` and lets stamina regen.
+    if (player.isBlocking()) {
+      player.stamina -= player.activeShield().block.staminaCost;
+      if (player.stamina < 0) player.stamina = 0;
+    }
+
+    if (keys[" "] && !player.isBlocking() && player.attackCooldownTimer === 0 && player.stamina >= weapon.staminaCost) {
       player.stamina -= weapon.staminaCost;
       player.attackTimer = weapon.duration;
       player.attackCooldownTimer = weapon.cooldown;

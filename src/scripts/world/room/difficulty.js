@@ -43,14 +43,31 @@ export const targetEnemyCount = (session, room) => {
   );
 };
 
+// Difficulty point thresholds at which each enemy type starts spawning. Kept
+// in sync with the `enemyTypeWeights` curves below; bumping a threshold here
+// is purely informational unless the matching weight curve is also updated.
+export const ENEMY_DIFFICULTY_THRESHOLDS = Object.freeze({
+  blob: 0,
+  bat: 3,
+  skeleton: 9,
+  goblin: 17,
+});
+
+// Chests are loot-tier content tied to the skeleton phase: skeletons (and
+// goblins later) are the only enemies that drop keys, so chests don't appear
+// before either is reachable.
+export const chestsCanSpawn = (session) => (
+  enemyDifficultyPoints(session) >= ENEMY_DIFFICULTY_THRESHOLDS.skeleton
+);
+
 export const enemyTypeWeights = (points) => ({
   // Blobs fade from "default" to "occasional" as difficulty rises, while
   // harder monsters keep gaining weight. Goblins are currently the top threat,
   // so skeletons phase in before goblins and goblins ramp later.
   blob: Math.max(20, 100 - (points * 2)),
-  bat: Math.min(85, Math.max(0, (points - 2) * 5)),
-  skeleton: Math.min(90, Math.max(0, (points - 8) * 4)),
-  goblin: Math.min(115, Math.max(0, (points - 16) * 5)),
+  bat: Math.min(85, Math.max(0, (points - ENEMY_DIFFICULTY_THRESHOLDS.bat + 1) * 5)),
+  skeleton: Math.min(90, Math.max(0, (points - ENEMY_DIFFICULTY_THRESHOLDS.skeleton + 1) * 4)),
+  goblin: Math.min(115, Math.max(0, (points - ENEMY_DIFFICULTY_THRESHOLDS.goblin + 1) * 5)),
 });
 
 export const pickEnemyType = (session) => (

@@ -1,14 +1,18 @@
 import createCoin from "@entities/coin/coin";
+import createChest from "@entities/chest/chest";
 import createEnemy from "@entities/enemy/enemy";
 import createLadder from "@entities/ladder/ladder";
 import * as GAME_CONFIG from "@core/game_config";
 import DEV_FLAGS, { configValue } from "@core/dev_flags";
 import { shuffle } from "@utils/helpers";
 import Random from "@utils/random";
+import { drawCoinPouch, triggerCoinDropAnim, updateCoinPouchAnims } from "@ui/hud/coin_pouch";
+import { drawKeyring } from "@ui/hud/keyring";
 import setupRoomCombat from "./combat";
 import { pickVariantIndex, getForcedConfig } from "./map_variants";
 import createRoomMap from "./room_map";
 import {
+  chestsCanSpawn,
   enemyCountPoints,
   enemyDifficultyPoints,
   pickEnemyType,
@@ -70,6 +74,15 @@ function createRoom(neighbor, gameState) {
 
   // HP potions only enter a room as enemy drops; no procedural spawning.
   room.hpPotions = {};
+  room.equipmentPickups = {};
+  room.keys = {};
+  room.chests = {};
+  // Earliest timestamp (ms) at which this room is eligible for its next
+  // chest spawn roll. 0 = "rollable right now". The timer is updated by
+  // `tryRollChest` (on a failed roll) and by `onChestOpened` (after the
+  // player loots a chest). Successful spawns intentionally do NOT advance
+  // the timer — the spawned chest sits there indefinitely until opened.
+  room.chestRollAvailableAt = 0;
 
   // Win-condition ladder. Each room rolls AT MOST ONCE for a ladder spawn,
   // and only after the player has reached the coin threshold (see
@@ -242,6 +255,11 @@ function createRoom(neighbor, gameState) {
     room.enemyProjectiles.push(projectile);
   };
 
+  const addChest = (chest) => {
+    chest.updateSides();
+    room.chests[chest.id] = chest;
+  };
+
   room.updateEnemyProjectiles = (player) => {
     if (room.enemyProjectiles.length === 0) return;
     room.enemyProjectiles.forEach(projectile => projectile.update(room, player));
@@ -396,6 +414,77 @@ function createRoom(neighbor, gameState) {
     room.spawnEnemies(configuredSpawnCounts);
   }
 
+  // Per-entry chest roll. Called on first creation (below) and again on
+  // every re-entry by `roomChange`, mirroring the ladder roll pattern.
+  //
+  // Rolling rules:
+  //   - Difficulty gate: chests don't appear before the skeleton tier so
+  //     they can't show up before the player has any way to get keys.
+  //   - One-at-a-time gate: if there's already a non-broken, unopened
+  //     chest in the room, skip the roll entirely (don't even consume the
+  //     cooldown — the existing chest is the "winning" roll until opened).
+  //   - Cooldown gate: rolls are limited to once every `rerollMs` per
+  //     room. Failed rolls advance the cooldown; successful rolls do not
+  //     (they stick the chest in the room indefinitely, and the next
+  //     cooldown is started when the chest is eventually opened).
+  room.tryRollChest = (now = Date.now()) => {
+    if (!chestsCanSpawn(session)) return;
+    if (now < room.chestRollAvailableAt) return;
+    const hasUnopenedChest = Object.values(room.chests)
+      .some(chest => !chest.opened && !chest.broken);
+    if (hasUnopenedChest) return;
+    const cfg = GAME_CONFIG.entities.chest;
+    if (Random.chance(cfg.chance)) {
+      addChest(createChest([
+        randSpawnAxis(coinSpawnCfg),
+        randSpawnAxis(coinSpawnCfg),
+      ], gameState));
+    } else {
+      room.chestRollAvailableAt = now + cfg.rerollMs;
+    }
+  };
+
+  // Hook called by `chest.open` (key or brute) so the room knows to start
+  // its post-open cooldown timer. After this fires, the next eligible
+  // entry won't roll again for `rerollMs` ms.
+  room.onChestOpened = (now = Date.now()) => {
+    room.chestRollAvailableAt = now + GAME_CONFIG.entities.chest.rerollMs;
+  };
+
+  // Dev/test escape hatch: drop a chest in the room right now, ignoring the
+  // difficulty gate, the per-room reroll cooldown, and the one-at-a-time
+  // rule. Returns the spawned chest. Used by the dev-options "Force chest
+  // spawn" button — production gameplay should always go through
+  // `tryRollChest`.
+  room.spawnChestNow = () => {
+    const chest = createChest([
+      randSpawnAxis(coinSpawnCfg),
+      randSpawnAxis(coinSpawnCfg),
+    ], gameState);
+    addChest(chest);
+    return chest;
+  };
+
+  // Note: the initial chest roll for this room is NOT triggered from
+  // inside createRoom. The caller (game.js for the starting room,
+  // roomChange for entry transitions) calls tryRollChest, mirroring the
+  // tryRollLadder pattern so the "roll on entry" semantics live in one
+  // place and new-room creation doesn't double-roll.
+
+  // Movement-collision sources: room walls plus every still-intact chest's
+  // colBox. Brute-broken chests are skipped because they're already
+  // mid-debris (their drop has been collected and the silhouette is gone).
+  // Key-opened chests still block — they remain rendered as a closed-looking
+  // sprite, so passing through them would read as a bug.
+  room.movementBlockers = () => {
+    const blockers = room.walls.slice();
+    for (const chest of Object.values(room.chests)) {
+      if (chest.broken) continue;
+      blockers.push(chest.colBox);
+    }
+    return blockers;
+  };
+
   room.scatterEnemies = () => {
     for (const enemy of Object.values(room.enemies)) {
       enemy.pos[0] = Random.int(enemySpawnCfg.min, enemySpawnMax);
@@ -471,7 +560,7 @@ function createRoom(neighbor, gameState) {
       player.pos[0] = Math.max(-24, Math.min(696, player.pos[0]));
       player.pos[1] = Math.max(-24, Math.min(696, player.pos[1]));
       player.updateSides();
-      player.wallCheckKnockback(room.walls);
+      player.wallCheckKnockback(room.movementBlockers());
       player.updateSides();
       enemy.updateSides();
     }
@@ -507,6 +596,12 @@ function createRoom(neighbor, gameState) {
     room.collect();
     Object.values(room.coins).forEach(coin => coin.animate(room));
     Object.values(room.hpPotions).forEach(potion => potion.animate(room));
+    Object.values(room.equipmentPickups).forEach(pickup => pickup.animate(room));
+    Object.values(room.keys).forEach(key => key.animate(room));
+    Object.values(room.chests).forEach(chest => chest.animate(room));
+    for (const [id, chest] of Object.entries(room.chests)) {
+      if (chest.done) delete room.chests[id];
+    }
     room.poofs.forEach(p => p.update());
     room.poofs = room.poofs.filter(p => !p.done);
   };
@@ -522,6 +617,7 @@ function createRoom(neighbor, gameState) {
       if (coin.collect()) {
         delete room.coins[coin.id];
         gameState.session.coinCount++;
+        triggerCoinDropAnim(gameState.session.player);
         return;
       }
     }
@@ -538,6 +634,24 @@ function createRoom(neighbor, gameState) {
         return;
       }
     }
+    for (let pickup of Object.values(room.equipmentPickups)) {
+      if (pickup.collect()) {
+        delete room.equipmentPickups[pickup.id];
+        return;
+      }
+    }
+    for (let key of Object.values(room.keys)) {
+      if (key.collect()) {
+        delete room.keys[key.id];
+        return;
+      }
+    }
+    if (gameState.keys.e) {
+      const player = gameState.session.player;
+      for (let chest of Object.values(room.chests)) {
+        if (chest.tryKeyOpen(player, room)) return;
+      }
+    }
     if (room.ladder && !gameState.session.climbing && !gameState.session.climbed) {
       const player = gameState.session.player;
       if (room.ladder.checkPlayerOverlap(player)) {
@@ -552,6 +666,9 @@ function createRoom(neighbor, gameState) {
       ...Object.values(room.enemies),
       ...Object.values(room.coins),
       ...Object.values(room.hpPotions),
+      ...Object.values(room.equipmentPickups),
+      ...Object.values(room.keys),
+      ...Object.values(room.chests),
       ...(room.ladder ? [room.ladder] : []),
     ];
   };
@@ -587,31 +704,28 @@ function createRoom(neighbor, gameState) {
       ctx.fillText(`Room [ ${room.nodePos} ]`, 15, 30);
       ctx.fillText(`Kills x ${session.enemiesKilled ?? 0}`, 15, 55);
     }
-    const coinText = `x ${session.coinCount}`;
-    const coinSprite = gameState.sprites.coin;
-    const coinFrameSize = 16;
-    const coinRenderSize = GAME_CONFIG.entities.coin.renderSize;
-    const coinGap = 8;
-    const coinTextWidth = ctx.measureText(coinText).width;
-    const coinX = ctx.canvas.width - coinRenderSize - coinGap - coinTextWidth - 15;
-    const coinY = 12;
-    if (coinSprite?.complete && coinSprite.naturalWidth > 0) {
-      const frame = Math.floor(Date.now() / (GAME_CONFIG.entities.coin.frameInterval * (1000 / 60))) % 8;
-      ctx.drawImage(
-        coinSprite,
-        frame * coinFrameSize,
-        0,
-        coinFrameSize,
-        coinFrameSize,
-        coinX,
-        coinY,
-        coinRenderSize,
-        coinRenderSize,
-      );
-      ctx.fillText(coinText, coinX + coinRenderSize + coinGap, 30);
-    } else {
-      ctx.fillText(`Coins ${coinText}`, ctx.canvas.width - 130, 30);
-    }
+    // Pouch + keyring are stacked side-by-side in the bottom-right of the
+    // HUD. The pouch fills as the player accumulates coins (capped at the
+    // win threshold of 10 with an overflow visual), and the keyring grows a
+    // hanging key per key collected up to the configured maxKeys. Both
+    // widgets shrink/grow live with the underlying state — goblins
+    // stealing coins or the player spending a key updates the visual on
+    // the next frame without any extra event plumbing.
+    const POUCH_SIZE = 44;
+    const KEYRING_SIZE = 44;
+    const WIDGET_GAP = 12;
+    const RIGHT_MARGIN = 15;
+    const BOTTOM_MARGIN = 8;
+
+    updateCoinPouchAnims(player, session.coinCount ?? 0);
+
+    const widgetsWidth = POUCH_SIZE + WIDGET_GAP + KEYRING_SIZE;
+    const widgetY = ctx.canvas.height - POUCH_SIZE - BOTTOM_MARGIN;
+    const pouchX = ctx.canvas.width - widgetsWidth - RIGHT_MARGIN;
+    const keyringX = pouchX + POUCH_SIZE + WIDGET_GAP;
+
+    drawCoinPouch(ctx, pouchX, widgetY, session.coinCount ?? 0, POUCH_SIZE, player, gameState.sprites.coinPouch);
+    drawKeyring(ctx, keyringX, widgetY, player.keyCount ?? 0, KEYRING_SIZE);
 
     // HP bar reads left-to-right: red fill = remaining HP on top of a solid
     // black track (missing HP). Stamina stays yellow, invulnerability cyan.

@@ -1,0 +1,15 @@
+export default Object.freeze({
+  cooldown: 18,
+  criticalChance: 0.12,
+  criticalMultiplier: 2,
+  damageMax: 4,
+  damageMin: 2,
+  damageProfile: Object.freeze({ piercing: 0.5, crushing: 0.5 }),
+  damageType: "piercing",
+  duration: 7,
+  handedness: "oneHanded",
+  knockback: 18,
+  range: 36,
+  staminaCost: 90,
+  thrustWidth: 14,
+});

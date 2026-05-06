@@ -36,6 +36,10 @@ export const roomChange = (exitDir, currRoom, gameState) => {
   // is a cheap no-op. Coin threshold + per-room dice are checked inside
   // tryRollLadder.
   session.game.room.tryRollLadder(session.coinCount);
+  // Chests follow the same "roll on entry" pattern but with a per-room
+  // cooldown timer instead of a one-shot flag — see room.tryRollChest for
+  // the gating rules (difficulty + 5-minute cooldown + one-at-a-time).
+  session.game.room.tryRollChest();
 };
 
 export const randNumPaths = max => {

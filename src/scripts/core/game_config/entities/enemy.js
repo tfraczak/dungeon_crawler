@@ -1,13 +1,13 @@
+// Drop tables intentionally do NOT live here — each enemy's drops are
+// declared on its own config (see `src/scripts/entities/enemy/<type>/
+// config.js`) so individual creature loot can be tuned independently.
+// New enemies that don't ship a `drops` array won't drop anything.
 export default Object.freeze({
   baseDetectDistance: 150,
   chaseSpeedModifier: 1,
   damageMax: 4,
   damageMin: 1,
   detectDistancePerEnemy: 20,
-  drops: [
-    { chance: 0.1, type: "coin" },
-    { chance: 0.05, type: "hp_potion" },
-  ],
   hitDistance: 32,
   hp: 50,
   hpVariance: 0.05,

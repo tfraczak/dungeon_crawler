@@ -1,0 +1,323 @@
+@use 'sass:color';
+@use 'vars' as *;
+
+// Fullscreen dim layer. Sits one z-index below `.inventory-page` so the
+// drawer slides in over the top of it, and fades in/out together with
+// `body.inventory-open` to signal that the game loop is paused. Click
+// anywhere on the backdrop to close the inventory.
+.inventory-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background-color: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease-in-out;
+}
+
+body.inventory-open .inventory-backdrop {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.inventory-page {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 1000;
+  width: min(620px, 100%);
+  display: flex;
+  flex-direction: column;
+  font-family: $rubik;
+  transform: translateX(100%);
+  transition: transform 0.25s ease-in-out;
+  pointer-events: none;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.5);
+
+  &.active {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+}
+
+.inventory-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: $menu-color;
+  background-image: repeating-linear-gradient(
+    -30deg,
+    color.adjust($menu-color, $lightness: -14%) 0,
+    color.adjust($menu-color, $lightness: -14%) 360px,
+    $menu-color 500px,
+    color.adjust($menu-color, $lightness: -14%) 640px
+  );
+  border-left: 4px solid color.adjust(white, $lightness: -15%);
+}
+
+.inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 28px 16px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+
+  h1 {
+    font-family: $start-2p;
+    font-size: 22px;
+  }
+}
+
+.inventory-back {
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background-color: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  transition: all 0.15s ease-in-out;
+  padding: 8px 14px;
+  border-radius: 4px;
+
+  &:hover,
+  &:focus {
+    border-color: $banana;
+    color: $banana;
+    background-color: rgba(0, 0, 0, 0.45);
+  }
+}
+
+// Stacked: equipment slots on top (3 sub-columns), item picker below. The
+// outer container scrolls if the combined content exceeds the drawer height.
+.inventory-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 24px 24px;
+  overflow-y: auto;
+}
+
+// Equipment slots are split into three vertical lists side by side: hands
+// on the left, armor in the middle, accessories on the right. Each list
+// has its own header label and is independently scrollable when crowded.
+.equipment-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  min-height: 0;
+}
+
+.equipment-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.equipment-column-title,
+.inventory-list-panel h2 {
+  font-family: $start-2p;
+  font-size: 12px;
+  color: $banana;
+  letter-spacing: 0.05em;
+}
+
+.inventory-list-panel h2 {
+  font-size: 14px;
+}
+
+.equipment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+}
+
+.equipment-row {
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background-color: rgba(0, 0, 0, 0.18);
+  transition: all 0.12s ease-in-out;
+  outline: none;
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(255, 218, 98, 0.5);
+    color: $banana;
+    background-color: rgba(0, 0, 0, 0.35);
+  }
+
+  &.selected {
+    border-color: $banana;
+    background-color: rgba(255, 218, 98, 0.08);
+    box-shadow: 0 0 0 1px rgba(255, 218, 98, 0.3);
+  }
+}
+
+.equipment-row-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.25);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+
+  &.has-icon {
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+}
+
+.equipment-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.equipment-row-label {
+  font-family: $start-2p;
+  font-size: 8px;
+  line-height: 1.2;
+  color: color.adjust(white, $lightness: -28%);
+  letter-spacing: 0.04em;
+}
+
+.equipment-row-item {
+  font-size: 13px;
+  color: color.adjust(white, $lightness: -10%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.equipment-row.selected .equipment-row-item {
+  color: $banana;
+}
+
+// Off-hand row when a 2H weapon is occupying it indirectly. The slot is not
+// directly equipped here, but the 2H weapon's "spillover" reservation is
+// real (a shield can't fit alongside it), so we still render the icon — just
+// dimmed — to make the constraint legible.
+.equipment-row.indirect {
+  opacity: 0.55;
+
+  .equipment-row-item {
+    font-style: italic;
+  }
+
+  &:hover,
+  &:focus-visible {
+    opacity: 0.9;
+  }
+
+  &.selected {
+    opacity: 0.85;
+  }
+}
+
+// Right-side item picker — list of compatible items (grouped by type with a
+// quantity indicator), and an "Unequip" action when the slot is filled.
+.inventory-list-panel {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inventory-hint {
+  font-size: 13px;
+  color: color.adjust(white, $lightness: -18%);
+}
+
+.inventory-items {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inventory-item {
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background-color: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  transition: all 0.15s ease-in-out;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: left;
+
+  &:hover,
+  &:focus {
+    border-color: $banana;
+    color: $banana;
+    background-color: rgba(0, 0, 0, 0.45);
+  }
+
+  &.equipped {
+    border-color: #8ee6a2;
+  }
+}
+
+.inventory-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.inventory-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  small {
+    color: color.adjust(white, $lightness: -18%);
+    line-height: 1.3;
+  }
+
+  .inventory-description {
+    font-style: italic;
+  }
+
+  // Stat strip (e.g. "1H · 5 dmg") — punched up so the at-a-glance info
+  // doesn't get lost under the more verbose description line.
+  .inventory-stats {
+    color: $banana;
+    font-family: $start-2p;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+}
+
+.inventory-quantity {
+  color: $banana;
+  font-weight: 700;
+}
+
+// Below this width the three sub-columns of equipment slots get cramped enough
+// that wrapping into a single column reads better than ellipsizing every row.
+@media (max-width: 560px) {
+  .equipment-columns {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}

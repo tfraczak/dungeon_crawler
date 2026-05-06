@@ -1,5 +1,5 @@
 import * as GAME_CONFIG from "@core/game_config";
-import TEST_STATE, { TEST_IDS } from "@core/player_testing";
+import { resolveIncomingPlayerHit } from "@entities/player/incoming_hit";
 import Random from "@utils/random";
 import { boxesOverlap } from "./collision_boxes";
 
@@ -44,18 +44,14 @@ export const setupCombat = (enemy, cfg) => {
       )
         ? flyingHitBoxProbe.center
         : (playerHitBox.center ?? player.center);
-      const dx = hitCenter[0] - enemy.center[0];
-      const dy = hitCenter[1] - enemy.center[1];
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const knockback = GAME_CONFIG.entities.player.hitKnockback;
-      player.knockbackVx = (dx / dist) * knockback;
-      player.knockbackVy = (dy / dist) * knockback;
-      if (!TEST_STATE[TEST_IDS.a]) {
-        player.hp -= enemy.damage();
-        if (player.hp < 0) player.hp = 0;
-      }
-      player.hit();
-      enemy.onPlayerHit?.(player, { hitCenter });
+      const result = resolveIncomingPlayerHit(player, {
+        source: enemy,
+        sourceCenter: enemy.center,
+        hitCenter,
+        damage: () => enemy.damage(),
+        knockback: GAME_CONFIG.entities.player.hitKnockback,
+      });
+      if (!result.blocked) enemy.onPlayerHit?.(player, { hitCenter });
     }
   };
 };

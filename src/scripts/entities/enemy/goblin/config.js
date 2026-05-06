@@ -4,6 +4,15 @@ const playerSprintSpeed = GAME_CONFIG.entities.player.sprintMultiplier;
 
 export default Object.freeze({
   hp: 70,
+  // Goblins are the late-game heavyweights — they drop the most coins
+  // and have a slight bump on the rare key roll. The stolen-coin
+  // mechanic still adds an extra coin on death whenever the goblin
+  // pickpocketed the player; that's handled separately in setupDrops.
+  drops: Object.freeze([
+    Object.freeze({ type: "coin", chance: 0.20 }),
+    Object.freeze({ type: "hp_potion", chance: 0.08 }),
+    Object.freeze({ type: "key", chance: 0.12 }),
+  ]),
   baseSpeedModifier: 0.95,
   lowHpThreshold: 10,
   sprintDelayMs: 300,

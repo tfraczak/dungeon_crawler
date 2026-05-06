@@ -1,5 +1,12 @@
 export default Object.freeze({
   hp: 30,
+  // Bats lean a bit more on potions than coins because their poison
+  // attack puts more sustained pressure on the player than the basic
+  // melee enemies do.
+  drops: Object.freeze([
+    Object.freeze({ type: "coin", chance: 0.10 }),
+    Object.freeze({ type: "hp_potion", chance: 0.07 }),
+  ]),
   speedModifier: 1.3,
   colBox: Object.freeze({ width: 26, height: 20 }),
   animationPace: Object.freeze({

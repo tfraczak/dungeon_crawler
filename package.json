@@ -1,6 +1,6 @@
 {
   "name": "dungeon_crawler",
-  "version": "1.3.0",
+  "version": "1.11.9",
   "description": "*Dungeon Crawler 3000 is a JavaScript browser game where a player can explore a procedurally generated dungeon.*",
   "scripts": {
     "serve": "NODE_ENV=development webpack serve --config webpack.dev.js",

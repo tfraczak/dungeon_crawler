@@ -21,11 +21,15 @@ import TEST_STATE, {
   setTestValue,
   resetTestValues,
 } from "@core/player_testing";
+import * as GAME_CONFIG from "@core/game_config";
 import BAT_CONFIG from "@entities/enemy/bat/config";
 import { playBatBite } from "@entities/enemy/bat/sound";
 import BLOB_CONFIG from "@entities/enemy/blob/config";
 import { playBlobAttackHit } from "@entities/enemy/blob/sound";
 import { createWeaponById, DEFAULT_WEAPON_ID, WEAPON_GROUPS } from "@items/equipment/weapons/registry";
+import { createEquipmentById, SHIELD_GROUPS } from "@items/equipment/registry";
+import { equipItem, unequipItem } from "@items/equipment/inventory";
+import { EQUIPMENT_SLOTS } from "@items/equipment/slots";
 import { cycleRoomBackground, getVariantCount, normalizeForcedConfig } from "@world/room/map_variants";
 import {
   enemyCountPoints,
@@ -55,11 +59,15 @@ export default function installDevOptionsDrawer(gameState) {
     difficultyInfo,
     previewBatBiteBtn,
     previewBlobHitBtn,
+    addCoinsBtn,
+    addKeysBtn,
+    spawnChestBtn,
   } = ui;
 
   if (!drawer || !openBtn || !form || !body) return;
 
   const weaponSelect = form.querySelector(`[name="${TEST_IDS.d}"]`);
+  const shieldSelect = form.querySelector(`[name="${TEST_IDS.e}"]`);
   const sections = Array.from(body.querySelectorAll(".dev-options-section"));
 
   const showMenu = () => {
@@ -105,13 +113,19 @@ export default function installDevOptionsDrawer(gameState) {
 
   buildSubdrawerMenu();
 
-  if (weaponSelect) {
+  // Both pickers use the same render shape: a "default" first option followed
+  // by labelled <optgroup>s. Weapons default to the starter shortsword;
+  // shields default to "None" because the player can legitimately fight
+  // bare-handed off-hand and the selection should be able to clear an
+  // existing equip.
+  const populateEquipmentSelect = (select, groups, defaultLabel) => {
+    if (!select) return;
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
-    defaultOption.textContent = "Default (Shortsword)";
-    weaponSelect.appendChild(defaultOption);
+    defaultOption.textContent = defaultLabel;
+    select.appendChild(defaultOption);
 
-    for (const group of WEAPON_GROUPS) {
+    for (const group of groups) {
       const optgroup = document.createElement("optgroup");
       optgroup.label = group.label;
       for (const option of group.options) {
@@ -120,9 +134,12 @@ export default function installDevOptionsDrawer(gameState) {
         el.textContent = option.label;
         optgroup.appendChild(el);
       }
-      weaponSelect.appendChild(optgroup);
+      select.appendChild(optgroup);
     }
-  }
+  };
+
+  populateEquipmentSelect(weaponSelect, WEAPON_GROUPS, "Default (Shortsword)");
+  populateEquipmentSelect(shieldSelect, SHIELD_GROUPS, "None");
 
   // Placeholders mirror the canonical game_config defaults. Leaving a field
   // blank = "use the config default," which the call sites read via `?? cfg.x`.
@@ -145,6 +162,26 @@ export default function installDevOptionsDrawer(gameState) {
     player.attackHitIds.clear();
   };
 
+  // Sync the player's off-hand to whatever the shield picker says. Empty
+  // value → unequip the current shield (so the picker can also be used to
+  // disarm). Non-empty value → instantiate the shield, push it into the
+  // inventory, and equip it; equipItem handles the 2H-weapon / shield
+  // mutex automatically (a 2H main hand is cleared when a shield drops in).
+  const applyPlayerShield = () => {
+    const player = currentPlayer();
+    if (!player) return;
+    const shieldId = TEST_STATE[TEST_IDS.e];
+    if (!shieldId) {
+      const current = player.activeShield?.();
+      if (current) unequipItem(player.equipment, current);
+      return;
+    }
+    const shield = createEquipmentById(shieldId, gameState);
+    if (!shield) return;
+    const owned = player.inventory.add(shield);
+    equipItem(player.equipment, owned, EQUIPMENT_SLOTS.offHand);
+  };
+
   const previewBatBite = () => {
     const player = currentPlayer();
     if (!player) return;
@@ -157,6 +194,28 @@ export default function installDevOptionsDrawer(gameState) {
     if (!player) return;
     playBlobAttackHit();
     player.showBlobHit?.(player.flyingHitBox?.center ?? player.center, BLOB_CONFIG.hitEffect);
+  };
+
+  // Loot cheats: quietly no-op when there's no live run. The user can tell
+  // the action did nothing because the on-HUD counters won't change.
+  const COIN_GRANT = 10;
+  const KEY_GRANT = 1;
+
+  const addCoins = () => {
+    const session = gameState?.session;
+    if (!session) return;
+    session.coinCount = (session.coinCount ?? 0) + COIN_GRANT;
+  };
+
+  const addKeys = () => {
+    const player = currentPlayer();
+    if (!player) return;
+    const maxKeys = GAME_CONFIG.entities.key.maxKeys;
+    player.keyCount = Math.min(maxKeys, (player.keyCount ?? 0) + KEY_GRANT);
+  };
+
+  const forceSpawnChest = () => {
+    currentRoom()?.spawnChestNow?.();
   };
 
   const refreshMapInfo = () => {
@@ -282,6 +341,7 @@ export default function installDevOptionsDrawer(gameState) {
       }
     }
     applyPlayerWeapon();
+    applyPlayerShield();
     currentRoom()?.spawnDevEnemies?.();
     // Refresh from the store so any rejected / coerced inputs reflect truth.
     populate();
@@ -321,6 +381,7 @@ export default function installDevOptionsDrawer(gameState) {
     resetDevFlags();
     resetTestValues();
     applyPlayerWeapon();
+    applyPlayerShield();
     populate();
   });
 
@@ -339,6 +400,18 @@ export default function installDevOptionsDrawer(gameState) {
   previewBlobHitBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     previewBlobHit();
+  });
+  addCoinsBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    addCoins();
+  });
+  addKeysBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    addKeys();
+  });
+  spawnChestBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    forceSpawnChest();
   });
 
   document.addEventListener("keydown", (e) => {

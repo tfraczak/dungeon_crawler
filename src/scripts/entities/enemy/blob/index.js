@@ -14,6 +14,7 @@ function createBlobEnemy({ pos, width, height, spritePalette, detectDist, gameSt
     gameState,
     options: {
       hp: BLOB_CONFIG.hp,
+      drops: BLOB_CONFIG.drops,
     },
   });
   blob.onPlayerHit = (player, { hitCenter }) => {

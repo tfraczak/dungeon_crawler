@@ -102,7 +102,13 @@ export const DEV_FLAG_KEYS = Object.freeze([
 export const CONFIG_DEFAULTS = Object.freeze({
   enemyHp: GAME_CONFIG.entities.enemy.hp,
   enemyGoblinStealChance: GOBLIN_CONFIG.steal.chance,
-  enemyItemDropRate: GAME_CONFIG.entities.enemy.drops[0]?.chance ?? 0,
+  // `enemyItemDropRate` is an OVERRIDE that replaces every drop entry's
+  // chance, regardless of which type of enemy or item it came from. Drops
+  // now live per-enemy with varying chances (see each enemy's config), so
+  // there's no single canonical "default" — the placeholder is just a
+  // representative value picked from the most common drop chance to give
+  // the drawer a sensible hint.
+  enemyItemDropRate: 0.1,
   playerSpeedMultiplier: GAME_CONFIG.entities.player.speedMultiplier,
   playerSprintMultiplier: GAME_CONFIG.entities.player.sprintMultiplier,
   playerStaminaDrain: GAME_CONFIG.entities.player.staminaDrain,

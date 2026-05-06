@@ -17,6 +17,7 @@ function createBatEnemy({ pos, width, height, spritePalette, detectDist, gameSta
     gameState,
     options: {
       hp: BAT_CONFIG.hp,
+      drops: BAT_CONFIG.drops,
       colBox: BAT_CONFIG.colBox,
       colBoxAnchor: "center",
       flying: true,

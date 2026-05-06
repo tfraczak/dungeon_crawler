@@ -54,6 +54,7 @@ function createGameState() {
       Shift: false,
       Enter: false,
       " ": false,
+      e: false,
     },
     mobileZoom: 1,
     session: {},

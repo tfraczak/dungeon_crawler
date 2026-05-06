@@ -21,6 +21,7 @@ function createGoblinEnemy({ pos, width, height, spritePalette, detectDist, game
     options: {
       ...behavior,
       hp: GOBLIN_CONFIG.hp,
+      drops: GOBLIN_CONFIG.drops,
     },
   });
   goblin.speed = GAME_CONFIG.world.baseSpeed * GAME_CONFIG.entities.player.speedMultiplier * GOBLIN_CONFIG.baseSpeedModifier;

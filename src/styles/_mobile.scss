@@ -163,8 +163,9 @@ body.mobile {
 
       // Give portrait visitors something to do: route them to the in-app
       // How to play page instead of leaving them stuck on the rotate prompt.
-      .rotate-how-to {
-        margin-top: 32px;
+      .rotate-how-to,
+      .rotate-inventory {
+        margin-top: 16px;
         padding: 14px 28px;
         font-family: 'Courier New', monospace;
         font-size: 18px;
@@ -175,6 +176,7 @@ body.mobile {
         text-decoration: none;
         transition: all 0.15s ease-in-out;
         touch-action: manipulation;
+        cursor: pointer;
 
         &:hover,
         &:active {
@@ -182,7 +184,22 @@ body.mobile {
           border-color: #ffcf32;
         }
       }
+
+      .rotate-how-to {
+        margin-top: 32px;
+      }
+
+      // Inventory shortcut is only meaningful while a run is in progress.
+      // Hidden by default; revealed by the `game-active` body flag set when
+      // createGame runs.
+      .rotate-inventory {
+        display: none;
+      }
     }
+  }
+
+  &.portrait.game-active #rotate-overlay .rotate-inventory {
+    display: inline-block;
   }
 }
 

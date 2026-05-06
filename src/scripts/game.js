@@ -112,6 +112,13 @@ function createGame(gameState) {
   const tile = GAME_CONFIG.world.tileSize;
   const startingPos = [tile * 7, tile * 7];
 
+  // Body flag for "a run is currently live". Used by the mobile portrait
+  // overlay to reveal the inventory shortcut, and by anything else that
+  // needs to distinguish the start screen from in-game state. Re-adding is
+  // idempotent and survives `gameState.reset()` because the next createGame
+  // re-applies it before the first frame.
+  document.body.classList.add("game-active");
+
   const game = {
     fpsInterval: 1000 / GAME_CONFIG.game.fps,
     toPlayer: 100,
@@ -181,6 +188,12 @@ function createGame(gameState) {
   // win threshold), but routing it through the same call site as roomChange
   // means future tweaks to the spawn rules apply uniformly.
   game.startingRoom.tryRollLadder(gameState.session.coinCount);
+  // Chest roll on first entry. Same "roll on entry" pattern as the ladder;
+  // gated by difficulty + per-room cooldown internally. The starting room
+  // can't actually spawn a chest yet (difficulty starts below the skeleton
+  // threshold), but we still call it so the roll-on-entry contract is
+  // uniform across the starting room and roomChange.
+  game.startingRoom.tryRollChest();
   game.camera = gameState.isMobile ? createCamera() : null;
   game.player.draw(ctx);
 
@@ -206,6 +219,10 @@ function createGame(gameState) {
     // player. Reset `then` so the loop doesn't try to catch up on missed
     // frames the instant we rotate back to landscape.
     if (document.body.classList.contains("portrait")) {
+      game.then = Date.now();
+      return;
+    }
+    if (document.body.classList.contains("inventory-open")) {
       game.then = Date.now();
       return;
     }
@@ -264,6 +281,9 @@ function createGame(gameState) {
         Object.values(game.room.enemies).forEach(e => e.draw(ctx));
         Object.values(game.room.coins).forEach(c => c.draw(ctx));
         Object.values(game.room.hpPotions).forEach(p => p.draw(ctx));
+        Object.values(game.room.equipmentPickups).forEach(p => p.draw(ctx));
+        Object.values(game.room.keys).forEach(k => k.draw(ctx));
+        Object.values(game.room.chests).forEach(c => c.draw(ctx));
         if (game.room.ladder) game.room.ladder.draw(ctx);
         game.player.draw(ctx);
 
@@ -329,13 +349,17 @@ function createGame(gameState) {
         game.stop();
       } else {
         game.room.tickEnemyRespawns(now);
-        game.player.move(game.room.walls);
-        Object.values(game.room.enemies).forEach(enemy => enemy.move(game.room.walls));
+        // Movement collisions resolve against room walls + chest col-boxes
+        // (chests block both player and enemies). Combat hit detection still
+        // uses entities directly elsewhere; this set is movement-only.
+        const movementBlockers = game.room.movementBlockers();
+        game.player.move(movementBlockers);
+        Object.values(game.room.enemies).forEach(enemy => enemy.move(movementBlockers));
         game.room.updateEnemyProjectiles(game.player);
         game.room.resolveEnemyCollisions();
         game.room.resolvePlayerEnemyCollisions(game.player);
         game.room.resolvePlayerAttack(game.player);
-        game.player.wallCheck(game.room.walls);
+        game.player.wallCheck(movementBlockers);
         game.player.updateSides();
         game.room.animate();
 
@@ -361,8 +385,14 @@ function createGame(gameState) {
           && game.player.weapon.drawBehindPlayerWhenFacingUp !== false
         );
         for (const entity of entities) {
-          if (shouldDrawWeaponBehindPlayer && entity === game.player) {
-            game.player.weapon.drawSlash(ctx, game.player.center, game.player.facing, game.player.attackTimer);
+          if (entity === game.player) {
+            // Both the back-facing weapon swing and the back-facing shield
+            // pose paint just before the player so the body sprite covers
+            // their lower halves, selling the "viewed from behind" look.
+            if (shouldDrawWeaponBehindPlayer) {
+              game.player.weapon.drawSlash(ctx, game.player.center, game.player.facing, game.player.attackTimer);
+            }
+            game.player.drawShieldBehind(ctx);
           }
           entity.draw(ctx);
         }
@@ -370,6 +400,7 @@ function createGame(gameState) {
         if (game.player.isAttacking() && !shouldDrawWeaponBehindPlayer) {
           game.player.weapon.drawSlash(ctx, game.player.center, game.player.facing, game.player.attackTimer);
         }
+        game.player.drawBlock(ctx);
 
         game.room.drawEnemyProjectiles(ctx);
         game.room.poofs.forEach(p => p.draw(ctx));

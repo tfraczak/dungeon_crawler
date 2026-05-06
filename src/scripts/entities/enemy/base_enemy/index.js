@@ -65,7 +65,7 @@ function createBaseEnemy({
 
   setupHeadColBox(enemy, options);
   setupAnimation(enemy, spriteGridPos);
-  setupDrops(enemy, cfg, gameState);
+  setupDrops(enemy, options.drops ?? [], gameState);
   setupCombat(enemy, cfg);
   setupMovement(enemy, cfg);
   setupDevOverlays(enemy);

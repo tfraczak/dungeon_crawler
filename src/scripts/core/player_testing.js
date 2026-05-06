@@ -3,6 +3,7 @@ export const TEST_IDS = Object.freeze({
   b: "c1",
   c: "c2",
   d: "c3",
+  e: "c4",
 });
 
 export const TEST_KEYS = Object.freeze(Object.values(TEST_IDS));
@@ -15,6 +16,7 @@ const BOOLEAN_KEYS = Object.freeze([
 
 const STRING_KEYS = Object.freeze([
   TEST_IDS.d,
+  TEST_IDS.e,
 ]);
 
 const STORAGE_KEY = "runPrefs";

@@ -16,6 +16,9 @@ function setupRoomCombat(room, gameState) {
     for (const potion of drops.hpPotions) {
       room.hpPotions[potion.id] = potion;
     }
+    for (const key of drops.keys) {
+      room.keys[key.id] = key;
+    }
 
     session.enemiesKilled = (session.enemiesKilled ?? 0) + 1;
     room.scheduleEnemyRespawn(enemy);
@@ -36,6 +39,14 @@ function setupRoomCombat(room, gameState) {
         player.attackHitIds.add(key);
         enemy.takeDamage(weapon.rollDamage(), weapon.knockback);
         if (!enemy.alive()) room.onEnemyKilled(enemy, key);
+      }
+    }
+    for (const chest of Object.values(room.chests)) {
+      if (player.attackHitIds.has(chest.id) || chest.opened) continue;
+      if (weapon.hitsTarget(hitbox, chest.colBox)) {
+        hitAny = true;
+        player.attackHitIds.add(chest.id);
+        chest.takeDamage(weapon.rollDamage(), room, "brute");
       }
     }
 
