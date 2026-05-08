@@ -1,68 +1,97 @@
-const TOKEN_BY_KEY = Object.freeze({
+import DEV_FLAGS from "@core/dev_flags";
+import Random from "@utils/random";
+import { nudge } from "@utils/letters";
+import { resolveBase } from "./lookup";
+
+const KEY_MAP = Object.freeze({
   ArrowUp: "A",
   ArrowDown: "B",
   ArrowLeft: "C",
   ArrowRight: "D",
   b: "E",
   a: "F",
+  m: "G",
+  o: "H",
+  n: "I",
+  t: "J",
+  u: "K",
+  e: "L",
+  w: "M",
+  d: "N",
+  h: "O",
+  r: "P",
+  f: "Q",
+  i: "R",
+  s: "S",
 });
-const TOKEN_BY_CODE = Object.freeze({
+const CODE_MAP = Object.freeze({
   ArrowUp: "A",
   ArrowDown: "B",
   ArrowLeft: "C",
   ArrowRight: "D",
   KeyB: "E",
   KeyA: "F",
+  KeyM: "G",
+  KeyO: "H",
+  KeyN: "I",
+  KeyT: "J",
+  KeyU: "K",
+  KeyE: "L",
+  KeyW: "M",
+  KeyD: "N",
+  KeyH: "O",
+  KeyR: "P",
+  KeyF: "Q",
+  KeyI: "R",
+  KeyS: "S",
 });
 
-const BASE_SHIFT = 7;
-const BASE_TARGET = "HHIIJKJKLM";
+const OFFSET = 7;
+const STEM = "HHIIJKJKLM";
 const TIMEOUT_MS = 2000;
 
-const randomShift = () => 1 + Math.floor(Math.random() * 20);
-const shiftToken = (token, shift) => String.fromCharCode(token.charCodeAt(0) + shift);
-const reencodeTarget = (target, fromShift, toShift) => (
-  Array.from(target)
-    .map(char => String.fromCharCode(char.charCodeAt(0) - fromShift + toShift))
-    .join("")
-);
-
-const tokenFor = (event) => (
-  TOKEN_BY_KEY[event.key]
-  ?? TOKEN_BY_KEY[String(event.key).toLowerCase()]
-  ?? TOKEN_BY_CODE[event.code]
+const read = (event) => (
+  KEY_MAP[event.key]
+  ?? KEY_MAP[String(event.key).toLowerCase()]
+  ?? CODE_MAP[event.code]
   ?? null
 );
 
-export default function installAdditionalAccess({ onUnlock }) {
-  const sessionShift = randomShift();
-  const target = reencodeTarget(BASE_TARGET, BASE_SHIFT, sessionShift);
+export default function installAdditionalAccess({ onComplete }) {
+  const sessionOffset = Random.int(1, 20);
   let buffer = "";
+  let prev = null;
   let lastAcceptedAt = 0;
-  let unlocked = false;
+  let done = false;
 
   document.addEventListener("keydown", (event) => {
-    if (unlocked) return;
+    if (done) return;
     if (event.repeat) return;
-    const token = tokenFor(event);
-    if (!token) return;
+    const char = read(event);
+    if (!char) return;
+
+    const expected = nudge(STEM + resolveBase(DEV_FLAGS.additionalForcedLabel), sessionOffset - OFFSET);
+    if (expected !== prev) {
+      buffer = "";
+      prev = expected;
+    }
 
     const now = Date.now();
     if (lastAcceptedAt && now - lastAcceptedAt > TIMEOUT_MS) buffer = "";
     lastAcceptedAt = now;
 
-    const encoded = shiftToken(token, sessionShift);
+    const encoded = nudge(char, sessionOffset);
     const candidate = buffer + encoded;
-    if (target.startsWith(candidate)) {
+    if (expected.startsWith(candidate)) {
       buffer = candidate;
     } else {
-      buffer = target.startsWith(encoded) ? encoded : "";
+      buffer = expected.startsWith(encoded) ? encoded : "";
     }
 
-    if (buffer === target) {
-      unlocked = true;
+    if (buffer === expected) {
+      done = true;
       buffer = "";
-      onUnlock?.();
+      onComplete?.();
     }
   });
 }

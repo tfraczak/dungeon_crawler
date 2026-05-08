@@ -83,6 +83,10 @@ const STRING_KEYS = Object.freeze([
   // disconnected rooms or doors that lead into walls -- intentional, since
   // this is purely a dev visualization aid and never ships to production.
   "forceNextMapConfig",
+  // Pins the resolver in `additional/lookup.js` to a specific 3-letter
+  // segment without changing the system clock. Allowed values: "" (use
+  // today's segment) or one of "sun".."sat".
+  "additionalForcedLabel",
 ]);
 
 export const DEV_FLAG_KEYS = Object.freeze([

@@ -14,7 +14,7 @@ export default (gameState) => {
   installSoundSandbox(gameState);
   const inventoryDrawer = installInventoryDrawer(gameState);
   const additionalDrawer = installAdditionalDrawer(gameState);
-  installAdditionalAccess({ onUnlock: additionalDrawer.unlock });
+  installAdditionalAccess({ onComplete: additionalDrawer.activate });
 
   // Mobile inventory access lives inside the portrait rotate overlay: when
   // the device is portrait the game is paused, and the overlay surfaces an

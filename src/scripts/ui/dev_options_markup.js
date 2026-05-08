@@ -168,6 +168,26 @@ export default function buildDevOptionsMarkup() {
             </div>
           </section>
 
+          ${process.env.NODE_ENV !== "production" ? `
+          <section class="dev-options-section">
+            <h2>Additional</h2>
+            <p class="dev-options-hint">Pin the additional menu's resolver to a specific label, bypassing the system clock. Empty selection falls back to today.</p>
+            <label class="dev-field">
+              <span>Forced label</span>
+              <select name="additionalForcedLabel">
+                <option value="">Use today</option>
+                <option value="sun">Sun</option>
+                <option value="mon">Mon</option>
+                <option value="tue">Tue</option>
+                <option value="wed">Wed</option>
+                <option value="thu">Thu</option>
+                <option value="fri">Fri</option>
+                <option value="sat">Sat</option>
+              </select>
+            </label>
+          </section>
+          ` : ""}
+
           <section class="dev-options-section">
             <h2>Win & Economy</h2>
             <p class="dev-options-hint">Force ladder skips both the coin threshold and per-room roll. Win scene pins the post-climb backdrop.</p>

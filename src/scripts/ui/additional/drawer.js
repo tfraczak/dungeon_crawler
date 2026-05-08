@@ -11,7 +11,7 @@ import { createWeaponById, DEFAULT_WEAPON_ID, WEAPON_GROUPS } from "@items/equip
 import { getText } from "./text";
 import { runtimeId } from "../runtime_id";
 
-const COIN_AWARD_INTERVAL_MS = 100;
+const TICK_INTERVAL_MS = 100;
 const COPY = Object.freeze({
   a: getText("Hwwsf"),
   b: getText("Jsvzl"),
@@ -30,7 +30,7 @@ const check = (name, label) => `
   <label class="additional-check"><input type="checkbox" name="${name}" /> <span>${label}</span></label>
 `;
 
-const populateWeaponSelect = (select) => {
+const populateOptionList = (select) => {
   if (!select || select.options.length > 0) return;
   const defaultOption = document.createElement("option");
   defaultOption.value = "";
@@ -52,12 +52,12 @@ const populateWeaponSelect = (select) => {
 
 export default function installAdditionalDrawer(gameState) {
   let built = null;
-  let pendingCoins = 0;
-  let coinTimer = null;
+  let pending = 0;
+  let timer = null;
 
   const currentPlayer = () => gameState?.session?.player ?? null;
 
-  const applyPlayerWeapon = () => {
+  const applyEquip = () => {
     const player = currentPlayer();
     if (!player) return;
     player.weapon = createWeaponById(TEST_STATE[TEST_IDS.d] || DEFAULT_WEAPON_ID, gameState);
@@ -106,10 +106,10 @@ export default function installAdditionalDrawer(gameState) {
               </label>
               <label class="additional-field">
                 <span>${COPY.c}</span>
-                <input type="number" name="coins" step="1" min="1" inputmode="numeric" placeholder="40" />
+                <input type="number" name="amount" step="1" min="1" inputmode="numeric" placeholder="40" />
               </label>
               <div class="additional-row">
-                <button type="button" class="additional-button additional-secondary" data-additional-ref="coins">${COPY.c}</button>
+                <button type="button" class="additional-button additional-secondary" data-additional-ref="dispense">${COPY.c}</button>
               </div>
             </section>
           </div>
@@ -129,12 +129,12 @@ export default function installAdditionalDrawer(gameState) {
       closeBtn: ref("close"),
       applyBtn: ref("apply"),
       resetBtn: ref("reset"),
-      coinButton: ref("coins"),
+      dispenseBtn: ref("dispense"),
       form: drawer.querySelector(".additional-form"),
-      weaponSelect: drawer.querySelector(`[name="${TEST_IDS.d}"]`),
-      coinInput: drawer.querySelector('[name="coins"]'),
+      equipSelect: drawer.querySelector(`[name="${TEST_IDS.d}"]`),
+      amountInput: drawer.querySelector('[name="amount"]'),
     };
-    populateWeaponSelect(built.weaponSelect);
+    populateOptionList(built.equipSelect);
     return built;
   };
 
@@ -158,7 +158,7 @@ export default function installAdditionalDrawer(gameState) {
       if (isTestBooleanKey(key)) setTestValue(key, Boolean(input.checked));
       else if (isTestStringKey(key)) setTestValue(key, input.value);
     }
-    applyPlayerWeapon();
+    applyEquip();
     populate();
   };
 
@@ -179,33 +179,33 @@ export default function installAdditionalDrawer(gameState) {
     ui.drawer.setAttribute("aria-hidden", "true");
   };
 
-  const awardNextCoin = () => {
+  const tick = () => {
     const session = gameState?.session;
-    if (!session || pendingCoins <= 0) {
-      window.clearInterval(coinTimer);
-      coinTimer = null;
-      pendingCoins = 0;
+    if (!session || pending <= 0) {
+      window.clearInterval(timer);
+      timer = null;
+      pending = 0;
       return;
     }
     session.coinCount = (session.coinCount ?? 0) + 1;
     playCoinSound();
-    pendingCoins--;
+    pending--;
   };
 
-  const giveCoins = () => {
+  const dispense = () => {
     const ui = build();
     if (!ui) return;
-    const amount = Math.floor(Number(ui.coinInput.value || ui.coinInput.placeholder));
+    const amount = Math.floor(Number(ui.amountInput.value || ui.amountInput.placeholder));
     if (!Number.isFinite(amount) || amount <= 0) return;
-    pendingCoins += amount;
-    if (!coinTimer) {
-      awardNextCoin();
-      coinTimer = window.setInterval(awardNextCoin, COIN_AWARD_INTERVAL_MS);
+    pending += amount;
+    if (!timer) {
+      tick();
+      timer = window.setInterval(tick, TICK_INTERVAL_MS);
     }
   };
 
-  const unlock = () => {
-    document.body.classList.add("additional-unlocked");
+  const activate = () => {
+    document.body.classList.add("additional-active");
     const ui = build();
     if (!ui) return;
     ui.openBtn.addEventListener("click", (event) => {
@@ -223,17 +223,17 @@ export default function installAdditionalDrawer(gameState) {
     ui.resetBtn?.addEventListener("click", (event) => {
       event.preventDefault();
       resetTestValues();
-      applyPlayerWeapon();
+      applyEquip();
       populate();
     });
-    ui.coinButton?.addEventListener("click", (event) => {
+    ui.dispenseBtn?.addEventListener("click", (event) => {
       event.preventDefault();
-      giveCoins();
+      dispense();
     });
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && ui.drawer.classList.contains("active")) close();
     });
   };
 
-  return { unlock };
+  return { activate };
 }
