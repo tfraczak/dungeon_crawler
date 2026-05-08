@@ -34,6 +34,7 @@ import {
 } from "./storage";
 import { renderActions, renderPanel } from "./knob_renderer";
 import { formatPayloadString } from "./copy_format";
+import { parseSoundDefinition } from "./import_format";
 import { playProfileSynth } from "@core/profile_synth";
 import { slugifyId } from "./naming";
 import buildSoundSandboxMarkup from "./markup";
@@ -85,6 +86,16 @@ const collectAllEntries = () => {
 };
 
 const findEntry = (id, allEntries) => allEntries.find((e) => e.id === id) ?? null;
+
+const uniqueCustomId = (name) => {
+  const baseId = slugifyId(name);
+  if (!baseId) throw new Error("Name must contain at least one letter or digit.");
+  if (!isCustomSoundIdTaken(baseId)) return baseId;
+
+  let n = 2;
+  while (isCustomSoundIdTaken(`${baseId}_${n}`)) n++;
+  return `${baseId}_${n}`;
+};
 
 const isTextEntryTarget = (target) => {
   const tagName = target?.tagName;
@@ -144,13 +155,12 @@ const minimizeOverrides = (entry, state) => {
       if (entry.defaults[k] !== v) diff[k] = v;
     }
     if (Object.keys(diff).length > 0) out.params = diff;
-    // Extra layered profiles persist when present; an empty array means
-    // "no augmentation" and is omitted so the entry can fully revert to
-    // pristine defaults.
+    // Extra layered profiles persist when they differ from defaults. That
+    // includes an empty array for built-ins that ship with default extras,
+    // which means "clear the augmentation."
     const defaultProfiles = Array.isArray(entry.defaultExtraProfiles) ? entry.defaultExtraProfiles : [];
     if (
       Array.isArray(state.profiles)
-      && state.profiles.length > 0
       && !deepEqual(state.profiles, defaultProfiles)
     ) {
       out.profiles = deepClone(state.profiles);
@@ -262,16 +272,12 @@ const promptForCustomSound = () => {
   const trimmed = name.trim();
   if (!trimmed) return null;
 
-  let id = slugifyId(trimmed);
-  if (!id) {
+  let id;
+  try {
+    id = uniqueCustomId(trimmed);
+  } catch {
     window.alert("Name must contain at least one letter or digit.");
     return null;
-  }
-  // Disambiguate against existing customs by suffixing _2, _3, ...
-  if (isCustomSoundIdTaken(id)) {
-    let n = 2;
-    while (isCustomSoundIdTaken(`${id}_${n}`)) n++;
-    id = `${id}_${n}`;
   }
 
   const presets = listPresetIds();
@@ -317,6 +323,10 @@ export default function installSoundSandbox(_gameState) {
     select,
     knobSlot,
     addCustomBtn,
+    uploadDefinitionBtn,
+    importPanel,
+    importTextarea,
+    importDefinitionBtn,
     actionsSlot,
   } = ui;
   if (!drawer || !openBtn || !select || !knobSlot || !actionsSlot) return;
@@ -327,6 +337,24 @@ export default function installSoundSandbox(_gameState) {
   let currentEntry = allEntries[0] ?? null;
   let currentState = currentEntry ? buildInitialState(currentEntry) : null;
   let persistTimer = null;
+
+  const flushPendingPersist = () => {
+    if (!persistTimer) return;
+    clearTimeout(persistTimer);
+    persistTimer = null;
+    if (currentEntry?.isCustom) {
+      saveCustomSound({
+        id: currentEntry.customId,
+        name: currentState.name,
+        description: currentState.description,
+        profiles: currentState.profiles ?? [],
+      });
+    } else if (currentEntry) {
+      const minimal = minimizeOverrides(currentEntry, currentState);
+      if (minimal) writeOverrides(currentEntry.id, minimal);
+      else clearOverrides(currentEntry.id);
+    }
+  };
 
   const playCurrentSound = () => {
     try {
@@ -395,6 +423,57 @@ export default function installSoundSandbox(_gameState) {
     populateSelect(select, allEntries, currentEntry?.id);
     renderCurrentPanel();
     flashStatus(statusEl, "Custom sound deleted.");
+  };
+
+  const selectEntry = (entryId) => {
+    const next = findEntry(entryId, allEntries);
+    if (!next) return false;
+    currentEntry = next;
+    currentState = buildInitialState(currentEntry);
+    populateSelect(select, allEntries, currentEntry.id);
+    renderCurrentPanel();
+    return true;
+  };
+
+  const importDefinition = () => {
+    try {
+      flushPendingPersist();
+      const definition = parseSoundDefinition(importTextarea?.value ?? "");
+
+      if (definition.kind === "profile_synth") {
+        const id = uniqueCustomId(definition.name);
+        saveCustomSound({
+          id,
+          name: definition.name,
+          description: definition.description,
+          profiles: definition.profiles,
+        });
+        allEntries = collectAllEntries();
+        selectEntry(CUSTOM_PREFIX + id);
+        if (importTextarea) importTextarea.value = "";
+        flashStatus(statusEl, `Imported "${definition.name}".`);
+        return;
+      }
+
+      const target = listEntries().find((entry) => (
+        entry.id === definition.sound
+        && entry.kind === "tunable_recipe"
+      ));
+      if (!target) throw new Error(`Unknown sound id: ${definition.sound}.`);
+
+      writeOverrides(target.id, {
+        name: definition.name,
+        description: definition.description,
+        params: definition.params,
+        profiles: definition.profiles,
+      });
+      allEntries = collectAllEntries();
+      selectEntry(target.id);
+      if (importTextarea) importTextarea.value = "";
+      flashStatus(statusEl, `Imported "${definition.name}".`);
+    } catch (err) {
+      flashStatus(statusEl, `Import failed: ${err.message}`, "err", 3500);
+    }
   };
 
   const open = () => {
@@ -478,22 +557,7 @@ export default function installSoundSandbox(_gameState) {
     const next = findEntry(e.target.value, allEntries);
     if (!next) return;
     // Flush any pending writes for the outgoing entry first.
-    if (persistTimer) {
-      clearTimeout(persistTimer);
-      persistTimer = null;
-      if (currentEntry?.isCustom) {
-        saveCustomSound({
-          id: currentEntry.customId,
-          name: currentState.name,
-          description: currentState.description,
-          profiles: currentState.profiles ?? [],
-        });
-      } else if (currentEntry) {
-        const minimal = minimizeOverrides(currentEntry, currentState);
-        if (minimal) writeOverrides(currentEntry.id, minimal);
-        else clearOverrides(currentEntry.id);
-      }
-    }
+    flushPendingPersist();
     currentEntry = next;
     currentState = buildInitialState(currentEntry);
     renderCurrentPanel();
@@ -511,6 +575,14 @@ export default function installSoundSandbox(_gameState) {
     renderCurrentPanel();
     flashStatus(statusEl, `Added "${created.name}".`);
   });
+
+  uploadDefinitionBtn?.addEventListener("click", () => {
+    if (!importPanel) return;
+    importPanel.hidden = !importPanel.hidden;
+    if (!importPanel.hidden) importTextarea?.focus();
+  });
+
+  importDefinitionBtn?.addEventListener("click", importDefinition);
 
   openBtn.addEventListener("click", (e) => {
     e.preventDefault();

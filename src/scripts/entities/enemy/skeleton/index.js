@@ -13,7 +13,7 @@ function createSkeletonEnemy({ pos, width, height, spritePalette, detectDist, ga
     type: "skeleton",
     spriteGridPos: { row: 1, column: 1 },
     gameState,
-    detectDist,
+    detectDist: detectDist * SKELETON_CONFIG.detectDistanceMultiplier,
     options: {
       ...behavior,
       hp: SKELETON_CONFIG.hp,

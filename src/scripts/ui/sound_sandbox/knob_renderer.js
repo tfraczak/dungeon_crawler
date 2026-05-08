@@ -137,12 +137,26 @@ const renderCheckboxKnob = (knob, value, onValue) => {
   ]);
 };
 
+const renderTextAreaKnob = (knob, value, onValue) => {
+  const input = el("textarea", {
+    rows: knob.rows ?? 2,
+    placeholder: knob.placeholder ?? "",
+    onInput: (e) => onValue(e.target.value),
+  }, [value ?? ""]);
+
+  return el("label", { class: "dev-sound-field dev-sound-textarea-field" }, [
+    el("span", { text: knob.label }),
+    input,
+  ]);
+};
+
 const renderKnob = (knob, value, onValue) => {
   switch (knob.type) {
     case "range":       return renderRangeKnob(knob, value, onValue);
     case "text_number": return renderTextNumberKnob(knob, value, onValue);
     case "select":      return renderSelectKnob(knob, value, onValue);
     case "checkbox":    return renderCheckboxKnob(knob, value, onValue);
+    case "textarea":    return renderTextAreaKnob(knob, value, onValue);
     default:            return el("div", { text: `Unknown knob type: ${knob.type}` });
   }
 };
@@ -292,6 +306,7 @@ const renderProfileCard = (profile, idx, onChange, onRemove, onClone) => {
     onChange: (e) => {
       const newType = e.target.value;
       const preserved = {
+        description: profile.description ?? "",
         muted: profile.muted ?? false,
         reverseBuffer: profile.reverseBuffer ?? false,
         startOffset: profile.startOffset ?? 0,
@@ -321,6 +336,16 @@ const renderProfileCard = (profile, idx, onChange, onRemove, onClone) => {
 
   // Universal envelope knobs first.
   const envList = el("div", { class: "dev-sound-knob-list" }, [
+    renderTextAreaKnob({
+      key: "description",
+      label: "Description",
+      type: "textarea",
+      rows: 2,
+      placeholder: "What is this profile doing?",
+    }, profile.description ?? "", (v) => {
+      profile.description = v;
+      onChange();
+    }),
     renderCheckboxKnob({ key: "muted", label: "Mute profile", type: "checkbox" }, profile.muted ?? false, (v) => {
       profile.muted = v;
       card.classList.toggle("muted", v);
@@ -421,6 +446,7 @@ const renderProfileSynthBody = (profiles, onChange) => {
       const lastType = profiles.length ? profiles[profiles.length - 1].type : "oscillator";
       profiles.push({
         type: lastType,
+        description: "",
         startOffset: 0,
         duration: 0.04,
         gain: 0.2,

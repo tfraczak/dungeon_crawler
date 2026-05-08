@@ -34,6 +34,21 @@ export default function buildSoundSandboxMarkup() {
           <select aria-label="Pick a sound to tune" data-sound-ref="select"></select>
           <div class="dev-sound-actions" data-sound-ref="topActions">
             <button type="button" class="button" data-sound-ref="addCustom">+ Add experimental sound</button>
+            <button type="button" class="button" data-sound-ref="uploadDefinition">&uarr; Upload definition</button>
+          </div>
+          <div class="dev-sound-import-panel" data-sound-ref="importPanel" hidden>
+            <label>
+              <span>Sound schema JSON</span>
+              <textarea
+                rows="7"
+                spellcheck="false"
+                placeholder="Paste raw JSON or fenced JSON copied from Copy values"
+                data-sound-ref="importTextarea"
+              ></textarea>
+            </label>
+            <div class="dev-sound-actions">
+              <button type="button" class="button" data-sound-ref="importDefinition">Import definition</button>
+            </div>
           </div>
         </div>
 
@@ -53,6 +68,10 @@ export default function buildSoundSandboxMarkup() {
     select: ref("select"),
     knobSlot: ref("knobSlot"),
     addCustomBtn: ref("addCustom"),
+    uploadDefinitionBtn: ref("uploadDefinition"),
+    importPanel: ref("importPanel"),
+    importTextarea: ref("importTextarea"),
+    importDefinitionBtn: ref("importDefinition"),
     actionsSlot: ref("actionsSlot"),
   };
 }

@@ -171,6 +171,46 @@
         background-color: #111;
       }
     }
+
+    .dev-sound-import-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 4px;
+      background-color: rgba(0, 0, 0, 0.18);
+
+      &[hidden] {
+        display: none;
+      }
+
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 128px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        line-height: 1.4;
+        padding: 8px 10px;
+        resize: vertical;
+        color: $off-white;
+        background-color: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 3px;
+
+        &:focus {
+          outline: none;
+          border-color: $banana;
+          background-color: rgba(0, 0, 0, 0.6);
+        }
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -286,7 +326,8 @@
     }
 
     input[type="text"],
-    input.dev-sound-text-number {
+    input.dev-sound-text-number,
+    textarea {
       flex: 1;
       font-family: 'Courier New', monospace;
       font-size: 13px;
@@ -307,6 +348,17 @@
         border-color: #d97070;
         color: #f0a8a8;
       }
+    }
+
+    textarea {
+      min-height: 44px;
+      resize: vertical;
+      text-align: left;
+      line-height: 1.35;
+    }
+
+    &.dev-sound-textarea-field {
+      align-items: flex-start;
     }
 
     select {

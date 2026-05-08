@@ -1,5 +1,6 @@
 export default Object.freeze({
-  hp: 40,
+  hp: 20,
+  detectDistanceMultiplier: 0.75,
   // Skeletons drop slightly more coins than the early-game enemies and
   // are one of the two key sources for chest unlocks. Key chance is kept
   // "rare" so chests still feel meaningfully gated.
@@ -16,7 +17,7 @@ export default Object.freeze({
   }),
   magic: Object.freeze({
     castCooldownFrames: 72,
-    castDistance: 140,
+    castDistance: 120,
     castDissipateFrames: 18,
     castInterruptedDelayFrames: 12,
     castWindupFrames: 30,
