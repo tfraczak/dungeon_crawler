@@ -20,11 +20,12 @@ const STRING_KEYS = Object.freeze([
 ]);
 
 const STORAGE_KEY = "runPrefs";
+const isProd = process.env.NODE_ENV === "production";
 const STATE = {};
 for (const key of BOOLEAN_KEYS) STATE[key] = false;
 for (const key of STRING_KEYS) STATE[key] = "";
 
-if (typeof window !== "undefined") {
+if (!isProd && typeof window !== "undefined") {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -40,6 +41,7 @@ if (typeof window !== "undefined") {
 }
 
 const persist = () => {
+  if (isProd || typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
   } catch { /* storage may be unavailable; values still work for this session */ }
