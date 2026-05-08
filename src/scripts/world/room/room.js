@@ -4,7 +4,6 @@ import createEnemy from "@entities/enemy/enemy";
 import createLadder from "@entities/ladder/ladder";
 import * as GAME_CONFIG from "@core/game_config";
 import DEV_FLAGS, { configValue } from "@core/dev_flags";
-import { shuffle } from "@utils/helpers";
 import Random from "@utils/random";
 import { drawCoinPouch, triggerCoinDropAnim, updateCoinPouchAnims } from "@ui/hud/coin_pouch";
 import { drawKeyring } from "@ui/hud/keyring";
@@ -19,10 +18,15 @@ import {
   targetEnemyCount,
 } from "./difficulty";
 import {
-  randNumPaths,
   addValidNeighbors,
-  buildPaths,
   assignBlockedPaths,
+  applyRoomPaths,
+  directionForExit,
+  nodePosForExit,
+  pickRoomPaths,
+  roomAcceptsEntryFrom,
+  roomKey as nodeRoomKey,
+  validateRoomGraph,
   randNumCoins,
 } from "./generation";
 
@@ -31,13 +35,6 @@ const ENEMY_SPAWN_FLAG_BY_TYPE = Object.freeze({
   blob: "enemyBlobSpawnCount",
   goblin: "enemyGoblinSpawnCount",
   skeleton: "enemySkeletonSpawnCount",
-});
-
-const EXIT_NODE_DELTA = Object.freeze({
-  up: Object.freeze([0, 1]),
-  down: Object.freeze([0, -1]),
-  left: Object.freeze([-1, 0]),
-  right: Object.freeze([1, 0]),
 });
 
 const ENTRY_POS_BY_EXIT = Object.freeze({
@@ -96,28 +93,11 @@ function createRoom(neighbor, gameState) {
   if (neighbor) {
     const exitDir = Object.keys(neighbor)[0];
     const prevRoom = Object.values(neighbor)[0];
-    room.nodePos = [...prevRoom.nodePos];
-    switch (exitDir) {
-      case "up":
-        room.neighbors.down = prevRoom;
-        entryDir = "D";
-        room.nodePos[1]++;
-        break;
-      case "down":
-        room.neighbors.up = prevRoom;
-        entryDir = "U";
-        room.nodePos[1]--;
-        break;
-      case "left":
-        room.neighbors.right = prevRoom;
-        entryDir = "R";
-        room.nodePos[0]--;
-        break;
-      case "right":
-        room.neighbors.left = prevRoom;
-        entryDir = "L";
-        room.nodePos[0]++;
-        break;
+    const direction = directionForExit(exitDir);
+    room.nodePos = nodePosForExit(prevRoom.nodePos, exitDir);
+    if (direction) {
+      room.neighbors[direction.opposite] = prevRoom;
+      entryDir = direction.oppositeLetter;
     }
   } else {
     room.nodePos = [0, 0];
@@ -125,13 +105,9 @@ function createRoom(neighbor, gameState) {
 
   const session = gameState.session;
   const bgImgs = gameState.bgImgs;
-  session.rooms[`${room.nodePos}`] = room;
+  session.rooms[nodeRoomKey(room.nodePos)] = room;
 
-  addValidNeighbors(room, gameState);
   let numPaths;
-  let newPaths = [];
-  let paths = buildPaths(room, gameState);
-  let pathsArr = paths.split("");
 
   // Dev short-circuit: when `forceNextMapConfig` is set, bypass the entire
   // procedural exit picker and stamp the room with the requested config.
@@ -153,54 +129,17 @@ function createRoom(neighbor, gameState) {
     assignBlockedPaths(room, forcedPaths);
     room.map = createRoomMap(forcedPaths, room.bgConfig);
     room.walls.push(...room.map.movementWalls);
-    session.rooms[`${room.nodePos}`] = room;
-  } else if (neighbor) {
-    pathsArr = pathsArr.filter(path => path !== entryDir);
-    numPaths = randNumPaths(paths.length);
-    if (numPaths === paths.length) {
-      randIdx = pickVariantIndex(numPaths, paths);
-      room.background = bgImgs[`${numPaths}${paths}${randIdx}`];
-      room.bgConfig = { numPaths, paths, variantIdx: randIdx };
-      assignBlockedPaths(room, paths);
-      room.map = createRoomMap(paths, room.bgConfig);
-      room.walls.push(...room.map.movementWalls);
-      session.rooms[`${room.nodePos}`] = room;
-    } else {
-      shuffle(pathsArr);
-      newPaths.push(entryDir);
-      numPaths--;
-      for (let i = 0; i < numPaths; i++) { newPaths.push(pathsArr.pop()); }
-      newPaths = newPaths.sort().join("");
-      randIdx = pickVariantIndex(numPaths + 1, newPaths);
-      room.background = bgImgs[`${numPaths + 1}${newPaths}${randIdx}`];
-      room.bgConfig = { numPaths: numPaths + 1, paths: newPaths, variantIdx: randIdx };
-      assignBlockedPaths(room, newPaths);
-      room.map = createRoomMap(newPaths, room.bgConfig);
-      room.walls.push(...room.map.movementWalls);
-      session.rooms[`${room.nodePos}`] = room;
-    }
   } else {
-    numPaths = randNumPaths(paths.length);
-    if (numPaths === paths.length) {
-      randIdx = pickVariantIndex(numPaths, paths);
-      room.background = bgImgs[`${numPaths}${paths}${randIdx}`];
-      room.bgConfig = { numPaths, paths, variantIdx: randIdx };
-      room.map = createRoomMap(paths, room.bgConfig);
-      room.walls.push(...room.map.movementWalls);
-      session.rooms[`${room.nodePos}`] = room;
-    } else {
-      shuffle(pathsArr);
-      for (let i = 0; i < numPaths; i++) { newPaths.push(pathsArr.pop()); }
-      newPaths = newPaths.sort().join("");
-      randIdx = pickVariantIndex(numPaths, newPaths);
-      room.background = bgImgs[`${numPaths}${newPaths}${randIdx}`];
-      room.bgConfig = { numPaths, paths: newPaths, variantIdx: randIdx };
-      assignBlockedPaths(room, newPaths);
-      room.map = createRoomMap(newPaths, room.bgConfig);
-      room.walls.push(...room.map.movementWalls);
-      session.rooms[`${room.nodePos}`] = room;
-    }
+    const paths = pickRoomPaths(room, entryDir, gameState);
+    numPaths = paths.length;
+    randIdx = pickVariantIndex(numPaths, paths);
+    room.background = bgImgs[`${numPaths}${paths}${randIdx}`];
+    room.bgConfig = { numPaths, paths, variantIdx: randIdx };
+    applyRoomPaths(room, paths, gameState);
+    room.map = createRoomMap(paths, room.bgConfig);
+    room.walls.push(...room.map.movementWalls);
   }
+  validateRoomGraph(gameState, `room creation ${nodeRoomKey(room.nodePos)}`);
 
   room.enemies = {};
   room.enemyProjectiles = [];
@@ -289,21 +228,24 @@ function createRoom(neighbor, gameState) {
   };
 
   room.enemyCanExit = (exitDir) => {
-    const exitLetters = { up: "U", down: "D", left: "L", right: "R" };
-    return room.bgConfig?.paths?.includes(exitLetters[exitDir]) ?? false;
+    const direction = directionForExit(exitDir);
+    return direction
+      ? room.bgConfig?.paths?.includes(direction.letter) ?? false
+      : false;
   };
 
   room.transferEnemyToExit = (enemy, exitDir) => {
-    if (!room.enemyCanExit(exitDir) || !EXIT_NODE_DELTA[exitDir]) return false;
+    if (!room.enemyCanExit(exitDir) || !directionForExit(exitDir)) return false;
 
-    const [dx, dy] = EXIT_NODE_DELTA[exitDir];
-    const nextNodePos = [room.nodePos[0] + dx, room.nodePos[1] + dy];
+    const nextNodePos = nodePosForExit(room.nodePos, exitDir);
     const session = gameState.session;
-    let nextRoom = session.rooms[`${nextNodePos}`];
+    let nextRoom = session.rooms[nodeRoomKey(nextNodePos)];
     if (!nextRoom) {
       nextRoom = createRoom({ [exitDir]: room }, gameState);
       addValidNeighbors(room, gameState);
       addValidNeighbors(nextRoom, gameState);
+    } else if (!roomAcceptsEntryFrom(nextRoom, exitDir)) {
+      return false;
     }
 
     if (!removeEnemy(enemy)) return false;
