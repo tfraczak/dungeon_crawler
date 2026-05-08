@@ -51,11 +51,13 @@ export default (gameState) => {
 
   document.addEventListener("keydown", e => {
     const slot = slotFor(e.key);
+    // Space scrolls the page / activates focused buttons, and arrow keys
+    // scroll or move focus by default. Suppress those browser actions before
+    // any early return so held keys cannot leak a UI activation into play.
+    if (slot === " " || e.key.startsWith("Arrow")) e.preventDefault();
     if (slot === null || keys[slot]) return;
     if (document.body.classList.contains("inventory-open")) return;
     keys[slot] = true;
-    // Space scrolls the page and arrow keys scroll/move focus by default.
-    if (slot === " " || e.key.startsWith("Arrow")) e.preventDefault();
   });
 
   document.addEventListener("keyup", e => {
@@ -118,6 +120,11 @@ export default (gameState) => {
   syncHowToPage();
 
   const restart = document.getElementById("restart");
+  const restartGame = () => {
+    restart.blur();
+    newGame(gameState);
+  };
+
   restart.addEventListener("mouseenter", () => {
     playClick();
     document.getElementById("restart").classList.add("active");
@@ -129,7 +136,13 @@ export default (gameState) => {
   });
   restart.addEventListener("click", e => {
     e.preventDefault();
-    newGame(gameState);
+    restartGame();
+  });
+  restart.addEventListener("keydown", e => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    e.stopPropagation();
+    restartGame();
   });
 
   if (gameState.isMobile) {
@@ -277,7 +290,7 @@ export default (gameState) => {
 
     restart.addEventListener("touchend", e => {
       e.preventDefault();
-      newGame(gameState);
+      restartGame();
     });
   }
 }
