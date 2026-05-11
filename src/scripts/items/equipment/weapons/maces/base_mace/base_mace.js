@@ -1,6 +1,7 @@
 import createWeapon from "@items/equipment/weapons/weapon";
 import attachArcAttack from "@items/equipment/weapons/attacks/arc_attack";
-import { playSlashHit, playSlashSwing } from "@items/equipment/weapons/swords/sound";
+import { playMaceHit } from "@items/equipment/weapons/maces/sound";
+import { playSlashSwing } from "@items/equipment/weapons/swords/sound";
 
 // Shared base for one-handed maces (morningstar, ...). Maces use the swing
 // arc geometry with the heavier "crushing" visual treatment — bronze trail
@@ -27,7 +28,7 @@ function createBaseMace({ id, type, name, description, defaults, sprite, overrid
   mace.duration = overrides.duration ?? defaults.duration;
   mace.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
   mace.onAttackStart = () => playSlashSwing();
-  mace.onHit = () => playSlashHit();
+  mace.onHit = () => playMaceHit();
 
   attachArcAttack(mace, { style: "crushing" });
   return mace;

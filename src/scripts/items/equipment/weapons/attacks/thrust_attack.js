@@ -51,31 +51,63 @@ const STYLE = Object.freeze({
     // reads as motion blur behind the punching hand, not as a weapon glint.
     trail: (alpha) => `rgba(245, 200, 165, ${alpha * 0.18})`,
     streak: (alpha, t) => `rgba(255, 230, 210, ${alpha * (0.05 + (t * t * 0.4))})`,
-    drawTip: (ctx, tipX, tipY, alpha, progress, weapon) => {
-      // Knuckle disc — peachy fill with a darker outline. Pulses slightly
-      // larger near the apex of the punch (progress ~0.65–0.85) so the
-      // impact reads visually.
+    drawTip: (ctx, tipX, tipY, alpha, progress, weapon, dir) => {
+      // Draw in local punch-space: +x points forward, so the same fist shape
+      // works for all facings instead of becoming a stack of circles.
       const apexBoost = progress > 0.55 && progress < 0.92
         ? 1 + (Math.sin((progress - 0.55) / 0.37 * Math.PI) * 0.18)
         : 1;
-      const fistRadius = (weapon.thrustWidth / 2 - 1) * apexBoost;
+      const fistRadius = Math.max(5, (weapon.thrustWidth / 2 - 1) * apexBoost);
+      const angle = Math.atan2(dir.y, dir.x);
+
+      ctx.save();
+      ctx.translate(tipX, tipY);
+      ctx.rotate(angle);
+
+      // Short forearm cuff behind the fist anchors the punch to the player.
+      ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.arc(tipX, tipY, fistRadius, 0, Math.PI * 2);
+      ctx.moveTo(-fistRadius * 2.35, 0);
+      ctx.lineTo(-fistRadius * 0.9, 0);
+      ctx.lineWidth = fistRadius * 0.9;
+      ctx.strokeStyle = `rgba(228, 170, 130, ${alpha * 0.85})`;
+      ctx.stroke();
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = `rgba(80, 50, 30, ${alpha * 0.65})`;
+      ctx.stroke();
+
+      // Palm mass, slightly behind the leading knuckles.
+      ctx.beginPath();
+      ctx.ellipse(-fistRadius * 0.45, 0, fistRadius * 0.95, fistRadius * 0.72, 0, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(245, 200, 165, ${alpha})`;
       ctx.fill();
       ctx.lineWidth = 1.5;
       ctx.strokeStyle = `rgba(80, 50, 30, ${alpha * 0.85})`;
       ctx.stroke();
 
-      // Tiny knuckle indents to read as fingers (small dimples on the front
-      // half of the disc, perpendicular to the punch).
-      ctx.fillStyle = `rgba(180, 130, 95, ${alpha * 0.7})`;
-      const dimple = Math.max(0.7, fistRadius * 0.18);
-      for (let i = -1; i <= 1; i++) {
+      // Four front knuckles, compressed into a row, read as a fist instead
+      // of individual projectile balls.
+      const knuckleRadius = Math.max(1.7, fistRadius * 0.24);
+      const knuckleY = [-0.45, -0.15, 0.15, 0.45];
+      for (const offset of knuckleY) {
         ctx.beginPath();
-        ctx.arc(tipX, tipY + (i * fistRadius * 0.45), dimple, 0, Math.PI * 2);
+        ctx.arc(fistRadius * 0.28, offset * fistRadius, knuckleRadius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 214, 180, ${alpha})`;
         ctx.fill();
+        ctx.strokeStyle = `rgba(95, 58, 35, ${alpha * 0.75})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
+
+      // Side thumb tucked across the lower side of the palm.
+      ctx.beginPath();
+      ctx.ellipse(-fistRadius * 0.25, fistRadius * 0.58, fistRadius * 0.5, fistRadius * 0.22, -0.25, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(235, 180, 140, ${alpha * 0.95})`;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(95, 58, 35, ${alpha * 0.65})`;
+      ctx.stroke();
+
+      ctx.restore();
 
       // Brief impact ring near apex.
       if (progress > 0.6 && progress < 0.95) {
@@ -181,7 +213,7 @@ export function attachThrustAttack(weapon, { style = "piercing" } = {}) {
       }
     }
 
-    if (styleDef.drawTip) styleDef.drawTip(ctx, tipX, tipY, alpha, progress, weapon);
+    if (styleDef.drawTip) styleDef.drawTip(ctx, tipX, tipY, alpha, progress, weapon, dir);
     ctx.restore();
   };
 

@@ -161,6 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const equipmentSprites = Object.freeze({
+    falchion:     "./src/assets/items/equipment/weapons/swords/falchion/sprite.png",
     longsword:    "./src/assets/items/equipment/weapons/swords/longsword/sprite.png",
     claymore:     "./src/assets/items/equipment/weapons/greatswords/claymore/sprite.png",
     hatchet:      "./src/assets/items/equipment/weapons/axes/hatchet/sprite.png",

@@ -1,5 +1,6 @@
 import createDagger from "@items/equipment/weapons/daggers/dagger/dagger";
 import createShortsword from "@items/equipment/weapons/swords/shortsword/shortsword";
+import createFalchion from "@items/equipment/weapons/swords/falchion/falchion";
 import createLongsword from "@items/equipment/weapons/swords/longsword/longsword";
 import createClaymore from "@items/equipment/weapons/greatswords/claymore/claymore";
 import createHatchet from "@items/equipment/weapons/axes/hatchet/hatchet";
@@ -16,6 +17,7 @@ export const DEFAULT_WEAPON_ID = "swords.shortsword";
 export const WEAPON_ITEMS = Object.freeze([
   Object.freeze({ id: "daggers.dagger", label: "Dagger" }),
   Object.freeze({ id: DEFAULT_WEAPON_ID, label: "Shortsword" }),
+  Object.freeze({ id: "swords.falchion", label: "Falchion" }),
   Object.freeze({ id: "swords.longsword", label: "Longsword" }),
   Object.freeze({ id: "greatswords.claymore", label: "Claymore" }),
   Object.freeze({ id: "axes.hatchet", label: "Hatchet" }),
@@ -40,6 +42,7 @@ export const WEAPON_GROUPS = Object.freeze([
     label: "Swords",
     options: Object.freeze([
       Object.freeze({ id: DEFAULT_WEAPON_ID, label: "Shortsword" }),
+      Object.freeze({ id: "swords.falchion", label: "Falchion" }),
       Object.freeze({ id: "swords.longsword", label: "Longsword" }),
     ]),
   }),
@@ -98,6 +101,7 @@ export const createWeaponById = (id, gameState) => {
   const sprites = gameState.sprites;
   switch (id || DEFAULT_WEAPON_ID) {
     case "daggers.dagger":          return createDagger({ sprite: sprites.dagger });
+    case "swords.falchion":         return createFalchion({ sprite: sprites.falchion });
     case "swords.longsword":        return createLongsword({ sprite: sprites.longsword });
     case "greatswords.claymore":    return createClaymore({ sprite: sprites.claymore });
     case "axes.hatchet":            return createHatchet({ sprite: sprites.hatchet });

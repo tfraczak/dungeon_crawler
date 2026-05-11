@@ -1,6 +1,7 @@
 import createWeapon from "@items/equipment/weapons/weapon";
 import attachArcAttack from "@items/equipment/weapons/attacks/arc_attack";
-import { playSlashHit, playSlashSwing } from "@items/equipment/weapons/swords/sound";
+import { playStaffHit } from "@items/equipment/weapons/staves/sound";
+import { playSlashSwing } from "@items/equipment/weapons/swords/sound";
 
 // Shared base for two-handed staves (staff, ...). For non-magic users this
 // is purely a physical bo-style swing — same arc geometry as the swords/axes
@@ -28,7 +29,7 @@ function createBaseStaff({ id, type, name, description, defaults, sprite, overri
   staff.duration = overrides.duration ?? defaults.duration;
   staff.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
   staff.onAttackStart = () => playSlashSwing();
-  staff.onHit = () => playSlashHit();
+  staff.onHit = () => playStaffHit();
 
   attachArcAttack(staff, { style: "crushing" });
   return staff;

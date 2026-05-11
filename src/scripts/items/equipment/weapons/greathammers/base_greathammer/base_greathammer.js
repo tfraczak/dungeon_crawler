@@ -1,6 +1,7 @@
 import createWeapon from "@items/equipment/weapons/weapon";
 import attachArcAttack from "@items/equipment/weapons/attacks/arc_attack";
-import { playSlashHit, playSlashSwing } from "@items/equipment/weapons/swords/sound";
+import { playGreathammerHit } from "@items/equipment/weapons/greathammers/sound";
+import { playSlashSwing } from "@items/equipment/weapons/swords/sound";
 
 // Shared base for two-handed hammers (warhammer, ...). Big, slow crushing
 // arc with maximum knockback.
@@ -26,7 +27,7 @@ function createBaseGreathammer({ id, type, name, description, defaults, sprite, 
   greathammer.duration = overrides.duration ?? defaults.duration;
   greathammer.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
   greathammer.onAttackStart = () => playSlashSwing();
-  greathammer.onHit = () => playSlashHit();
+  greathammer.onHit = () => playGreathammerHit();
 
   attachArcAttack(greathammer, { style: "crushing" });
   return greathammer;

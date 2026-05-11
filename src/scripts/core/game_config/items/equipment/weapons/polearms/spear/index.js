@@ -1,6 +1,6 @@
 export default Object.freeze({
   cooldown: 28,
-  criticalChance: 0.08,
+  criticalChance: 0.05,
   criticalMultiplier: 2,
   damageMax: 8,
   damageMin: 4,
@@ -8,7 +8,7 @@ export default Object.freeze({
   damageType: "piercing",
   duration: 11,
   handedness: "twoHanded",
-  knockback: 40,
+  knockback: 46,
   range: 82,
   staminaCost: 210,
   thrustWidth: 28,

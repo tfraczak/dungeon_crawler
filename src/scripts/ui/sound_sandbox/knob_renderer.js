@@ -217,16 +217,19 @@ const renderHeaderBlock = (state, onMetaChange) => {
 };
 
 // ---------------------------------------------------------------------------
-// Action row (Play / Sample / Reset / Copy / optional Delete for customs)
+// Action row (Play / Sample / Reset / Save / Copy / optional Delete for customs)
 // ---------------------------------------------------------------------------
 
-export const renderActions = ({ entry, onPlay, onSample, onReset, onCopy, onDelete }) => {
+export const renderActions = ({ entry, onPlay, onSample, onReset, onSave, onCopy, onDelete }) => {
   const buttons = [];
   buttons.push(el("button", { type: "button", class: "button play", onClick: onPlay }, ["\u25B6 Play"]));
   if (entry.sample?.audioElementId && onSample) {
     buttons.push(el("button", { type: "button", class: "button sample", onClick: onSample }, ["\u25B6 Play sample"]));
   }
   buttons.push(el("button", { type: "button", class: "button reset", onClick: onReset }, ["Reset to defaults"]));
+  if (onSave) {
+    buttons.push(el("button", { type: "button", class: "button", onClick: onSave }, ["Save changes"]));
+  }
   buttons.push(el("button", { type: "button", class: "button copy", onClick: onCopy }, ["Copy values"]));
   if (onDelete) {
     buttons.push(el("button", { type: "button", class: "button danger", onClick: onDelete }, ["Delete"]));

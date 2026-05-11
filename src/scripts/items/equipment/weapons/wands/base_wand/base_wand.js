@@ -1,6 +1,7 @@
 import createWeapon from "@items/equipment/weapons/weapon";
 import attachThrustAttack from "@items/equipment/weapons/attacks/thrust_attack";
-import { playDaggerHit, playDaggerSwing } from "@items/equipment/weapons/daggers/sound";
+import { playDaggerSwing } from "@items/equipment/weapons/daggers/sound";
+import { playWandHit } from "@items/equipment/weapons/wands/sound";
 
 // Shared base for one-handed wands. For non-magic users this is a small,
 // quick poke — short range, low stamina cost, but deceptively responsive.
@@ -29,7 +30,7 @@ function createBaseWand({ id, type, name, description, defaults, sprite, overrid
   // Wand carved tip sits at ~(14,14); ~14px from sprite center.
   wand.spriteTipOffset = 14;
   wand.onAttackStart = () => playDaggerSwing();
-  wand.onHit = () => playDaggerHit();
+  wand.onHit = () => playWandHit();
 
   attachThrustAttack(wand, { style: "wand" });
   return wand;

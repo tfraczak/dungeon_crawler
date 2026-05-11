@@ -1,7 +1,7 @@
 export default Object.freeze({
   arc: Math.PI * 0.78,
   cooldown: 34,
-  criticalChance: 0.08,
+  criticalChance: 0.05,
   criticalMultiplier: 2,
   damageMax: 9,
   damageMin: 5,
@@ -9,7 +9,7 @@ export default Object.freeze({
   damageType: "slashing",
   duration: 14,
   handedness: "twoHanded",
-  knockback: 42,
+  knockback: 48,
   range: 66,
   staminaCost: 230,
 });

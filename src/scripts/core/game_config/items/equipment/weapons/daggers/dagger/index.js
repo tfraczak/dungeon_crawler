@@ -1,7 +1,7 @@
 export default Object.freeze({
   cooldown: 11,
-  criticalChance: 0.05,
-  criticalMultiplier: 2,
+  criticalChance: 0.18,
+  criticalMultiplier: 3,
   damageMax: 3,
   damageMin: 1,
   damageProfile: Object.freeze({ piercing: 1 }),

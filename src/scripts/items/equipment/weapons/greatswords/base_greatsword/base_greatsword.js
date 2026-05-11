@@ -1,6 +1,7 @@
 import createWeapon from "@items/equipment/weapons/weapon";
 import attachArcAttack from "@items/equipment/weapons/attacks/arc_attack";
-import { playSlashHit, playSlashSwing } from "@items/equipment/weapons/swords/sound";
+import { playGreatswordHit } from "@items/equipment/weapons/greatswords/sound";
+import { playSlashSwing } from "@items/equipment/weapons/swords/sound";
 
 // Shared base for two-handed swords (claymore, ...). Locks the family to a
 // two-handed grip, slashing arc visual, and the slashing swing/hit sound set.
@@ -26,7 +27,7 @@ function createBaseGreatsword({ id, type, name, description, defaults, sprite, o
   greatsword.duration = overrides.duration ?? defaults.duration;
   greatsword.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
   greatsword.onAttackStart = () => playSlashSwing();
-  greatsword.onHit = () => playSlashHit();
+  greatsword.onHit = () => playGreatswordHit();
 
   attachArcAttack(greatsword, { style: "slashing" });
   return greatsword;

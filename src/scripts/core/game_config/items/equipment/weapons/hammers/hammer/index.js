@@ -9,7 +9,7 @@ export default Object.freeze({
   damageType: "crushing",
   duration: 11,
   handedness: "oneHanded",
-  knockback: 46,
+  knockback: 58,
   range: 43,
   staminaCost: 170,
 });

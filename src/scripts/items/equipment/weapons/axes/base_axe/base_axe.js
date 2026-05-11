@@ -1,6 +1,7 @@
 import createWeapon from "@items/equipment/weapons/weapon";
 import attachArcAttack from "@items/equipment/weapons/attacks/arc_attack";
-import { playSlashHit, playSlashSwing } from "@items/equipment/weapons/swords/sound";
+import { playAxeHit } from "@items/equipment/weapons/axes/sound";
+import { playSlashSwing } from "@items/equipment/weapons/swords/sound";
 
 // Shared base for one-handed axes (hatchet, ...). Axes share the slashing
 // swing visual with swords, but their damage profiles lean on partial
@@ -27,7 +28,7 @@ function createBaseAxe({ id, type, name, description, defaults, sprite, override
   axe.duration = overrides.duration ?? defaults.duration;
   axe.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
   axe.onAttackStart = () => playSlashSwing();
-  axe.onHit = () => playSlashHit();
+  axe.onHit = () => playAxeHit();
 
   // `reverse: true` flips the sweep direction so the asymmetric hatchet
   // sprite — drawn with its cutting edge on the lower-left perpendicular

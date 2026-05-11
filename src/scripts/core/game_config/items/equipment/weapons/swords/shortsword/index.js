@@ -1,7 +1,7 @@
 export default Object.freeze({
   arc: Math.PI / 2,
   cooldown: 20,
-  criticalChance: 0.1,
+  criticalChance: 0.05,
   criticalMultiplier: 2,
   damageMax: 4,
   damageMin: 2,

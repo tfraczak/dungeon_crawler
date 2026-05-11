@@ -1,6 +1,7 @@
 import createWeapon from "@items/equipment/weapons/weapon";
 import attachThrustAttack from "@items/equipment/weapons/attacks/thrust_attack";
-import { playDaggerHit, playDaggerSwing } from "@items/equipment/weapons/daggers/sound";
+import { playDaggerSwing } from "@items/equipment/weapons/daggers/sound";
+import { playFistHit } from "@items/equipment/weapons/fists/sound";
 
 // Shared base for unarmed strikes. Fists are never picked up or equipped
 // from the inventory — `compatibleSlots` is empty so `itemFitsSlot` rejects
@@ -32,7 +33,7 @@ function createBaseFists({ id, type, name, description, defaults, overrides = {}
   fists.thrustWidth = overrides.thrustWidth ?? defaults.thrustWidth;
   fists.unarmed = true;
   fists.onAttackStart = () => playDaggerSwing();
-  fists.onHit = () => playDaggerHit();
+  fists.onHit = () => playFistHit();
 
   attachThrustAttack(fists, { style: "fist" });
   return fists;

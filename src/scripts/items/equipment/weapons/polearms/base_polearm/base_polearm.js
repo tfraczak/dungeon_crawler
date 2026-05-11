@@ -1,6 +1,7 @@
 import createWeapon from "@items/equipment/weapons/weapon";
 import attachThrustAttack from "@items/equipment/weapons/attacks/thrust_attack";
-import { playDaggerHit, playDaggerSwing } from "@items/equipment/weapons/daggers/sound";
+import { playDaggerSwing } from "@items/equipment/weapons/daggers/sound";
+import { playPolearmHit } from "@items/equipment/weapons/polearms/sound";
 
 // Shared base for two-handed polearms. Polearms thrust like a dagger but with
 // significantly longer reach and a wider thrust band — they're the long-range
@@ -29,7 +30,7 @@ function createBasePolearm({ id, type, name, description, defaults, sprite, over
   // Polearm spear point sits at ~(4,4); ~28px from sprite center.
   polearm.spriteTipOffset = 28;
   polearm.onAttackStart = () => playDaggerSwing();
-  polearm.onHit = () => playDaggerHit();
+  polearm.onHit = () => playPolearmHit();
 
   attachThrustAttack(polearm, { style: "polearm" });
   return polearm;

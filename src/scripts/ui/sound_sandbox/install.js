@@ -14,6 +14,7 @@
 //   - Reset to defaults: clear overrides, re-render with defaults
 //   - Copy values: emit the structured JSON payload (in a fenced
 //     ```json block) to the clipboard
+//   - imported definitions load as unsaved drafts; Save changes persists them
 //   - "+ Add experimental sound" flow: prompt for Name, pick a preset
 //     template, persist as a custom entry
 //   - Delete on custom entries
@@ -41,6 +42,7 @@ import buildSoundSandboxMarkup from "./markup";
 
 const PRESET_PREFIX = "preset_";
 const CUSTOM_PREFIX = "custom_";
+const IMPORT_DRAFT_PREFIX = "import_";
 const PERSIST_DEBOUNCE_MS = 150;
 const COPY_BUTTON_TEXT = "Copy values";
 
@@ -72,6 +74,18 @@ const customToEntry = (custom) => ({
   isCustom: true,
   customId: custom.id,
   defaults: { profiles: custom.profiles ?? [] },
+  play: (overrides) => playProfileSynth(overrides?.profiles ?? overrides),
+});
+
+const importDraftToEntry = (draft) => ({
+  id: IMPORT_DRAFT_PREFIX + draft.id,
+  defaultName: draft.name,
+  defaultDescription: draft.description ?? "",
+  category: "Imported drafts",
+  kind: "profile_synth",
+  isImportDraft: true,
+  customId: draft.id,
+  defaults: { profiles: draft.profiles ?? [] },
   play: (overrides) => playProfileSynth(overrides?.profiles ?? overrides),
 });
 
@@ -337,11 +351,39 @@ export default function installSoundSandbox(_gameState) {
   let currentEntry = allEntries[0] ?? null;
   let currentState = currentEntry ? buildInitialState(currentEntry) : null;
   let persistTimer = null;
+  let importDrafts = [];
+  let importedBuiltInDraftId = null;
+
+  const buildAllEntries = () => [
+    ...collectAllEntries(),
+    ...importDrafts.map(importDraftToEntry),
+  ];
+
+  allEntries = buildAllEntries();
+  currentEntry = allEntries[0] ?? null;
+  currentState = currentEntry ? buildInitialState(currentEntry) : null;
+
+  const isCurrentImportDraft = () => (
+    currentEntry?.isImportDraft
+    || (currentEntry?.id && currentEntry.id === importedBuiltInDraftId)
+  );
+
+  const uniqueImportDraftId = (name) => {
+    const baseId = slugifyId(name);
+    if (!baseId) throw new Error("Name must contain at least one letter or digit.");
+    const isTaken = id => isCustomSoundIdTaken(id) || importDrafts.some(draft => draft.id === id);
+    if (!isTaken(baseId)) return baseId;
+
+    let n = 2;
+    while (isTaken(`${baseId}_${n}`)) n++;
+    return `${baseId}_${n}`;
+  };
 
   const flushPendingPersist = () => {
     if (!persistTimer) return;
     clearTimeout(persistTimer);
     persistTimer = null;
+    if (isCurrentImportDraft()) return;
     if (currentEntry?.isCustom) {
       saveCustomSound({
         id: currentEntry.customId,
@@ -417,7 +459,7 @@ export default function installSoundSandbox(_gameState) {
     if (!currentEntry?.isCustom) return;
     if (!window.confirm(`Delete "${currentState.name}"? This cannot be undone.`)) return;
     deleteCustomSound(currentEntry.customId);
-    allEntries = collectAllEntries();
+    allEntries = buildAllEntries();
     currentEntry = allEntries[0] ?? null;
     currentState = currentEntry ? buildInitialState(currentEntry) : null;
     populateSelect(select, allEntries, currentEntry?.id);
@@ -435,23 +477,57 @@ export default function installSoundSandbox(_gameState) {
     return true;
   };
 
+  const saveCurrentImportDraft = () => {
+    if (!isCurrentImportDraft() || !currentEntry || !currentState) return;
+
+    if (currentEntry.isImportDraft) {
+      saveCustomSound({
+        id: currentEntry.customId,
+        name: currentState.name,
+        description: currentState.description,
+        profiles: currentState.profiles ?? [],
+      });
+      importDrafts = importDrafts.filter(draft => draft.id !== currentEntry.customId);
+      importedBuiltInDraftId = null;
+      allEntries = buildAllEntries();
+      const savedEntryId = CUSTOM_PREFIX + currentEntry.customId;
+      currentEntry = findEntry(savedEntryId, allEntries);
+      currentState = currentEntry ? buildInitialState(currentEntry) : null;
+      populateSelect(select, allEntries, currentEntry?.id);
+      renderCurrentPanel();
+      flashStatus(statusEl, `Saved "${currentState?.name ?? "imported sound"}".`);
+      return;
+    }
+
+    const minimal = minimizeOverrides(currentEntry, currentState);
+    if (minimal) writeOverrides(currentEntry.id, minimal);
+    else clearOverrides(currentEntry.id);
+    importedBuiltInDraftId = null;
+    allEntries = buildAllEntries();
+    currentEntry = findEntry(currentEntry.id, allEntries) ?? currentEntry;
+    populateSelect(select, allEntries, currentEntry.id);
+    renderCurrentPanel();
+    flashStatus(statusEl, `Saved "${currentState.name}".`);
+  };
+
   const importDefinition = () => {
     try {
       flushPendingPersist();
       const definition = parseSoundDefinition(importTextarea?.value ?? "");
 
       if (definition.kind === "profile_synth") {
-        const id = uniqueCustomId(definition.name);
-        saveCustomSound({
+        const id = uniqueImportDraftId(definition.name);
+        importDrafts.push({
           id,
           name: definition.name,
           description: definition.description,
           profiles: definition.profiles,
         });
-        allEntries = collectAllEntries();
-        selectEntry(CUSTOM_PREFIX + id);
+        importedBuiltInDraftId = null;
+        allEntries = buildAllEntries();
+        selectEntry(IMPORT_DRAFT_PREFIX + id);
         if (importTextarea) importTextarea.value = "";
-        flashStatus(statusEl, `Imported "${definition.name}".`);
+        flashStatus(statusEl, `Imported "${definition.name}" as an unsaved draft.`);
         return;
       }
 
@@ -461,16 +537,19 @@ export default function installSoundSandbox(_gameState) {
       ));
       if (!target) throw new Error(`Unknown sound id: ${definition.sound}.`);
 
-      writeOverrides(target.id, {
+      currentEntry = target;
+      currentState = {
         name: definition.name,
         description: definition.description,
         params: definition.params,
         profiles: definition.profiles,
-      });
-      allEntries = collectAllEntries();
-      selectEntry(target.id);
+      };
+      importedBuiltInDraftId = target.id;
+      allEntries = buildAllEntries();
+      populateSelect(select, allEntries, target.id);
+      renderCurrentPanel();
       if (importTextarea) importTextarea.value = "";
-      flashStatus(statusEl, `Imported "${definition.name}".`);
+      flashStatus(statusEl, `Imported "${definition.name}" as an unsaved draft.`);
     } catch (err) {
       flashStatus(statusEl, `Import failed: ${err.message}`, "err", 3500);
     }
@@ -493,6 +572,7 @@ export default function installSoundSandbox(_gameState) {
     persistTimer = setTimeout(() => {
       persistTimer = null;
       if (!currentEntry || !currentState) return;
+      if (isCurrentImportDraft()) return;
       if (currentEntry.isCustom) {
         // Custom sounds always store the full state in their own table,
         // not in the per-sound overrides table.
@@ -503,7 +583,7 @@ export default function installSoundSandbox(_gameState) {
           profiles: currentState.profiles ?? [],
         });
         // Refresh the dropdown label in case Name changed.
-        allEntries = collectAllEntries();
+        allEntries = buildAllEntries();
         // Keep selection on the same custom (its id is stable).
         populateSelect(select, allEntries, currentEntry.id);
         // Re-resolve currentEntry to the freshly built one (defaults
@@ -543,6 +623,7 @@ export default function installSoundSandbox(_gameState) {
       onPlay: playCurrentSound,
       onSample: playSample,
       onReset: resetCurrentSound,
+      onSave: isCurrentImportDraft() ? saveCurrentImportDraft : null,
       onCopy: copyCurrentSound,
       onDelete: currentEntry.isCustom ? deleteCurrentSound : null,
     }));
@@ -558,8 +639,14 @@ export default function installSoundSandbox(_gameState) {
     if (!next) return;
     // Flush any pending writes for the outgoing entry first.
     flushPendingPersist();
+    if (currentEntry?.isImportDraft) {
+      importDrafts = importDrafts.filter(draft => draft.id !== currentEntry.customId);
+      allEntries = buildAllEntries();
+    }
+    if (currentEntry?.id === importedBuiltInDraftId) importedBuiltInDraftId = null;
     currentEntry = next;
     currentState = buildInitialState(currentEntry);
+    populateSelect(select, allEntries, currentEntry.id);
     renderCurrentPanel();
   });
 
@@ -567,7 +654,7 @@ export default function installSoundSandbox(_gameState) {
     const created = promptForCustomSound();
     if (!created) return;
     saveCustomSound(created);
-    allEntries = collectAllEntries();
+    allEntries = buildAllEntries();
     const newEntryId = CUSTOM_PREFIX + created.id;
     currentEntry = findEntry(newEntryId, allEntries);
     currentState = buildInitialState(currentEntry);

@@ -1,6 +1,7 @@
 import createWeapon from "@items/equipment/weapons/weapon";
 import attachArcAttack from "@items/equipment/weapons/attacks/arc_attack";
-import { playSlashHit, playSlashSwing } from "@items/equipment/weapons/swords/sound";
+import { playGreataxeHit } from "@items/equipment/weapons/greataxes/sound";
+import { playSlashSwing } from "@items/equipment/weapons/swords/sound";
 
 // Shared base for two-handed axes (battleaxe, ...). Big, slow, slashing arc
 // with partial crushing in the damage profile.
@@ -26,7 +27,7 @@ function createBaseGreataxe({ id, type, name, description, defaults, sprite, ove
   greataxe.duration = overrides.duration ?? defaults.duration;
   greataxe.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
   greataxe.onAttackStart = () => playSlashSwing();
-  greataxe.onHit = () => playSlashHit();
+  greataxe.onHit = () => playGreataxeHit();
 
   attachArcAttack(greataxe, { style: "slashing" });
   return greataxe;

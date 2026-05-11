@@ -267,6 +267,106 @@ const longsword = () => {
   return a;
 };
 
+// ---- 1H sword: falchion (single-edged, asymmetrical chopping blade) ----
+const falchion = () => {
+  const a = makeCanvas();
+  const bladeStart = [35, 35];
+  const bladeEnd = [8, 8];
+  const dx = bladeEnd[0] - bladeStart[0];
+  const dy = bladeEnd[1] - bladeStart[1];
+  const len = Math.hypot(dx, dy);
+  const ux = dx / len;
+  const uy = dy / len;
+  const nx = -uy;
+  const ny = ux;
+
+  const bladeShape = (x, y) => {
+    const rx = x - bladeStart[0];
+    const ry = y - bladeStart[1];
+    const along = ((rx * ux) + (ry * uy)) / len;
+    const curve = Math.sin(along * Math.PI) * 1.6;
+    const off = ((rx * nx) + (ry * ny)) + curve;
+    if (along < 0 || along > 1) return false;
+    const back = 0.9 + ((1 - along) * 0.45);
+    const edge = along < 0.78
+      ? 2.0 + (along * 3.0)
+      : Math.max(0.4, 4.4 * ((1 - along) / 0.22));
+    return off >= -back && off <= edge;
+  };
+
+  fillShape(a, bladeShape, [4, 4], [39, 39], (x, y) => {
+    const rx = x - bladeStart[0];
+    const ry = y - bladeStart[1];
+    const along = ((rx * ux) + (ry * uy)) / len;
+    const curve = Math.sin(along * Math.PI) * 1.6;
+    const off = ((rx * nx) + (ry * ny)) + curve;
+    if (off < -0.35) return PALETTE.bladeDark;    // dull, straighter back
+    if (off < 0.65) return PALETTE.bladeLight;    // raised spine/center plane
+    if (off > 3.2) return PALETTE.bladeShine;     // broad sharpened edge
+    return PALETTE.blade;
+  });
+  outlineRegion(a, bladeShape, [3, 3], [40, 40]);
+
+  // Clipped, forward-heavy tip rather than a symmetric sword point.
+  setPx(a, 7, 8, PALETTE.bladeShine);
+  setPx(a, 8, 7, PALETTE.blade);
+  setPx(a, 6, 8, OUTLINE);
+  setPx(a, 8, 6, OUTLINE);
+
+  // Reference-inspired hilt: pale metal S-guard, black grip, and flared
+  // pommel. The back quillon curls subtly up toward the blade while the
+  // front quillon drops and hooks back over the grip like a knuckle guard.
+  drawBlade(a, [40, 30], [30, 40], () => 1, () => PALETTE.ironLight);
+  outlineBlade(a, [40, 30], [30, 40], () => 1);
+  walkLine(40, 30, 38, 28, (cx, cy, t) => {
+    const width = t > 0.65 ? 1 : 0;
+    for (let off = -width; off <= width; off++) setPx(a, cx + off, cy, PALETTE.ironLight);
+  });
+  const frontGuardPixels = new Set();
+  for (let i = 0; i <= 18; i++) {
+    const t = i / 18;
+    const inv = 1 - t;
+    const x = Math.round(
+      (inv ** 3 * 30)
+      + (3 * inv * inv * t * 29)
+      + (3 * inv * t * t * 34)
+      + (t ** 3 * 38),
+    );
+    const y = Math.round(
+      (inv ** 3 * 40)
+      + (3 * inv * inv * t * 45)
+      + (3 * inv * t * t * 44)
+      + (t ** 3 * 45),
+    );
+    frontGuardPixels.add(`${x},${y}`);
+  }
+  for (const point of frontGuardPixels) {
+    const [x, y] = point.split(",").map(Number);
+    for (const [dxOutline, dyOutline] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const key = `${x + dxOutline},${y + dyOutline}`;
+      if (!frontGuardPixels.has(key)) setPx(a, x + dxOutline, y + dyOutline, OUTLINE);
+    }
+  }
+  for (const point of frontGuardPixels) {
+    const [x, y] = point.split(",").map(Number);
+    setPx(a, x, y, PALETTE.ironLight);
+  }
+  drawDisc(a, 38, 28, 1, PALETTE.ironLight);
+  setPx(a, 38, 45, PALETTE.bladeShine);
+
+  drawBlade(a, [36, 36], [42, 42], () => 1, (off) => (
+    off === -1 ? PALETTE.leatherLight : off === 1 ? PALETTE.leatherDark : PALETTE.leather
+  ));
+  outlineBlade(a, [36, 36], [42, 42], () => 1);
+  setPx(a, 37, 37, PALETTE.brassLight);
+  setPx(a, 39, 39, PALETTE.brassLight);
+
+  drawBlade(a, [42, 42], [45, 45], (t) => 1 + Math.floor(t * 1.2), () => PALETTE.ironLight);
+  outlineBlade(a, [42, 42], [45, 45], (t) => 1 + Math.floor(t * 1.2));
+  setPx(a, 43, 43, PALETTE.bladeShine);
+  return a;
+};
+
 // ---- 2H greatsword: claymore (very long blade, ricasso, downturned guard) ----
 const claymore = () => {
   const a = makeCanvas();
@@ -1396,6 +1496,7 @@ const towerShieldSide = () => {
 
 const sprites = [
   ["items/equipment/weapons/swords/shortsword/sprite.png",          shortsword()],
+  ["items/equipment/weapons/swords/falchion/sprite.png",            falchion()],
   ["items/equipment/weapons/swords/longsword/sprite.png",           longsword()],
   ["items/equipment/weapons/greatswords/claymore/sprite.png",       claymore()],
   ["items/equipment/weapons/daggers/dagger/sprite.png",             dagger()],

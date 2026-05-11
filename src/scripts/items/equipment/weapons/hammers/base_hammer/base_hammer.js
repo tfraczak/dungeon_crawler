@@ -1,6 +1,7 @@
 import createWeapon from "@items/equipment/weapons/weapon";
 import attachArcAttack from "@items/equipment/weapons/attacks/arc_attack";
-import { playSlashHit, playSlashSwing } from "@items/equipment/weapons/swords/sound";
+import { playHammerHit } from "@items/equipment/weapons/hammers/sound";
+import { playSlashSwing } from "@items/equipment/weapons/swords/sound";
 
 // Shared base for one-handed hammers (hammer, ...). Same swing-arc geometry
 // as the swords/axes/maces, but with the heavier "crushing" visual treatment.
@@ -26,7 +27,7 @@ function createBaseHammer({ id, type, name, description, defaults, sprite, overr
   hammer.duration = overrides.duration ?? defaults.duration;
   hammer.staminaCost = overrides.staminaCost ?? defaults.staminaCost;
   hammer.onAttackStart = () => playSlashSwing();
-  hammer.onHit = () => playSlashHit();
+  hammer.onHit = () => playHammerHit();
 
   attachArcAttack(hammer, { style: "crushing" });
   return hammer;

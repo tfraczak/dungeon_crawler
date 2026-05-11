@@ -3,6 +3,7 @@
 // shove-back to attackers.
 export default Object.freeze({
   size: "medium",
+  metallic: true,
   attackerKnockback: 50,
   projectileBehavior: "nullify",
   damageReduction: 0.95,

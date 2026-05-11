@@ -1,7 +1,7 @@
 import * as GAME_CONFIG from "@core/game_config";
 import createEquipment from "@items/equipment/equipment";
 import { EQUIPMENT_SLOTS } from "@items/equipment/slots";
-import { playShieldBlock } from "@items/equipment/shields/sound";
+import { playMetalShieldBlock, playShieldBlock } from "@items/equipment/shields/sound";
 
 // Shared base for every shield. Concrete variants (buckler, viking shield,
 // tower shield, ...) call this with their id/name/description/config/sprite.
@@ -33,6 +33,7 @@ function createBaseShield({ id, name, description, defaults, sprite, spriteSide 
   });
   shield.handedness = "oneHanded";
   shield.size = size;
+  shield.metallic = Boolean(overrides.metallic ?? defaults.metallic ?? false);
   shield.sprite = sprite;
   // Edge-on view drawn for left/right facing in `player.drawBlock`. Drawn so
   // the convex face points LEFT in the asset; the renderer flips the sprite
@@ -47,7 +48,13 @@ function createBaseShield({ id, name, description, defaults, sprite, spriteSide 
     speedMultiplier:    pick("speedMultiplier"),
     staminaCost:        pick("staminaCost"),
   };
-  shield.onBlock = () => playShieldBlock();
+  shield.onBlock = () => {
+    if (shield.metallic) {
+      playMetalShieldBlock();
+      return;
+    }
+    playShieldBlock();
+  };
   return shield;
 }
 

@@ -47,7 +47,7 @@ export default function buildSoundSandboxMarkup() {
               ></textarea>
             </label>
             <div class="dev-sound-actions">
-              <button type="button" class="button" data-sound-ref="importDefinition">Import definition</button>
+              <button type="button" class="button" data-sound-ref="importDefinition">Load draft</button>
             </div>
           </div>
         </div>

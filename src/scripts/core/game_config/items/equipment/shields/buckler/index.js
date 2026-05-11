@@ -3,4 +3,5 @@
 // other than its sprite/look.
 export default Object.freeze({
   size: "small",
+  metallic: true,
 });

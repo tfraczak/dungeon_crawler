@@ -47,6 +47,52 @@ import {
   ICE_CRYSTAL_WALL_HIT_PROFILES,
 } from "@entities/projectiles/ice_crystal/sound";
 import {
+  METAL_SHIELD_BLOCK_PROFILES,
+  playMetalShieldBlock,
+  playShieldBlock,
+  WOODEN_SHIELD_BLOCK_PROFILES,
+} from "@items/equipment/shields/sound";
+import {
+  AXE_HIT_PROFILES,
+  playAxeHit,
+} from "@items/equipment/weapons/axes/sound";
+import {
+  FIST_HIT_PROFILES,
+  playFistHit,
+} from "@items/equipment/weapons/fists/sound";
+import {
+  GREATAXE_HIT_PROFILES,
+  playGreataxeHit,
+} from "@items/equipment/weapons/greataxes/sound";
+import {
+  GREATSWORD_HIT_PROFILES,
+  playGreatswordHit,
+} from "@items/equipment/weapons/greatswords/sound";
+import {
+  HAMMER_HIT_PROFILES,
+  playHammerHit,
+} from "@items/equipment/weapons/hammers/sound";
+import {
+  GREATHAMMER_HIT_PROFILES,
+  playGreathammerHit,
+} from "@items/equipment/weapons/greathammers/sound";
+import {
+  MACE_HIT_PROFILES,
+  playMaceHit,
+} from "@items/equipment/weapons/maces/sound";
+import {
+  POLEARM_HIT_PROFILES,
+  playPolearmHit,
+} from "@items/equipment/weapons/polearms/sound";
+import {
+  STAFF_HIT_PROFILES,
+  playStaffHit,
+} from "@items/equipment/weapons/staves/sound";
+import {
+  WAND_HIT_PROFILES,
+  playWandHit,
+} from "@items/equipment/weapons/wands/sound";
+import {
   playDaggerHit,
   playDaggerSwing,
   DAGGER_HIT_PROFILES,
@@ -277,6 +323,138 @@ const BUILT_IN_ENTRIES = [
     play: (overrides) => playBlobAttackHit(overrides?.profiles ?? overrides),
   },
   {
+    id: "metal_shield_block",
+    defaultName: "Shield bounce big reverb ping",
+    defaultDescription: "A weapon bouncing off a shield with a sharper ding, louder metallic ping, stronger upper overtones, and more reverb-like ringing delay.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/shields/sound.js",
+    constName: "METAL_SHIELD_BLOCK_PROFILES",
+    defaults: { profiles: METAL_SHIELD_BLOCK_PROFILES },
+    play: (overrides) => playMetalShieldBlock(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "wooden_shield_block",
+    defaultName: "Wooden shield block splintering impact",
+    defaultDescription: "A wooden shield block with a blunt board thud, strong hollow wood clock, added splintering cracks, dry grain tearing, and a rough wooden decay.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/shields/sound.js",
+    constName: "WOODEN_SHIELD_BLOCK_PROFILES",
+    defaults: { profiles: WOODEN_SHIELD_BLOCK_PROFILES },
+    play: (overrides) => playShieldBlock(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "axe_hit",
+    defaultName: "Deep wet axe impact ripping splintering",
+    defaultDescription: "A heavy axe impact that keeps the deep thud but emphasizes ripping splintering: layered wood/bone cracks, rough fiber tearing, wet gouging drag, and a thick gore tail.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/axes/sound.js",
+    constName: "AXE_HIT_PROFILES",
+    defaults: { profiles: AXE_HIT_PROFILES },
+    play: (overrides) => playAxeHit(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "fist_hit",
+    defaultName: "Bare fist heavy body crash brown thud punch",
+    defaultDescription: "A bare-fist punch with a heavier body thud, low brown-noise support, dense torso compression, skin slap, and a short crashing impact layer on top.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/fists/sound.js",
+    constName: "FIST_HIT_PROFILES",
+    defaults: { profiles: FIST_HIT_PROFILES },
+    play: (overrides) => playFistHit(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "greataxe_hit",
+    defaultName: "Devastating greataxe splinter impact",
+    defaultDescription: "A heavier two-handed greataxe impact with a deep body thud, lower-frequency ripping wood/bone splinters, wet gore drag, and a slightly longer devastating decay.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/greataxes/sound.js",
+    constName: "GREATAXE_HIT_PROFILES",
+    defaults: { profiles: GREATAXE_HIT_PROFILES },
+    play: (overrides) => playGreataxeHit(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "greatsword_hit",
+    defaultName: "Devastating greatsword flesh rip higher",
+    defaultDescription: "A heavier two-handed greatsword flesh-ripping hit with a slightly higher-frequency blade edge, deep impact weight, broad wet ripping pulls, and a devastating gore tail.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/greatswords/sound.js",
+    constName: "GREATSWORD_HIT_PROFILES",
+    defaults: { profiles: GREATSWORD_HIT_PROFILES },
+    play: (overrides) => playGreatswordHit(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "hammer_hit",
+    defaultName: "Devastating metal hammer crash impact",
+    defaultDescription: "A more devastating one-handed metal hammer impact with deep crushing force, metallic ping, low splintering collapse, and a wider crashing debris layer.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/hammers/sound.js",
+    constName: "HAMMER_HIT_PROFILES",
+    defaults: { profiles: HAMMER_HIT_PROFILES },
+    play: (overrides) => playHammerHit(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "greathammer_hit",
+    defaultName: "Cataclysmic greathammer hard thud impact high splinters",
+    defaultDescription: "A devastating two-handed greathammer impact with a hard blunt thud, crushing collapse, low splintering, and added higher-frequency splinter shards for sharper destruction.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/greathammers/sound.js",
+    constName: "GREATHAMMER_HIT_PROFILES",
+    defaults: { profiles: GREATHAMMER_HIT_PROFILES },
+    play: (overrides) => playGreathammerHit(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "mace_hit",
+    defaultName: "Mace thud splinter crash high splinters",
+    defaultDescription: "A one-handed mace impact with a blunt thud, compact crushing body, chunky splintering breaks, short crash layer, and added higher-pitched splinter shards.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/maces/sound.js",
+    constName: "MACE_HIT_PROFILES",
+    defaults: { profiles: MACE_HIT_PROFILES },
+    play: (overrides) => playMaceHit(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "polearm_hit",
+    defaultName: "Spear varied high Q gouging rip stab",
+    defaultDescription: "A higher-pitched spear hit with more varied high-Q gouging, sharper resonant ripping fibers, focused shaft scrape, and a less uniform layered texture.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/polearms/sound.js",
+    constName: "POLEARM_HIT_PROFILES",
+    defaults: { profiles: POLEARM_HIT_PROFILES },
+    play: (overrides) => playPolearmHit(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "staff_hit",
+    defaultName: "Wooden staff pronounced wood clock hit",
+    defaultDescription: "A wooden staff impact with a stronger wooden identity: clear hollow clocking, dry grain knocks, resonant pole body, and a supportive blunt thud.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/staves/sound.js",
+    constName: "STAFF_HIT_PROFILES",
+    defaults: { profiles: STAFF_HIT_PROFILES },
+    play: (overrides) => playStaffHit(overrides?.profiles ?? overrides),
+  },
+  {
+    id: "wand_hit",
+    defaultName: "Wand wet ham leather smack wood clock hit",
+    defaultDescription: "A light wand hit tuned toward a wet ham slapping a leather couch, with subtle thud, wet slap, leathery cushion bloom, sticky rebound, and added dry wood clocking from the wand shaft.",
+    category: "Game sounds",
+    kind: "profile_synth",
+    sourceFile: "src/scripts/items/equipment/weapons/wands/sound.js",
+    constName: "WAND_HIT_PROFILES",
+    defaults: { profiles: WAND_HIT_PROFILES },
+    play: (overrides) => playWandHit(overrides?.profiles ?? overrides),
+  },
+  {
     id: "dagger_swing",
     defaultName: "Dagger swing",
     defaultDescription: "Quick reversed noise stab for dagger attacks",
@@ -289,8 +467,8 @@ const BUILT_IN_ENTRIES = [
   },
   {
     id: "dagger_hit",
-    defaultName: "Dagger hit",
-    defaultDescription: "Short piercing impact when the dagger connects",
+    defaultName: "Wet gouging high flesh rip slice 200ms",
+    defaultDescription: "A loud 200ms wet gouging flesh hit with slightly higher pitch, stronger scooping drag, broad wet pulls, and a slick bright finish.",
     category: "Game sounds",
     kind: "profile_synth",
     sourceFile: "src/scripts/items/equipment/weapons/daggers/sound.js",
@@ -300,8 +478,8 @@ const BUILT_IN_ENTRIES = [
   },
   {
     id: "slash_hit",
-    defaultName: "Sword slash hit",
-    defaultDescription: "Layered distorted bandpass impacts when the sword connects",
+    defaultName: "Short wet loud very high flesh rip slice 300ms",
+    defaultDescription: "A loud, very high-pitched wet flesh-ripping sword slice with sharp tearing friction, bright fibrous pulls, and an overall duration of about 0.3 seconds.",
     category: "Game sounds",
     kind: "profile_synth",
     sourceFile: "src/scripts/items/equipment/weapons/swords/sound.js",

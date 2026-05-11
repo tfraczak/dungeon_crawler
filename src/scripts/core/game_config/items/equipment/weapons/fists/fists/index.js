@@ -3,7 +3,7 @@
 // punch cooldown so unarmed combat is at least viable as a panic option.
 export default Object.freeze({
   cooldown: 12,
-  criticalChance: 0.04,
+  criticalChance: 0.05,
   criticalMultiplier: 2,
   damageMax: 2,
   damageMin: 1,
@@ -12,7 +12,7 @@ export default Object.freeze({
   duration: 6,
   handedness: "oneHanded",
   knockback: 14,
-  range: 30,
+  range: 22.5,
   staminaCost: 30,
   thrustWidth: 14,
 });

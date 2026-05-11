@@ -1,6 +1,6 @@
 export default Object.freeze({
   cooldown: 18,
-  criticalChance: 0.12,
+  criticalChance: 0.05,
   criticalMultiplier: 2,
   damageMax: 4,
   damageMin: 2,
